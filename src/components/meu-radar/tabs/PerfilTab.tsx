@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { AppHeader } from "../Header";
-import { Check, ChevronRight, LogOut } from "lucide-react";
+import { Check, ChevronRight, LogOut, Moon, Sun } from "lucide-react";
+import { useTheme } from "@/hooks/use-theme";
 
 const monitored = [
   { label: "CPF", value: "•••.456.789-••" },
@@ -11,6 +12,8 @@ const monitored = [
 
 export function PerfilTab() {
   const [s, setS] = useState({ push: true, email: true, scan: true, bio: true });
+  const { theme, toggle } = useTheme();
+  const isDark = theme === "dark";
 
   return (
     <>
