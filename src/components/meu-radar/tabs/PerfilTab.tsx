@@ -66,8 +66,38 @@ export function PerfilTab() {
           </button>
         </section>
 
+        {/* Theme toggle */}
+        <section className="rounded-2xl border border-border/60 bg-card p-4 shadow-sm">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <span className="grid h-10 w-10 place-items-center rounded-xl bg-secondary">
+                {isDark ? <Moon className="h-5 w-5 text-[var(--color-teal)]" /> : <Sun className="h-5 w-5 text-[var(--color-warning)]" />}
+              </span>
+              <div>
+                <p className="text-sm font-semibold text-foreground">Aparência</p>
+                <p className="text-[11px] text-muted-foreground">{isDark ? "Tema escuro ativado" : "Tema claro ativado"}</p>
+              </div>
+            </div>
+            <div className="flex rounded-full bg-muted p-1">
+              <button
+                onClick={() => isDark && toggle()}
+                className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold transition ${!isDark ? "bg-background text-foreground shadow" : "text-muted-foreground"}`}
+              >
+                <Sun className="h-3 w-3" /> Claro
+              </button>
+              <button
+                onClick={() => !isDark && toggle()}
+                className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold transition ${isDark ? "bg-background text-foreground shadow" : "text-muted-foreground"}`}
+              >
+                <Moon className="h-3 w-3" /> Escuro
+              </button>
+            </div>
+          </div>
+        </section>
+
         {/* Settings */}
         <section className="rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden">
+
           {[
             { k: "push" as const, label: "Notificações push" },
             { k: "email" as const, label: "Alertas por e-mail" },
