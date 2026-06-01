@@ -3,6 +3,7 @@ import { useState } from "react";
 import { BottomNav, type TabId } from "@/components/meu-radar/BottomNav";
 import { RadarTab } from "@/components/meu-radar/tabs/RadarTab";
 import { CredenciaisTab } from "@/components/meu-radar/tabs/CredenciaisTab";
+import { ScoreTab } from "@/components/meu-radar/tabs/ScoreTab";
 import { FamiliaTab } from "@/components/meu-radar/tabs/FamiliaTab";
 import { DarkWebTab } from "@/components/meu-radar/tabs/DarkWebTab";
 import { PerfilTab } from "@/components/meu-radar/tabs/PerfilTab";
@@ -28,6 +29,7 @@ function Index() {
         <main className="flex-1 pb-2">
           {tab === "radar" && <RadarTab />}
           {tab === "credenciais" && <CredenciaisTab />}
+          {tab === "score" && <ScoreTab />}
           {tab === "familia" && <FamiliaTab />}
           {tab === "darkweb" && <DarkWebTab />}
           {tab === "perfil" && <PerfilTab />}
