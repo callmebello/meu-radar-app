@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useState, type ReactNode } from "react";
 import type { TabId } from "@/components/meu-radar/BottomNav";
 
 type Ctx = {
@@ -19,7 +19,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [isPremium, setIsPremium] = useState(false);
   const [hasChecked, setHasChecked] = useState(false);
   const [paywallOpen, setPaywallOpen] = useState(false);
-  const [goToTabFn, setGoToTabFn] = useState<(t: TabId) => void>(() => () => {});
+  const [goToTabFn, setGoToTabFn] = useState<{ fn: (t: TabId) => void }>({ fn: () => {} });
+
+  const openPaywall = useCallback(() => setPaywallOpen(true), []);
+  const closePaywall = useCallback(() => setPaywallOpen(false), []);
+  const setGoToTab = useCallback((fn: (t: TabId) => void) => {
+    setGoToTabFn({ fn });
+  }, []);
+  const goToTab = useCallback((t: TabId) => goToTabFn.fn(t), [goToTabFn]);
 
   return (
     <AppCtx.Provider
@@ -29,10 +36,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
         hasChecked,
         setHasChecked,
         paywallOpen,
-        openPaywall: () => setPaywallOpen(true),
-        closePaywall: () => setPaywallOpen(false),
-        goToTab: goToTabFn,
-        setGoToTab: (fn) => setGoToTabFn(() => fn),
+        openPaywall,
+        closePaywall,
+        goToTab,
+        setGoToTab,
       }}
     >
       {children}
