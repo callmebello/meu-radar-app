@@ -1,5 +1,6 @@
 import { AppHeader } from "../Header";
-import { Plus } from "lucide-react";
+import { Plus, Lock } from "lucide-react";
+import { useApp } from "@/contexts/AppContext";
 
 type Risk = "Alto" | "Médio" | "Baixo";
 const members: { name: string; rel: string; score: number; risk: Risk; when: string; attention?: boolean }[] = [
@@ -12,6 +13,7 @@ const members: { name: string; rel: string; score: number; risk: Risk; when: str
 const riskColor = (r: Risk) => r === "Alto" ? "var(--color-danger)" : r === "Médio" ? "var(--color-warning)" : "var(--color-success)";
 
 export function FamiliaTab() {
+  const { isPremium, openPaywall } = useApp();
   return (
     <>
       <AppHeader title="Plano Família" subtitle="4 membros monitorados" />
