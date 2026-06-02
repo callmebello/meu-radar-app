@@ -1,11 +1,11 @@
-import { Radar, KeyRound, Users, Eye, User, Gauge } from "lucide-react";
+import { Radar, KeyRound, Users, Eye, User, TrendingUp } from "lucide-react";
 
 export type TabId = "radar" | "credenciais" | "score" | "familia" | "darkweb" | "perfil";
 
 const tabs: { id: TabId; label: string; icon: typeof Radar }[] = [
   { id: "radar", label: "Radar", icon: Radar },
   { id: "credenciais", label: "Cred.", icon: KeyRound },
-  { id: "score", label: "Score", icon: Gauge },
+  { id: "score", label: "Score", icon: TrendingUp },
   { id: "familia", label: "Família", icon: Users },
   { id: "darkweb", label: "Dark", icon: Eye },
   { id: "perfil", label: "Perfil", icon: User },

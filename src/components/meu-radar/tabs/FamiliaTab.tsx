@@ -1,5 +1,6 @@
 import { AppHeader } from "../Header";
-import { Plus } from "lucide-react";
+import { Plus, Lock } from "lucide-react";
+import { useApp } from "@/contexts/AppContext";
 
 type Risk = "Alto" | "Médio" | "Baixo";
 const members: { name: string; rel: string; score: number; risk: Risk; when: string; attention?: boolean }[] = [
@@ -12,6 +13,7 @@ const members: { name: string; rel: string; score: number; risk: Risk; when: str
 const riskColor = (r: Risk) => r === "Alto" ? "var(--color-danger)" : r === "Médio" ? "var(--color-warning)" : "var(--color-success)";
 
 export function FamiliaTab() {
+  const { isPremium, openPaywall } = useApp();
   return (
     <>
       <AppHeader title="Plano Família" subtitle="4 membros monitorados" />
@@ -35,7 +37,16 @@ export function FamiliaTab() {
                     <p className="text-[11px] text-muted-foreground">{m.rel} · verificado {m.when}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-xl font-extrabold tracking-tight text-foreground">{m.score}</p>
+                    {isPremium || m.rel === "Você" ? (
+                      <p className="text-xl font-extrabold tracking-tight text-foreground">{m.score}</p>
+                    ) : (
+                      <button
+                        onClick={openPaywall}
+                        className="inline-flex items-center gap-1 text-xl font-extrabold text-muted-foreground hover:text-foreground transition"
+                      >
+                        <Lock className="h-3.5 w-3.5" />—
+                      </button>
+                    )}
                     <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: c }}>Risco {m.risk}</p>
                   </div>
                 </div>

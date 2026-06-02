@@ -1,5 +1,6 @@
 import { AppHeader } from "../Header";
-import { ShieldCheck, KeyRound, ShieldAlert } from "lucide-react";
+import { ShieldCheck, KeyRound, ShieldAlert, Lock } from "lucide-react";
+import { useApp } from "@/contexts/AppContext";
 
 type Level = "Alto" | "Médio";
 const breaches: { source: string; date: string; tags: string[]; level: Level }[] = [
@@ -18,6 +19,7 @@ const recs = [
 ];
 
 export function DarkWebTab() {
+  const { isPremium, openPaywall } = useApp();
   return (
     <>
       <AppHeader title="Dark Web" subtitle="Monitoramento contínuo" />
@@ -64,8 +66,18 @@ export function DarkWebTab() {
               return (
                 <li key={b.source} className="rounded-xl border border-border/60 bg-card p-4 shadow-sm">
                   <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold text-foreground">{b.source}</p>
+                    <div className="min-w-0 flex-1">
+                      {isPremium ? (
+                        <p className="truncate text-sm font-semibold text-foreground">{b.source}</p>
+                      ) : (
+                        <button
+                          onClick={openPaywall}
+                          className="inline-flex items-center gap-1.5 text-sm font-semibold text-muted-foreground hover:text-foreground transition"
+                        >
+                          <Lock className="h-3 w-3" />
+                          <span className="blur-[4px] select-none">{b.source}</span>
+                        </button>
+                      )}
                       <p className="text-[11px] text-muted-foreground">{b.date}</p>
                     </div>
                     <span className="rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide" style={{ backgroundColor: `color-mix(in oklab, ${c} 14%, transparent)`, color: c }}>
