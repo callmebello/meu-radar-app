@@ -1,5 +1,6 @@
 import { AppHeader } from "../Header";
-import { ShieldCheck, KeyRound, ShieldAlert } from "lucide-react";
+import { ShieldCheck, KeyRound, ShieldAlert, Lock } from "lucide-react";
+import { useApp } from "@/contexts/AppContext";
 
 type Level = "Alto" | "Médio";
 const breaches: { source: string; date: string; tags: string[]; level: Level }[] = [
@@ -18,6 +19,7 @@ const recs = [
 ];
 
 export function DarkWebTab() {
+  const { isPremium, openPaywall } = useApp();
   return (
     <>
       <AppHeader title="Dark Web" subtitle="Monitoramento contínuo" />

@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { AppHeader } from "../Header";
-import { ChevronRight, Copy, RefreshCw, ShieldAlert, AlertTriangle } from "lucide-react";
+import { ChevronRight, Copy, RefreshCw, ShieldAlert, AlertTriangle, Lock } from "lucide-react";
 import { toast } from "sonner";
+import { useApp } from "@/contexts/AppContext";
 
 type Status = "Comprometida" | "Fraca" | "Segura";
 const items: { name: string; status: Status; when: string }[] = [
@@ -31,6 +32,7 @@ export function CredenciaisTab() {
   const [numbers, setNumbers] = useState(true);
   const [symbols, setSymbols] = useState(true);
   const [pwd, setPwd] = useState("Kx#9mP$vL2@nQ8");
+  const { isPremium, openPaywall } = useApp();
 
   return (
     <>
@@ -54,6 +56,7 @@ export function CredenciaisTab() {
           <ul className="overflow-hidden rounded-2xl border border-border/60 bg-card shadow-sm">
             {items.map((it, i) => {
               const c = statusColor(it.status);
+              const locked = !isPremium && it.status === "Comprometida";
               return (
                 <li key={it.name} className={`flex items-center gap-3 px-4 py-3.5 ${i > 0 ? "border-t border-border/60" : ""}`}>
                   <span className="grid h-10 w-10 place-items-center rounded-xl bg-[var(--color-navy)] text-sm font-bold text-white">
@@ -63,9 +66,18 @@ export function CredenciaisTab() {
                     <p className="text-sm font-semibold text-foreground">{it.name}</p>
                     <p className="text-[11px] text-muted-foreground">{it.when}</p>
                   </div>
-                  <span className="rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide" style={{ backgroundColor: `color-mix(in oklab, ${c} 14%, transparent)`, color: c }}>
-                    {it.status}
-                  </span>
+                  {locked ? (
+                    <button
+                      onClick={openPaywall}
+                      className="inline-flex items-center gap-1 rounded-full bg-secondary px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-muted-foreground hover:bg-secondary/80 transition"
+                    >
+                      <Lock className="h-3 w-3" /> Bloqueado
+                    </button>
+                  ) : (
+                    <span className="rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide" style={{ backgroundColor: `color-mix(in oklab, ${c} 14%, transparent)`, color: c }}>
+                      {it.status}
+                    </span>
+                  )}
                   <ChevronRight className="h-4 w-4 text-muted-foreground" />
                 </li>
               );
