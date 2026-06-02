@@ -37,7 +37,16 @@ export function FamiliaTab() {
                     <p className="text-[11px] text-muted-foreground">{m.rel} · verificado {m.when}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-xl font-extrabold tracking-tight text-foreground">{m.score}</p>
+                    {isPremium || m.rel === "Você" ? (
+                      <p className="text-xl font-extrabold tracking-tight text-foreground">{m.score}</p>
+                    ) : (
+                      <button
+                        onClick={openPaywall}
+                        className="inline-flex items-center gap-1 text-xl font-extrabold text-muted-foreground hover:text-foreground transition"
+                      >
+                        <Lock className="h-3.5 w-3.5" />—
+                      </button>
+                    )}
                     <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: c }}>Risco {m.risk}</p>
                   </div>
                 </div>

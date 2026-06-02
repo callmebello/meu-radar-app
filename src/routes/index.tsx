@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { BottomNav, type TabId } from "@/components/meu-radar/BottomNav";
 import { RadarTab } from "@/components/meu-radar/tabs/RadarTab";
 import { CredenciaisTab } from "@/components/meu-radar/tabs/CredenciaisTab";
@@ -8,6 +8,10 @@ import { FamiliaTab } from "@/components/meu-radar/tabs/FamiliaTab";
 import { DarkWebTab } from "@/components/meu-radar/tabs/DarkWebTab";
 import { PerfilTab } from "@/components/meu-radar/tabs/PerfilTab";
 import { Toaster } from "@/components/ui/sonner";
+import { AppProvider, useApp } from "@/contexts/AppContext";
+import { PaywallModal } from "@/components/meu-radar/PaywallModal";
+import { CPFEntry } from "@/components/meu-radar/CPFEntry";
+import { LiveAlertBanner } from "@/components/meu-radar/LiveAlertBanner";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -18,14 +22,34 @@ export const Route = createFileRoute("/")({
       { property: "og:description", content: "Sua identidade digital protegida em um só lugar." },
     ],
   }),
-  component: Index,
+  component: () => (
+    <AppProvider>
+      <Index />
+    </AppProvider>
+  ),
 });
 
 function Index() {
   const [tab, setTab] = useState<TabId>("radar");
+  const { hasChecked, setGoToTab } = useApp();
+
+  useEffect(() => {
+    setGoToTab((t: TabId) => setTab(t));
+  }, [setGoToTab]);
+
+  if (!hasChecked) {
+    return (
+      <>
+        <CPFEntry />
+        <Toaster position="top-center" />
+      </>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-muted/40">
       <div className="mx-auto flex min-h-screen max-w-[420px] flex-col bg-background shadow-2xl">
+        <LiveAlertBanner />
         <main className="flex-1 pb-2">
           {tab === "radar" && <RadarTab />}
           {tab === "credenciais" && <CredenciaisTab />}
@@ -36,6 +60,7 @@ function Index() {
         </main>
         <BottomNav active={tab} onChange={setTab} />
       </div>
+      <PaywallModal />
       <Toaster position="top-center" />
     </div>
   );
