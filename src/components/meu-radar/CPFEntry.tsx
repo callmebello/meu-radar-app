@@ -218,6 +218,14 @@ export function CPFEntry() {
                   )}
                 </button>
 
+                <button
+                  onClick={() => (window.location.href = "#privacidade")}
+                  className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-medium transition-all duration-200 hover:bg-white/[0.04] sm:rounded-full sm:py-4 sm:text-base"
+                  style={{ color: TEXT, border: `1px solid ${BORDER_STRONG}` }}
+                >
+                  Soluções para empresas →
+                </button>
+
                 <p
                   className="mt-4 flex items-center justify-center gap-1.5 text-[11px]"
                   style={{ color: TEXT_MUTED }}
