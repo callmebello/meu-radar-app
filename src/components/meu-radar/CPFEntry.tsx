@@ -112,7 +112,7 @@ export function CPFEntry() {
       </nav>
 
       {/* HERO */}
-      <section className="relative overflow-hidden px-5 pt-8 pb-24 sm:pt-12 sm:pb-32">
+      <section className="relative overflow-hidden px-5 pt-4 pb-10 sm:pt-12 sm:pb-32">
         {/* Subtle ambient — white, not blue */}
         <div
           aria-hidden
@@ -122,31 +122,31 @@ export function CPFEntry() {
               "radial-gradient(800px 400px at 50% 0%, rgba(255,255,255,0.04), transparent 70%)",
           }}
         />
-        <div className="relative mx-auto flex max-w-3xl flex-col items-center text-center">
+        <div className="relative mx-auto flex max-w-3xl flex-col items-center gap-2 text-center sm:gap-4">
           <span
-            className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-[11px] font-medium uppercase tracking-[0.12em]"
+            className="inline-flex items-center gap-2 rounded-full px-2 py-1 text-xs font-medium uppercase tracking-[0.12em] sm:px-3 sm:py-1.5 sm:text-[11px]"
             style={{
               color: TEXT_MUTED,
               border: `1px solid ${BORDER}`,
               backgroundColor: SURFACE,
             }}
           >
-            🔒 Proteção de identidade digital
+            🔒 PROTEÇÃO DE IDENTIDADE DIGITAL
           </span>
 
           <h1
-            className="mt-8 text-[44px] font-extrabold leading-[1.02] tracking-[-0.03em] sm:text-[72px]"
+            className="mt-2 max-w-[20ch] text-2xl font-extrabold leading-[1.05] tracking-[-0.03em] sm:mt-6 sm:max-w-none sm:text-4xl md:text-5xl"
             style={{ color: TEXT }}
           >
-            Descubra quem tem acesso aos seus dados pessoais.
+            Descubra onde seus dados pessoais estão expostos.
           </h1>
 
           <p
-            className="mt-6 max-w-xl text-base leading-relaxed sm:text-lg"
+            className="mt-1 max-w-xl text-sm leading-relaxed sm:mt-4 sm:text-base md:text-lg"
             style={{ color: TEXT_MUTED }}
           >
-            A Priva verifica sua exposição online e ajuda você a recuperar o
-            controle das suas informações antes que elas sejam usadas contra você.
+            Telefone, endereço, CPF e outras informações podem estar disponíveis online sem que você saiba.
+            <span className="mt-2 block">A Priva verifica sua exposição digital e ajuda você a recuperar o controle da sua privacidade.</span>
           </p>
 
           {/* CPF form — visual gravity center, neutral surface */}
