@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useApp } from "@/contexts/AppContext";
 import { PrivaLogo } from "@/components/meu-radar/PrivaLogo";
+import { LiveMap } from "@/components/meu-radar/LiveMap";
 
 function formatCPF(v: string) {
   const d = v.replace(/\D/g, "").slice(0, 11);
@@ -193,9 +194,11 @@ export function CPFEntry() {
               "radial-gradient(800px 400px at 50% 0%, rgba(255,255,255,0.04), transparent 70%)",
           }}
         />
-        <div className="relative mx-auto flex max-w-3xl flex-col items-center gap-2 text-center sm:gap-4">
+        <div className="relative mx-auto flex max-w-5xl flex-col items-center gap-2 sm:gap-4">
+          {/* Top row: headline (left) + Live Map (right) */}
+          <div className="flex w-full flex-col items-center gap-8 md:flex-row md:items-center md:justify-between md:gap-10">
           <div
-            className={`flex flex-col items-center gap-2 text-center transition-all duration-500 ease-out sm:gap-4 ${
+            className={`flex flex-col items-start gap-2 text-left transition-all duration-500 ease-out sm:gap-4 md:w-[54%] ${
               phase === "results"
                 ? "pointer-events-none max-h-0 -translate-y-3 overflow-hidden opacity-0"
                 : "max-h-[600px] translate-y-0 opacity-100"
@@ -230,6 +233,13 @@ export function CPFEntry() {
             Telefone, endereço, CPF e outras informações podem estar disponíveis online sem que você saiba.
             <span className="mt-2 block">A Priva verifica sua exposição digital e ajuda você a recuperar o controle da sua privacidade.</span>
           </p>
+          </div>
+
+          {phase !== "results" && (
+            <div className="mx-auto w-full max-w-sm md:mx-0 md:w-[44%] md:max-w-none md:shrink-0">
+              <LiveMap />
+            </div>
+          )}
           </div>
 
           {/* CPF form — visual gravity center, neutral surface */}
