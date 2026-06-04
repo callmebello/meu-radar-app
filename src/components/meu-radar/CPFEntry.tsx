@@ -83,10 +83,14 @@ export function CPFEntry() {
           borderBottom: `1px solid ${BORDER}`,
         }}
       >
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-3.5">
-          <PrivaLogo />
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-5 sm:py-3.5">
+          <PrivaLogo
+            size={36}
+            showWordmark={false}
+            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          />
           <span
-            className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium text-gray-300"
+            className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium text-gray-300 sm:px-3 sm:py-1.5 sm:text-xs"
             style={{ backgroundColor: SURFACE, border: `1px solid ${BORDER_STRONG}` }}
           >
             <ShieldCheck className="h-3.5 w-3.5" style={{ color: CYAN }} />
