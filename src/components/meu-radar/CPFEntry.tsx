@@ -10,7 +10,6 @@ import {
   KeyRound,
   Check,
   Menu,
-  X,
 } from "lucide-react";
 import { useApp } from "@/contexts/AppContext";
 import { PrivaLogo } from "@/components/meu-radar/PrivaLogo";
@@ -124,7 +123,7 @@ export function CPFEntry() {
 
           {/* Mobile hamburger */}
           <button
-            onClick={() => setMenuOpen(true)}
+            onClick={() => setMenuOpen((v) => !v)}
             className="sm:hidden"
             style={{ color: TEXT }}
             aria-label="Abrir menu"
@@ -136,55 +135,50 @@ export function CPFEntry() {
 
       {/* Mobile full-screen menu */}
       {menuOpen && (
-        <div
-          className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-8 sm:hidden"
-          style={{ backgroundColor: BG }}
-        >
-          <button
-            onClick={() => setMenuOpen(false)}
-            className="absolute top-4 right-5"
-            style={{ color: TEXT }}
-            aria-label="Fechar menu"
+        <div className="fixed inset-0 z-40 sm:hidden" onClick={() => setMenuOpen(false)}>
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="absolute right-3 top-16 w-56 rounded-2xl p-2 shadow-2xl animate-scale-in"
+            style={{ backgroundColor: SURFACE, border: `1px solid ${BORDER}` }}
           >
-            <X className="h-6 w-6" />
-          </button>
-          <a
-            href="#como-funciona"
-            onClick={() => setMenuOpen(false)}
-            className="text-lg text-gray-300 transition-colors duration-200 hover:text-white"
-          >
-            Como funciona
-          </a>
-          <a
-            href="#privacidade"
-            onClick={() => setMenuOpen(false)}
-            className="text-lg text-gray-300 transition-colors duration-200 hover:text-white"
-          >
-            Planos
-          </a>
-          <a
-            href="#privacidade"
-            onClick={() => setMenuOpen(false)}
-            className="text-lg text-gray-300 transition-colors duration-200 hover:text-white"
-          >
-            Para empresas
-          </a>
+            <a
+              href="#como-funciona"
+              onClick={() => setMenuOpen(false)}
+              className="block rounded-lg px-3 py-2.5 text-sm text-gray-300 transition-colors hover:bg-white/[0.05] hover:text-white"
+            >
+              Como funciona
+            </a>
+            <a
+              href="#privacidade"
+              onClick={() => setMenuOpen(false)}
+              className="block rounded-lg px-3 py-2.5 text-sm text-gray-300 transition-colors hover:bg-white/[0.05] hover:text-white"
+            >
+              Planos
+            </a>
+            <a
+              href="#privacidade"
+              onClick={() => setMenuOpen(false)}
+              className="block rounded-lg px-3 py-2.5 text-sm text-gray-300 transition-colors hover:bg-white/[0.05] hover:text-white"
+            >
+              Para empresas
+            </a>
 
-          <div className="h-px w-40" style={{ backgroundColor: BORDER }} />
+            <div className="my-1 h-px" style={{ backgroundColor: BORDER }} />
 
-          <button
-            onClick={() => { setMenuOpen(false); focusCpf(); }}
-            className="text-lg text-gray-300 transition-colors duration-200 hover:text-white"
-          >
-            Entrar
-          </button>
-          <button
-            onClick={() => { setMenuOpen(false); focusCpf(); }}
-            className="w-64 rounded-full py-3 text-base font-semibold text-white"
-            style={{ backgroundColor: BLUE }}
-          >
-            Verificar gratuitamente →
-          </button>
+            <button
+              onClick={() => { setMenuOpen(false); focusCpf(); }}
+              className="block w-full rounded-lg px-3 py-2.5 text-left text-sm text-gray-300 transition-colors hover:bg-white/[0.05] hover:text-white"
+            >
+              Entrar
+            </button>
+            <button
+              onClick={() => { setMenuOpen(false); focusCpf(); }}
+              className="mt-1 w-full rounded-full py-2.5 text-sm font-semibold text-white"
+              style={{ backgroundColor: BLUE }}
+            >
+              Verificar gratuitamente →
+            </button>
+          </div>
         </div>
       )}
 
