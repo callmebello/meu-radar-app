@@ -131,11 +131,11 @@ export function CPFEntry() {
                 onClick={submit}
                 disabled={cpf.length < 14 || phase === "loading"}
                 className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-bold text-white transition-all duration-200 disabled:opacity-40"
-                style={{ backgroundColor: "#3B5BDB" }}
+                style={{ backgroundColor: "#3B82F6", boxShadow: "0 0 0 1px rgba(59,130,246,0.45), 0 12px 32px -10px rgba(59,130,246,0.7)" }}
                 onMouseEnter={(e) => {
-                  if (!e.currentTarget.disabled) e.currentTarget.style.backgroundColor = "#4C6EF5";
+                  if (!e.currentTarget.disabled) e.currentTarget.style.backgroundColor = "#2563EB";
                 }}
-                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#3B5BDB")}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#3B82F6")}
               >
                 {phase === "loading" ? (
                   <>
@@ -206,13 +206,14 @@ export function CPFEntry() {
                 <button
                   onClick={enterFree}
                   className="w-full rounded-xl py-3.5 text-sm font-bold text-white transition-all duration-200 hover:opacity-90"
-                  style={{ backgroundColor: "#3B5BDB" }}
+                  style={{ backgroundColor: "#3B82F6", boxShadow: "0 0 0 1px rgba(59,130,246,0.4), 0 10px 28px -10px rgba(59,130,246,0.6)" }}
                 >
                   Ver detalhes grátis
                 </button>
                 <button
                   onClick={enterPremium}
-                  className="w-full rounded-xl bg-[var(--color-teal)] py-3.5 text-sm font-bold text-[var(--color-navy)] transition-all duration-200 hover:opacity-90"
+                  className="w-full rounded-xl py-3.5 text-sm font-bold text-white transition-all duration-200 hover:opacity-90"
+                  style={{ backgroundColor: "#7C3AED", boxShadow: "0 0 0 1px rgba(124,58,237,0.45), 0 12px 32px -10px rgba(124,58,237,0.65)" }}
                 >
                   Ativar proteção completa · R$19/mês
                 </button>
