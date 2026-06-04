@@ -38,21 +38,29 @@ export function AppHeader({
   return (
     <header
       className="sticky top-0 z-20 flex items-center justify-between px-4 py-3"
-      style={{ position: "relative", background: "#0B1020", borderBottom: "1px solid rgba(255,255,255,0.06)" }}
+      style={{
+        position: "relative",
+        backgroundColor: "var(--color-background)",
+        borderBottom: "1px solid rgba(255,255,255,0.04)",
+      }}
     >
       {/* LEFT — Plus */}
       <button
         onClick={() => goToTab("familia")}
         aria-label="Adicionar à família"
-        className="-ml-2 grid h-11 w-11 place-items-center rounded-full transition hover:bg-white/[0.06]"
+        className="flex h-11 w-11 items-center justify-center text-white transition-opacity active:opacity-70"
       >
-        <Plus className="h-6 w-6 text-white" />
+        <Plus size={22} strokeWidth={2} />
       </button>
 
-      {/* CENTER — wordmark */}
-      <span className="absolute left-1/2 -translate-x-1/2 text-white font-bold text-xl tracking-tight">
-        priva
-      </span>
+      {/* CENTER — wordmark logo */}
+      <div className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center">
+        <img
+          src="/PRIVA_letter_only_logo.png"
+          alt="PRIVA"
+          className="h-5 w-auto object-contain"
+        />
+      </div>
 
       {/* RIGHT — bell */}
       {showBell && (
