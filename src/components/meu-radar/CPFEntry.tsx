@@ -316,20 +316,21 @@ export function CPFEntry() {
 
           {/* Quiet trust row */}
           {phase !== "results" && (
-            <div
-              className="mt-10 flex flex-wrap items-center justify-center gap-x-7 gap-y-3 text-xs"
-              style={{ color: TEXT_MUTED }}
-            >
-              <span className="inline-flex items-center gap-1.5">
-                ✓ Sem cadastro
-              </span>
-              <span className="inline-flex items-center gap-1.5">
-                ✓ Resultado em segundos
-              </span>
-              <span className="inline-flex items-center gap-1.5">
-                ✓ Conforme a LGPD
-              </span>
-            </div>
+            <>
+              <div
+                className="mt-6 flex flex-col items-center justify-center gap-1 text-xs sm:mt-10 sm:flex-row sm:gap-4 sm:text-sm"
+                style={{ color: TEXT_MUTED }}
+              >
+                <span>✓ Sem cadastro</span>
+                <span className="hidden sm:inline">·</span>
+                <span>✓ Resultado em segundos</span>
+                <span className="hidden sm:inline">·</span>
+                <span>✓ Conforme a LGPD</span>
+              </div>
+              <p className="mt-3 text-xs text-green-400 sm:mt-4 sm:text-sm">
+                🟢 Milhares de brasileiros verificam seus dados todos os dias
+              </p>
+            </>
           )}
         </div>
       </section>
