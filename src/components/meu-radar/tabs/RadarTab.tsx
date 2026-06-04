@@ -37,7 +37,7 @@ export function RadarTab() {
               CPF verificado · 3 ocorrências encontradas
             </p>
             <button
-              onClick={() => goToTab("darkweb")}
+              onClick={() => goToTab("seguranca")}
               className="text-[11px] font-bold text-[var(--color-navy)] dark:text-[var(--color-teal)]"
             >
               Ver detalhes →

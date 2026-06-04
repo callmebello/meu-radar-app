@@ -16,7 +16,7 @@ export function FamiliaTab() {
   const { isPremium, openPaywall } = useApp();
   return (
     <>
-      <AppHeader title="Plano Família" subtitle="4 membros monitorados" />
+      <AppHeader title="Plano Família" subtitle="4 membros monitorados" showBell />
       <div className="space-y-4 px-5 py-5">
         <ul className="space-y-3">
           {members.map((m) => {
@@ -60,11 +60,11 @@ export function FamiliaTab() {
         </button>
 
         <section className="rounded-2xl bg-[var(--color-navy)] p-5 text-white shadow-lg">
-          <p className="text-xs font-bold uppercase tracking-wider text-[var(--color-teal)]">Upgrade</p>
+          <p className="text-xs font-bold uppercase tracking-wider text-white/80">Upgrade</p>
           <h3 className="mt-1 text-lg font-bold">Plano Família — até 6 membros</h3>
           <p className="mt-1 text-sm text-white/70">R$ 39/mês — você já usa 4 de 6 slots</p>
           <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/10">
-            <div className="h-full rounded-full bg-[var(--color-teal)]" style={{ width: "66%" }} />
+            <div className="h-full rounded-full bg-white" style={{ width: "66%" }} />
           </div>
         </section>
       </div>

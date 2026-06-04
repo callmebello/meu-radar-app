@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import type { TabId } from "@/components/meu-radar/BottomNav";
 
 type Ctx = {
@@ -16,8 +16,22 @@ type Ctx = {
 const AppCtx = createContext<Ctx | null>(null);
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [isPremium, setIsPremium] = useState(false);
+  const [isPremium, setIsPremiumState] = useState(false);
   const [hasChecked, setHasChecked] = useState(false);
+
+  // Restore paid state from localStorage ('priva_is_paid')
+  useEffect(() => {
+    if (typeof window !== "undefined" && localStorage.getItem("priva_is_paid") === "true") {
+      setIsPremiumState(true);
+    }
+  }, []);
+
+  const setIsPremium = useCallback((v: boolean) => {
+    setIsPremiumState(v);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("priva_is_paid", v ? "true" : "false");
+    }
+  }, []);
   const [paywallOpen, setPaywallOpen] = useState(false);
   const [goToTabFn, setGoToTabFn] = useState<{ fn: (t: TabId) => void }>({ fn: () => {} });
 

@@ -17,7 +17,7 @@ export function PerfilTab() {
 
   return (
     <>
-      <AppHeader title="Perfil" />
+      <AppHeader title="Perfil" showBell />
       <div className="space-y-5 px-5 py-5">
         {/* Avatar */}
         <div className="flex items-center gap-4">
@@ -50,7 +50,7 @@ export function PerfilTab() {
 
         {/* Plan */}
         <section className="rounded-2xl border border-border/60 bg-card p-5 shadow-sm">
-          <span className="rounded-full bg-[var(--color-teal)] px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[var(--color-navy)]">Plano Família</span>
+          <span className="rounded-full bg-[var(--color-teal)] px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">Plano Família</span>
           <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
             <div>
               <p className="text-[11px] text-muted-foreground">Renova em</p>

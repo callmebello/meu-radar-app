@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Bell, AlertCircle, CheckCircle2 } from "lucide-react";
-import { PrivaLogo } from "@/components/meu-radar/PrivaLogo";
+import { Bell, AlertCircle, CheckCircle2, Plus } from "lucide-react";
 import { useApp } from "@/contexts/AppContext";
 
 type Notif = { id: string; icon: "alert" | "check"; title: string; time: string; unread: boolean; level: "danger" | "success" };
@@ -37,19 +36,25 @@ export function AppHeader({
   }, [open]);
 
   return (
-    <header className="sticky top-0 z-20 flex items-center justify-between border-b border-border/60 bg-background/80 px-4 pt-4 pb-3 backdrop-blur-xl sm:px-5 sm:pt-5 sm:pb-4">
-      <div className="flex min-w-0 items-center gap-3">
-        <PrivaLogo
-          size={36}
-          showWordmark={false}
-          onClick={() => goToTab("radar")}
-          ariaLabel="Priva — ir para o início"
-        />
-        <div className="min-w-0">
-          <h1 className="truncate text-base font-bold tracking-tight text-foreground sm:text-lg">{title}</h1>
-          {subtitle && <p className="truncate text-xs text-muted-foreground">{subtitle}</p>}
-        </div>
-      </div>
+    <header
+      className="sticky top-0 z-20 flex items-center justify-between px-4 py-3"
+      style={{ position: "relative", background: "#0B1020", borderBottom: "1px solid rgba(255,255,255,0.06)" }}
+    >
+      {/* LEFT — Plus */}
+      <button
+        onClick={() => goToTab("familia")}
+        aria-label="Adicionar à família"
+        className="-ml-2 grid h-11 w-11 place-items-center rounded-full transition hover:bg-white/[0.06]"
+      >
+        <Plus className="h-6 w-6 text-white" />
+      </button>
+
+      {/* CENTER — wordmark */}
+      <span className="absolute left-1/2 -translate-x-1/2 text-white font-bold text-xl tracking-tight">
+        priva
+      </span>
+
+      {/* RIGHT — bell */}
       {showBell && (
         <div className="relative" ref={ref}>
           <button

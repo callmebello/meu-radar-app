@@ -1,4 +1,3 @@
-import { AppHeader } from "../Header";
 import { AnimatedScoreGauge } from "../AnimatedScoreGauge";
 import { AlertTriangle, TrendingUp, ExternalLink, CheckCircle2, X } from "lucide-react";
 import { useState } from "react";
@@ -39,7 +38,6 @@ export function ScoreTab() {
 
   return (
     <>
-      <AppHeader title="Score de Crédito" subtitle="Situação financeira e negativações" />
       <div className="space-y-5 px-5 py-5">
         {/* Paywall banner */}
         {!isPremium && bannerOpen && (
@@ -154,7 +152,7 @@ export function ScoreTab() {
                 href="https://www.serasa.com.br/limpa-nome-online/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-[var(--color-teal)] px-3 py-2 text-xs font-bold text-[var(--color-navy)] transition hover:opacity-90"
+                className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-[var(--color-teal)] px-3 py-2 text-xs font-bold text-white transition hover:opacity-90"
               >
                 Serasa Limpa Nome <ExternalLink className="h-3 w-3" />
               </a>
@@ -168,7 +166,7 @@ export function ScoreTab() {
                 href="https://www.consumidor.gov.br"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-[var(--color-teal)] px-3 py-2 text-xs font-bold text-[var(--color-navy)] transition hover:opacity-90"
+                className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-[var(--color-teal)] px-3 py-2 text-xs font-bold text-white transition hover:opacity-90"
               >
                 Consumidor.gov <ExternalLink className="h-3 w-3" />
               </a>
@@ -221,9 +219,9 @@ export function ScoreTab() {
                 <Line
                   type="monotone"
                   dataKey="score"
-                  stroke="#2dd4bf"
+                  stroke="#818CF8"
                   strokeWidth={2.5}
-                  dot={{ r: 3, fill: "#2dd4bf" }}
+                  dot={{ r: 3, fill: "#818CF8" }}
                   activeDot={{ r: 5 }}
                 />
               </LineChart>

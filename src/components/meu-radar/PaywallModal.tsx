@@ -33,7 +33,7 @@ export function PaywallModal() {
         </button>
         <div className="flex flex-col items-center text-center">
           <span className="grid h-12 w-12 place-items-center rounded-full bg-[var(--color-navy)]">
-            <Lock className="h-5 w-5 text-[var(--color-teal)]" />
+            <Lock className="h-5 w-5 text-white" />
           </span>
           <h2 className="mt-3 text-lg font-bold text-foreground">Recurso Premium</h2>
           <p className="mt-1 text-xs text-muted-foreground">
@@ -62,7 +62,7 @@ export function PaywallModal() {
                   <p className="text-[11px] text-muted-foreground">{p.desc}</p>
                 </div>
                 {p.highlight && (
-                  <span className="rounded-full bg-[var(--color-teal)] px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-[var(--color-navy)]">
+                  <span className="rounded-full bg-[var(--color-teal)] px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white">
                     Popular
                   </span>
                 )}

@@ -1,4 +1,3 @@
-import { AppHeader } from "../Header";
 import { ShieldCheck, KeyRound, ShieldAlert, Lock } from "lucide-react";
 import { useApp } from "@/contexts/AppContext";
 
@@ -22,13 +21,12 @@ export function DarkWebTab() {
   const { isPremium, openPaywall } = useApp();
   return (
     <>
-      <AppHeader title="Dark Web" subtitle="Monitoramento contínuo" />
       <div className="space-y-5 px-5 py-5">
         {/* Status banner */}
         <div className="flex items-center gap-3 rounded-2xl bg-[var(--color-navy)] p-4 text-white shadow-lg">
           <span className="relative grid h-3 w-3 place-items-center">
-            <span className="absolute h-3 w-3 rounded-full bg-[var(--color-teal)] pulse-dot" />
-            <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-teal)]" />
+            <span className="absolute h-3 w-3 rounded-full bg-white pulse-dot" />
+            <span className="h-1.5 w-1.5 rounded-full bg-white" />
           </span>
           <div className="flex-1">
             <p className="text-sm font-semibold">Monitoramento ativo</p>

@@ -2,14 +2,13 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { BottomNav, type TabId } from "@/components/meu-radar/BottomNav";
 import { RadarTab } from "@/components/meu-radar/tabs/RadarTab";
-import { CredenciaisTab } from "@/components/meu-radar/tabs/CredenciaisTab";
-import { ScoreTab } from "@/components/meu-radar/tabs/ScoreTab";
+import { SegurancaTab } from "@/components/meu-radar/tabs/SegurancaTab";
 import { FamiliaTab } from "@/components/meu-radar/tabs/FamiliaTab";
-import { DarkWebTab } from "@/components/meu-radar/tabs/DarkWebTab";
 import { PerfilTab } from "@/components/meu-radar/tabs/PerfilTab";
 import { Toaster } from "@/components/ui/sonner";
 import { AppProvider, useApp } from "@/contexts/AppContext";
 import { PaywallModal } from "@/components/meu-radar/PaywallModal";
+import { ScanningOverlay } from "@/components/meu-radar/ScanningOverlay";
 import { CPFEntry } from "@/components/meu-radar/CPFEntry";
 import { LiveAlertBanner } from "@/components/meu-radar/LiveAlertBanner";
 
@@ -31,11 +30,30 @@ export const Route = createFileRoute("/")({
 
 function Index() {
   const [tab, setTab] = useState<TabId>("radar");
-  const { hasChecked, setGoToTab } = useApp();
+  const [scanning, setScanning] = useState(false);
+  const [overlay, setOverlay] = useState(false);
+  const { hasChecked, setGoToTab, openPaywall } = useApp();
 
   useEffect(() => {
     setGoToTab((t: TabId) => setTab(t));
   }, [setGoToTab]);
+
+  const onScan = () => {
+    if (scanning) return;
+    setScanning(true); // sweep starts rotating fast
+    setTimeout(() => setOverlay(true), 300); // overlay appears
+    setTimeout(() => {
+      setOverlay(false);
+      setScanning(false);
+      const isPaid =
+        typeof window !== "undefined" && localStorage.getItem("priva_is_paid") === "true";
+      if (isPaid) {
+        setTab("radar"); // → Radar dashboard with results
+      } else {
+        openPaywall(); // → checkout / paywall
+      }
+    }, 3200);
+  };
 
   if (!hasChecked) {
     return (
@@ -52,14 +70,13 @@ function Index() {
         <LiveAlertBanner />
         <main className="flex-1 pb-2">
           {tab === "radar" && <RadarTab />}
-          {tab === "credenciais" && <CredenciaisTab />}
-          {tab === "score" && <ScoreTab />}
+          {tab === "seguranca" && <SegurancaTab />}
           {tab === "familia" && <FamiliaTab />}
-          {tab === "darkweb" && <DarkWebTab />}
           {tab === "perfil" && <PerfilTab />}
         </main>
-        <BottomNav active={tab} onChange={setTab} />
+        <BottomNav active={tab} onChange={setTab} onScan={onScan} scanning={scanning} />
       </div>
+      {overlay && <ScanningOverlay />}
       <PaywallModal />
       <Toaster position="top-center" />
     </div>

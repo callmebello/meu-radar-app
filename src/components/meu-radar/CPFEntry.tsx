@@ -32,8 +32,8 @@ const BORDER = "rgba(255,255,255,0.08)";
 const BORDER_STRONG = "rgba(255,255,255,0.14)";
 const TEXT = "#FDFDFD";
 const TEXT_MUTED = "#9B9BA7";
-const BLUE = "#3B82F6";
-const BLUE_HOVER = "#4F8FF7";
+const BLUE = "#4F46E5";
+const BLUE_HOVER = "#4338CA";
 const DANGER = "#F87171";
 
 export function CPFEntry() {
@@ -74,43 +74,53 @@ export function CPFEntry() {
       className="min-h-screen antialiased"
       style={{ backgroundColor: BG, color: TEXT }}
     >
-      {/* Navbar — silent, generous */}
+      {/* Navbar */}
       <nav
-        className="sticky top-0 z-30 backdrop-blur-xl"
+        className="sticky top-0 z-30 backdrop-blur-md"
         style={{
-          backgroundColor: "rgba(6,6,15,0.72)",
-          borderBottom: `1px solid ${BORDER}`,
+          backgroundColor: "rgba(13,31,78,0.95)",
+          borderBottom: "1px solid rgba(255,255,255,0.08)",
         }}
       >
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4 sm:px-8">
-          <PrivaLogo
-            size={32}
-            showWordmark={false}
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+          {/* LEFT — full logo */}
+          <button
             onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          />
+            aria-label="Priva — topo"
+          >
+            <img src="/PRIVA_BLACK_WEB.png" alt="Priva" className="h-7 w-auto object-contain sm:h-8" />
+          </button>
+
+          {/* CENTER — links */}
           <div className="hidden items-center gap-8 sm:flex">
-            <a
-              href="#como-funciona"
-              className="text-sm transition-colors duration-200 hover:text-white"
-              style={{ color: TEXT_MUTED }}
-            >
+            <a href="#como-funciona" className="text-sm text-gray-300 transition-colors duration-200 hover:text-white">
               Como funciona
             </a>
-            <a
-              href="#privacidade"
-              className="text-sm transition-colors duration-200 hover:text-white"
-              style={{ color: TEXT_MUTED }}
-            >
-              Privacidade
+            <a href="#privacidade" className="text-sm text-gray-300 transition-colors duration-200 hover:text-white">
+              Planos
+            </a>
+            <a href="#privacidade" className="text-sm text-gray-300 transition-colors duration-200 hover:text-white">
+              Para empresas
             </a>
           </div>
-          <button
-            onClick={focusCpf}
-            className="hidden rounded-full px-4 py-2 text-xs font-medium transition-all duration-200 hover:bg-white/[0.04] sm:block sm:text-sm"
-            style={{ color: TEXT, border: `1px solid ${BORDER_STRONG}` }}
-          >
-            Verificar CPF
-          </button>
+
+          {/* RIGHT — Entrar + CTA */}
+          <div className="hidden items-center sm:flex">
+            <button onClick={focusCpf} className="mr-4 text-sm text-gray-300 transition-colors duration-200 hover:text-white">
+              Entrar
+            </button>
+            <button
+              onClick={focusCpf}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = BLUE_HOVER)}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = BLUE)}
+              className="rounded-full px-4 py-2 text-sm font-semibold text-white transition-all duration-200"
+              style={{ backgroundColor: BLUE }}
+            >
+              Verificar gratuitamente →
+            </button>
+          </div>
+
+          {/* Mobile hamburger */}
           <button
             onClick={() => setMenuOpen(true)}
             className="sm:hidden"
@@ -139,19 +149,40 @@ export function CPFEntry() {
           <a
             href="#como-funciona"
             onClick={() => setMenuOpen(false)}
-            className="text-lg transition-colors duration-200 hover:text-white"
-            style={{ color: TEXT_MUTED }}
+            className="text-lg text-gray-300 transition-colors duration-200 hover:text-white"
           >
             Como funciona
           </a>
           <a
             href="#privacidade"
             onClick={() => setMenuOpen(false)}
-            className="text-lg transition-colors duration-200 hover:text-white"
-            style={{ color: TEXT_MUTED }}
+            className="text-lg text-gray-300 transition-colors duration-200 hover:text-white"
           >
-            Privacidade
+            Planos
           </a>
+          <a
+            href="#privacidade"
+            onClick={() => setMenuOpen(false)}
+            className="text-lg text-gray-300 transition-colors duration-200 hover:text-white"
+          >
+            Para empresas
+          </a>
+
+          <div className="h-px w-40" style={{ backgroundColor: BORDER }} />
+
+          <button
+            onClick={() => { setMenuOpen(false); focusCpf(); }}
+            className="text-lg text-gray-300 transition-colors duration-200 hover:text-white"
+          >
+            Entrar
+          </button>
+          <button
+            onClick={() => { setMenuOpen(false); focusCpf(); }}
+            className="w-64 rounded-full py-3 text-base font-semibold text-white"
+            style={{ backgroundColor: BLUE }}
+          >
+            Verificar gratuitamente →
+          </button>
         </div>
       )}
 
@@ -167,6 +198,13 @@ export function CPFEntry() {
           }}
         />
         <div className="relative mx-auto flex max-w-3xl flex-col items-center gap-2 text-center sm:gap-4">
+          <div
+            className={`flex flex-col items-center gap-2 text-center transition-all duration-500 ease-out sm:gap-4 ${
+              phase === "results"
+                ? "pointer-events-none max-h-0 -translate-y-3 overflow-hidden opacity-0"
+                : "max-h-[600px] translate-y-0 opacity-100"
+            }`}
+          >
           <span
             className="inline-flex items-center gap-2 rounded-full px-2 py-1 text-xs font-medium uppercase tracking-[0.12em] sm:px-3 sm:py-1.5 sm:text-[11px]"
             style={{
@@ -176,8 +214,8 @@ export function CPFEntry() {
             }}
           >
             <span className="relative flex h-2 w-2 mr-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#6366F1] opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-[#4F46E5]"></span>
             </span>
             PROTEÇÃO DE IDENTIDADE DIGITAL
           </span>
@@ -196,12 +234,14 @@ export function CPFEntry() {
             Telefone, endereço, CPF e outras informações podem estar disponíveis online sem que você saiba.
             <span className="mt-2 block">A Priva verifica sua exposição digital e ajuda você a recuperar o controle da sua privacidade.</span>
           </p>
+          </div>
 
           {/* CPF form — visual gravity center, neutral surface */}
           <div
             ref={formRef}
-            className="relative mt-12 w-full max-w-md text-left"
-            style={{ transition: "all 250ms ease" }}
+            className={`relative w-full max-w-md text-left transition-all duration-500 ease-out ${
+              phase === "results" ? "mt-0" : "mt-12"
+            }`}
           >
             {phase !== "results" ? (
               <div
