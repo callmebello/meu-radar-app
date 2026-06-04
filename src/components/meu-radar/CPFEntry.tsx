@@ -78,20 +78,12 @@ export function CPFEntry() {
       <nav
         className="sticky top-0 z-30 backdrop-blur-md"
         style={{
-          backgroundColor: "rgba(13,31,78,0.95)",
-          borderBottom: "1px solid rgba(255,255,255,0.08)",
+          backgroundColor: BG,
+          borderBottom: "1px solid rgba(255,255,255,0.04)",
         }}
       >
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          {/* LEFT — full logo */}
-          <button
-            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-            aria-label="Priva — topo"
-          >
-            <img src="/PRIVA_BLACK_WEB.png" alt="Priva" className="h-7 w-auto object-contain sm:h-8" />
-          </button>
-
-          {/* CENTER — links */}
+        <div className="relative mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+          {/* LEFT — links (desktop) / spacer (mobile) */}
           <div className="hidden items-center gap-8 sm:flex">
             <a href="#como-funciona" className="text-sm text-gray-300 transition-colors duration-200 hover:text-white">
               Como funciona
@@ -103,8 +95,18 @@ export function CPFEntry() {
               Para empresas
             </a>
           </div>
+          <div className="h-6 w-6 sm:hidden" aria-hidden />
 
-          {/* RIGHT — Entrar + CTA */}
+          {/* CENTER — wordmark logo (absolutely centered) */}
+          <button
+            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+            aria-label="Priva — topo"
+            className="absolute left-1/2 flex -translate-x-1/2 items-center justify-center"
+          >
+            <img src="/PRIVA_letter_only_logo.png" alt="PRIVA" className="h-6 w-auto object-contain" />
+          </button>
+
+          {/* RIGHT — Entrar + CTA (desktop) */}
           <div className="hidden items-center sm:flex">
             <button onClick={focusCpf} className="mr-4 text-sm text-gray-300 transition-colors duration-200 hover:text-white">
               Entrar
