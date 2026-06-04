@@ -41,6 +41,7 @@ export function CPFEntry() {
   const [cpf, setCpf] = useState("");
   const [phase, setPhase] = useState<"form" | "loading" | "results">("form");
   const [focused, setFocused] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const formRef = useRef<HTMLDivElement>(null);
 
   const submit = () => {
