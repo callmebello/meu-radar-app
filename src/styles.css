@@ -42,52 +42,64 @@
 :root {
   --radius: 0.875rem;
 
-  --navy: oklch(0.28 0.08 265);
-  --teal: oklch(0.78 0.13 180);
+  /* Priva trust-first system (mono dark + brand blue accent) */
+  --priva-bg: #06060F;
+  --priva-surface: #0D0D17;
+  --priva-surface-2: #14141F;
+  --priva-border: rgba(255, 255, 255, 0.08);
+  --priva-border-strong: rgba(255, 255, 255, 0.14);
+  --priva-text: #FDFDFD;
+  --priva-text-muted: #9B9BA7;
+  --priva-blue: #3B82F6;
+  --priva-blue-hover: #4F8FF7;
+
+  --navy: #3B82F6;
+  --teal: #3B82F6;
   --danger: oklch(0.64 0.22 27);
   --warning: oklch(0.78 0.16 70);
   --success: oklch(0.72 0.18 150);
-  --surface: oklch(0.985 0.005 250);
-  --surface-dark: oklch(0.22 0.04 265);
+  --surface: var(--priva-surface);
+  --surface-dark: var(--priva-bg);
 
-  --background: oklch(0.985 0.005 250);
-  --foreground: oklch(0.18 0.04 265);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.18 0.04 265);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.18 0.04 265);
-  --primary: var(--navy);
-  --primary-foreground: oklch(0.985 0.003 247);
-  --secondary: oklch(0.96 0.01 250);
-  --secondary-foreground: var(--navy);
-  --muted: oklch(0.96 0.01 250);
-  --muted-foreground: oklch(0.5 0.03 257);
-  --accent: var(--teal);
-  --accent-foreground: var(--navy);
+  --background: var(--priva-bg);
+  --foreground: var(--priva-text);
+  --card: var(--priva-surface);
+  --card-foreground: var(--priva-text);
+  --popover: var(--priva-surface);
+  --popover-foreground: var(--priva-text);
+  --primary: var(--priva-blue);
+  --primary-foreground: #FFFFFF;
+  --secondary: var(--priva-surface-2);
+  --secondary-foreground: var(--priva-text);
+  --muted: var(--priva-surface-2);
+  --muted-foreground: var(--priva-text-muted);
+  --accent: var(--priva-blue);
+  --accent-foreground: #FFFFFF;
   --destructive: var(--danger);
-  --destructive-foreground: oklch(0.99 0 0);
-  --border: oklch(0.92 0.01 255);
-  --input: oklch(0.92 0.01 255);
-  --ring: var(--teal);
+  --destructive-foreground: #FFFFFF;
+  --border: var(--priva-border);
+  --input: var(--priva-border);
+  --ring: var(--priva-blue);
 }
 
 .dark {
-  --background: oklch(0.13 0.02 265);
-  --foreground: oklch(0.98 0.003 247);
-  --card: oklch(0.18 0.03 265);
-  --card-foreground: oklch(0.98 0.003 247);
-  --popover: oklch(0.18 0.03 265);
-  --popover-foreground: oklch(0.98 0.003 247);
-  --primary: var(--teal);
-  --primary-foreground: var(--navy);
-  --secondary: oklch(0.24 0.03 260);
-  --secondary-foreground: oklch(0.98 0.003 247);
-  --muted: oklch(0.22 0.03 260);
-  --muted-foreground: oklch(0.72 0.02 257);
-  --border: oklch(1 0 0 / 8%);
-  --input: oklch(1 0 0 / 12%);
-  --surface-dark: oklch(0.16 0.025 265);
+  --background: var(--priva-bg);
+  --foreground: var(--priva-text);
+  --card: var(--priva-surface);
+  --card-foreground: var(--priva-text);
+  --popover: var(--priva-surface);
+  --popover-foreground: var(--priva-text);
+  --primary: var(--priva-blue);
+  --primary-foreground: #FFFFFF;
+  --secondary: var(--priva-surface-2);
+  --secondary-foreground: var(--priva-text);
+  --muted: var(--priva-surface-2);
+  --muted-foreground: var(--priva-text-muted);
+  --border: var(--priva-border);
+  --input: var(--priva-border);
+  --surface-dark: var(--priva-bg);
 }
+
 
 
 @layer base {
