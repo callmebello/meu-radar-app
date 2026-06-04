@@ -1,4 +1,4 @@
-import logoAsset from "@/assets/priva-logo.png.asset.json";
+import logoUrl from "@/assets/priva-logo.png";
 
 type Props = {
   size?: number;
@@ -20,7 +20,7 @@ export function PrivaLogo({
   const content = (
     <>
       <img
-        src={logoAsset.url}
+        src={logoUrl}
         alt="Priva"
         width={size}
         height={size}
