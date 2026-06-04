@@ -5,6 +5,8 @@ type Props = {
   showWordmark?: boolean;
   className?: string;
   wordmarkClassName?: string;
+  onClick?: () => void;
+  ariaLabel?: string;
 };
 
 export function PrivaLogo({
@@ -12,9 +14,11 @@ export function PrivaLogo({
   showWordmark = true,
   className = "",
   wordmarkClassName = "text-white",
+  onClick,
+  ariaLabel = "Priva — ir para o início",
 }: Props) {
-  return (
-    <div className={`flex items-center gap-2 ${className}`}>
+  const content = (
+    <>
       <img
         src={logoAsset.url}
         alt="Priva"
@@ -28,6 +32,21 @@ export function PrivaLogo({
           priva
         </span>
       )}
-    </div>
+    </>
   );
+
+  if (onClick) {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        aria-label={ariaLabel}
+        className={`flex items-center gap-2 rounded-xl transition-transform duration-200 hover:scale-[1.04] active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 ${className}`}
+      >
+        {content}
+      </button>
+    );
+  }
+
+  return <div className={`flex items-center gap-2 ${className}`}>{content}</div>;
 }

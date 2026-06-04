@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Bell, AlertCircle, CheckCircle2 } from "lucide-react";
 import { PrivaLogo } from "@/components/meu-radar/PrivaLogo";
+import { useApp } from "@/contexts/AppContext";
 
 type Notif = { id: string; icon: "alert" | "check"; title: string; time: string; unread: boolean; level: "danger" | "success" };
 
@@ -14,7 +15,6 @@ export function AppHeader({
   title,
   subtitle,
   showBell = false,
-  showLogo = false,
 }: {
   title: string;
   subtitle?: string;
@@ -25,6 +25,7 @@ export function AppHeader({
   const [notifs, setNotifs] = useState(initial);
   const ref = useRef<HTMLDivElement>(null);
   const unreadCount = notifs.filter((n) => n.unread).length;
+  const { goToTab } = useApp();
 
   useEffect(() => {
     if (!open) return;
@@ -36,12 +37,17 @@ export function AppHeader({
   }, [open]);
 
   return (
-    <header className="sticky top-0 z-20 flex items-center justify-between border-b border-border/60 bg-background/80 px-5 pt-5 pb-4 backdrop-blur-xl">
-      <div className="flex items-center gap-2.5">
-        {showLogo && <PrivaLogo size={36} showWordmark={false} />}
-        <div>
-          <h1 className="text-lg font-bold tracking-tight text-foreground">{title}</h1>
-          {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
+    <header className="sticky top-0 z-20 flex items-center justify-between border-b border-border/60 bg-background/80 px-4 pt-4 pb-3 backdrop-blur-xl sm:px-5 sm:pt-5 sm:pb-4">
+      <div className="flex min-w-0 items-center gap-3">
+        <PrivaLogo
+          size={36}
+          showWordmark={false}
+          onClick={() => goToTab("radar")}
+          ariaLabel="Priva — ir para o início"
+        />
+        <div className="min-w-0">
+          <h1 className="truncate text-base font-bold tracking-tight text-foreground sm:text-lg">{title}</h1>
+          {subtitle && <p className="truncate text-xs text-muted-foreground">{subtitle}</p>}
         </div>
       </div>
       {showBell && (

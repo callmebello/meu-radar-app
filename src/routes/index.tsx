@@ -48,7 +48,7 @@ function Index() {
 
   return (
     <div className="min-h-screen bg-muted/40">
-      <div className="mx-auto flex min-h-screen max-w-[420px] flex-col bg-background shadow-2xl">
+      <div className="mx-auto flex min-h-screen max-w-[420px] flex-col bg-background shadow-2xl sm:max-w-[640px] lg:max-w-[820px]">
         <LiveAlertBanner />
         <main className="flex-1 pb-2">
           {tab === "radar" && <RadarTab />}
