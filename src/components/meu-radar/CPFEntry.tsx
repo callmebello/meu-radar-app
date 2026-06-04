@@ -131,29 +131,22 @@ export function CPFEntry() {
               backgroundColor: SURFACE,
             }}
           >
-            <span
-              className="h-1.5 w-1.5 rounded-full"
-              style={{ backgroundColor: BLUE }}
-            />
-            Proteção de identidade digital
+            🔒 Proteção de identidade digital
           </span>
 
           <h1
-            className="mt-8 text-[44px] font-semibold leading-[1.02] tracking-[-0.03em] sm:text-[72px]"
+            className="mt-8 text-[44px] font-extrabold leading-[1.02] tracking-[-0.03em] sm:text-[72px]"
             style={{ color: TEXT }}
           >
-            Seus dados.
-            <br />
-            <span style={{ color: TEXT_MUTED }}>Sob seu controle.</span>
+            Descubra quem tem acesso aos seus dados pessoais.
           </h1>
 
           <p
             className="mt-6 max-w-xl text-base leading-relaxed sm:text-lg"
             style={{ color: TEXT_MUTED }}
           >
-            A Priva monitora silenciosamente vazamentos, credenciais expostas
-            e ameaças à sua identidade — para que você nunca seja o último a
-            saber.
+            A Priva verifica sua exposição online e ajuda você a recuperar o
+            controle das suas informações antes que elas sejam usadas contra você.
           </p>
 
           {/* CPF form — visual gravity center, neutral surface */}
@@ -219,10 +212,9 @@ export function CPFEntry() {
                       Analisando…
                     </>
                   ) : (
-                    <>
-                      Verificar agora
-                      <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
-                    </>
+                  <>
+                      Verificar meus dados agora →
+                  </>
                   )}
                 </button>
 
@@ -321,13 +313,13 @@ export function CPFEntry() {
               style={{ color: TEXT_MUTED }}
             >
               <span className="inline-flex items-center gap-1.5">
-                <ShieldCheck className="h-3.5 w-3.5" /> LGPD
+                ✓ Sem cadastro
               </span>
               <span className="inline-flex items-center gap-1.5">
-                <Lock className="h-3.5 w-3.5" /> Criptografia end-to-end
+                ✓ Resultado em segundos
               </span>
               <span className="inline-flex items-center gap-1.5">
-                <Eye className="h-3.5 w-3.5" /> Zero rastreamento
+                ✓ Conforme a LGPD
               </span>
             </div>
           )}
