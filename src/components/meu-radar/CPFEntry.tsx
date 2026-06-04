@@ -112,7 +112,7 @@ export function CPFEntry() {
       </nav>
 
       {/* HERO */}
-      <section className="relative overflow-hidden px-5 pt-20 pb-24 sm:pt-32 sm:pb-32">
+      <section className="relative overflow-hidden px-5 pt-8 pb-24 sm:pt-12 sm:pb-32">
         {/* Subtle ambient — white, not blue */}
         <div
           aria-hidden
