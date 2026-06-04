@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Loader2, Lock, ShieldCheck, AlertTriangle, Search, BarChart3, Shield } from "lucide-react";
 import { useApp } from "@/contexts/AppContext";
+import { PrivaLogo } from "@/components/meu-radar/PrivaLogo";
 
 function formatCPF(v: string) {
   const d = v.replace(/\D/g, "").slice(0, 11);
@@ -10,23 +11,6 @@ function formatCPF(v: string) {
   if (d.length > 9)
     out = d.slice(0, 3) + "." + d.slice(3, 6) + "." + d.slice(6, 9) + "-" + d.slice(9);
   return out;
-}
-
-function PrivaLogo() {
-  return (
-    <div className="flex items-center gap-2">
-      <div
-        className="grid h-9 w-9 place-items-center rounded-lg"
-        style={{ backgroundColor: "#3B5BDB" }}
-      >
-        <span className="relative text-white font-extrabold leading-none">
-          <span className="text-lg">P</span>
-          <span className="text-[10px] absolute -right-1.5 -bottom-0.5">p</span>
-        </span>
-      </div>
-      <span className="text-white font-bold text-xl tracking-tight">priva</span>
-    </div>
-  );
 }
 
 export function CPFEntry() {

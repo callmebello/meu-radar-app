@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Bell, AlertCircle, CheckCircle2 } from "lucide-react";
-import logo from "@/assets/logo.png";
+import { PrivaLogo } from "@/components/meu-radar/PrivaLogo";
 
 type Notif = { id: string; icon: "alert" | "check"; title: string; time: string; unread: boolean; level: "danger" | "success" };
 
@@ -38,7 +38,7 @@ export function AppHeader({
   return (
     <header className="sticky top-0 z-20 flex items-center justify-between border-b border-border/60 bg-background/80 px-5 pt-5 pb-4 backdrop-blur-xl">
       <div className="flex items-center gap-2.5">
-        {showLogo && <img src={logo} alt="Meu Radar" className="h-9 w-9 object-contain" />}
+        {showLogo && <PrivaLogo size={36} showWordmark={false} />}
         <div>
           <h1 className="text-lg font-bold tracking-tight text-foreground">{title}</h1>
           {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
