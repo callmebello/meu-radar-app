@@ -203,7 +203,7 @@ export function CPFEntry() {
                   onMouseLeave={(e) =>
                     (e.currentTarget.style.backgroundColor = BLUE)
                   }
-                  className="group mt-6 flex w-full items-center justify-center gap-2 rounded-xl px-5 py-3.5 text-sm font-semibold text-white transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-40"
+                  className="group mt-6 flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold text-white transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-40 sm:rounded-full sm:py-4 sm:text-base"
                   style={{ backgroundColor: BLUE }}
                 >
                   {phase === "loading" ? (
@@ -213,7 +213,7 @@ export function CPFEntry() {
                     </>
                   ) : (
                   <>
-                      Verificar meus dados agora →
+                      Verificar gratuitamente →
                   </>
                   )}
                 </button>
