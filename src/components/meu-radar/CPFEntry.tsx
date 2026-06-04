@@ -175,7 +175,11 @@ export function CPFEntry() {
               backgroundColor: SURFACE,
             }}
           >
-            🔒 PROTEÇÃO DE IDENTIDADE DIGITAL
+            <span className="relative flex h-2 w-2 mr-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+            </span>
+            PROTEÇÃO DE IDENTIDADE DIGITAL
           </span>
 
           <h1
@@ -288,7 +292,7 @@ export function CPFEntry() {
               >
                 <div className="flex items-center gap-3">
                   <span
-                    className="grid h-10 w-10 place-items-center rounded-full"
+                    className="grid h-10 w-10 place-items-center rounded-full animate-danger-pulse"
                     style={{ backgroundColor: "rgba(248,113,113,0.10)" }}
                   >
                     <AlertTriangle className="h-5 w-5" style={{ color: DANGER }} />
@@ -371,8 +375,12 @@ export function CPFEntry() {
                 <span className="hidden sm:inline">·</span>
                 <span>✓ Conforme a LGPD</span>
               </div>
-              <p className="mt-3 text-xs text-green-400 sm:mt-4 sm:text-sm">
-                🟢 Milhares de brasileiros verificam seus dados todos os dias
+              <p className="mt-3 flex items-center justify-center text-xs text-green-400 sm:mt-4 sm:text-sm">
+                <span className="relative flex h-2 w-2 mr-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                </span>
+                Milhares de brasileiros verificam seus dados todos os dias
               </p>
             </>
           )}

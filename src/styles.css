@@ -113,3 +113,11 @@
   50% { opacity: 0.5; transform: scale(1.4); }
 }
 .pulse-dot { animation: pulse-dot 2s ease-in-out infinite; }
+
+@keyframes danger-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.18); opacity: 0.85; }
+}
+.animate-danger-pulse {
+  animation: danger-pulse 1.2s ease-in-out infinite;
+}

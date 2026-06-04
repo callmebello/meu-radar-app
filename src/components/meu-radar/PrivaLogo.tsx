@@ -1,4 +1,4 @@
-import logoUrl from "@/assets/priva-logo.png";
+const logoUrl = "/PRIVA_BLACK_WEB.png";
 
 type Props = {
   size?: number;
@@ -22,10 +22,8 @@ export function PrivaLogo({
       <img
         src={logoUrl}
         alt="Priva"
-        width={size}
-        height={size}
-        className="rounded-[22%] object-contain"
-        style={{ width: size, height: size }}
+        className="w-auto object-contain"
+        style={{ height: size }}
       />
       {showWordmark && (
         <span className={`font-bold text-xl tracking-tight ${wordmarkClassName}`}>
