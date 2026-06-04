@@ -9,6 +9,8 @@ import {
   Bell,
   KeyRound,
   Check,
+  Menu,
+  X,
 } from "lucide-react";
 import { useApp } from "@/contexts/AppContext";
 import { PrivaLogo } from "@/components/meu-radar/PrivaLogo";
