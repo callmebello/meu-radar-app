@@ -106,13 +106,54 @@ export function CPFEntry() {
           </div>
           <button
             onClick={focusCpf}
-            className="rounded-full px-4 py-2 text-xs font-medium transition-all duration-200 hover:bg-white/[0.04] sm:text-sm"
+            className="hidden rounded-full px-4 py-2 text-xs font-medium transition-all duration-200 hover:bg-white/[0.04] sm:block sm:text-sm"
             style={{ color: TEXT, border: `1px solid ${BORDER_STRONG}` }}
           >
             Verificar CPF
           </button>
+          <button
+            onClick={() => setMenuOpen(true)}
+            className="sm:hidden"
+            style={{ color: TEXT }}
+            aria-label="Abrir menu"
+          >
+            <Menu className="h-6 w-6" />
+          </button>
         </div>
       </nav>
+
+      {/* Mobile full-screen menu */}
+      {menuOpen && (
+        <div
+          className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-8 sm:hidden"
+          style={{ backgroundColor: BG }}
+        >
+          <button
+            onClick={() => setMenuOpen(false)}
+            className="absolute top-4 right-5"
+            style={{ color: TEXT }}
+            aria-label="Fechar menu"
+          >
+            <X className="h-6 w-6" />
+          </button>
+          <a
+            href="#como-funciona"
+            onClick={() => setMenuOpen(false)}
+            className="text-lg transition-colors duration-200 hover:text-white"
+            style={{ color: TEXT_MUTED }}
+          >
+            Como funciona
+          </a>
+          <a
+            href="#privacidade"
+            onClick={() => setMenuOpen(false)}
+            className="text-lg transition-colors duration-200 hover:text-white"
+            style={{ color: TEXT_MUTED }}
+          >
+            Privacidade
+          </a>
+        </div>
+      )}
 
       {/* HERO */}
       <section className="relative overflow-hidden px-5 pt-4 pb-10 sm:pt-12 sm:pb-32">
