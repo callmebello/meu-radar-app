@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Loader2, Lock, ShieldCheck, AlertTriangle, Search, BarChart3, Shield } from "lucide-react";
 import { useApp } from "@/contexts/AppContext";
+import { PrivaLogo } from "@/components/meu-radar/PrivaLogo";
 
 function formatCPF(v: string) {
   const d = v.replace(/\D/g, "").slice(0, 11);
@@ -10,23 +11,6 @@ function formatCPF(v: string) {
   if (d.length > 9)
     out = d.slice(0, 3) + "." + d.slice(3, 6) + "." + d.slice(6, 9) + "-" + d.slice(9);
   return out;
-}
-
-function PrivaLogo() {
-  return (
-    <div className="flex items-center gap-2">
-      <div
-        className="grid h-9 w-9 place-items-center rounded-lg"
-        style={{ backgroundColor: "#3B5BDB" }}
-      >
-        <span className="relative text-white font-extrabold leading-none">
-          <span className="text-lg">P</span>
-          <span className="text-[10px] absolute -right-1.5 -bottom-0.5">p</span>
-        </span>
-      </div>
-      <span className="text-white font-bold text-xl tracking-tight">priva</span>
-    </div>
-  );
 }
 
 export function CPFEntry() {
@@ -62,17 +46,17 @@ export function CPFEntry() {
   };
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: "#0A1530" }}>
+    <div className="min-h-screen" style={{ background: "radial-gradient(1200px 600px at 50% -10%, #0A1020 0%, #050B1A 60%, #050B1A 100%)" }}>
       {/* Navbar */}
-      <nav className="sticky top-0 z-30 backdrop-blur" style={{ backgroundColor: "rgba(10,21,48,0.85)" }}>
+      <nav className="sticky top-0 z-30 backdrop-blur-xl" style={{ backgroundColor: "rgba(5,11,26,0.75)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
         <div className="mx-auto flex max-w-5xl items-center justify-between px-5 py-3">
           <PrivaLogo />
           <button
             onClick={scrollToForm}
-            className="rounded-lg px-3 py-2 text-xs font-bold text-white transition-all duration-200"
-            style={{ backgroundColor: "#3B5BDB" }}
-            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#4C6EF5")}
-            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#3B5BDB")}
+            className="rounded-lg px-4 py-2 text-xs font-bold text-white transition-all duration-200"
+            style={{ backgroundColor: "#3B82F6", boxShadow: "0 0 0 1px rgba(59,130,246,0.4), 0 8px 24px -8px rgba(59,130,246,0.6)" }}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#2563EB")}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#3B82F6")}
           >
             Verificar meu CPF →
           </button>
@@ -147,11 +131,11 @@ export function CPFEntry() {
                 onClick={submit}
                 disabled={cpf.length < 14 || phase === "loading"}
                 className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-bold text-white transition-all duration-200 disabled:opacity-40"
-                style={{ backgroundColor: "#3B5BDB" }}
+                style={{ backgroundColor: "#3B82F6", boxShadow: "0 0 0 1px rgba(59,130,246,0.45), 0 12px 32px -10px rgba(59,130,246,0.7)" }}
                 onMouseEnter={(e) => {
-                  if (!e.currentTarget.disabled) e.currentTarget.style.backgroundColor = "#4C6EF5";
+                  if (!e.currentTarget.disabled) e.currentTarget.style.backgroundColor = "#2563EB";
                 }}
-                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#3B5BDB")}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#3B82F6")}
               >
                 {phase === "loading" ? (
                   <>
@@ -222,13 +206,14 @@ export function CPFEntry() {
                 <button
                   onClick={enterFree}
                   className="w-full rounded-xl py-3.5 text-sm font-bold text-white transition-all duration-200 hover:opacity-90"
-                  style={{ backgroundColor: "#3B5BDB" }}
+                  style={{ backgroundColor: "#3B82F6", boxShadow: "0 0 0 1px rgba(59,130,246,0.4), 0 10px 28px -10px rgba(59,130,246,0.6)" }}
                 >
                   Ver detalhes grátis
                 </button>
                 <button
                   onClick={enterPremium}
-                  className="w-full rounded-xl bg-[var(--color-teal)] py-3.5 text-sm font-bold text-[var(--color-navy)] transition-all duration-200 hover:opacity-90"
+                  className="w-full rounded-xl py-3.5 text-sm font-bold text-white transition-all duration-200 hover:opacity-90"
+                  style={{ backgroundColor: "#7C3AED", boxShadow: "0 0 0 1px rgba(124,58,237,0.45), 0 12px 32px -10px rgba(124,58,237,0.65)" }}
                 >
                   Ativar proteção completa · R$19/mês
                 </button>
