@@ -46,17 +46,17 @@ export function CPFEntry() {
   };
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: "#0A1530" }}>
+    <div className="min-h-screen" style={{ background: "radial-gradient(1200px 600px at 50% -10%, #0A1020 0%, #050B1A 60%, #050B1A 100%)" }}>
       {/* Navbar */}
-      <nav className="sticky top-0 z-30 backdrop-blur" style={{ backgroundColor: "rgba(10,21,48,0.85)" }}>
+      <nav className="sticky top-0 z-30 backdrop-blur-xl" style={{ backgroundColor: "rgba(5,11,26,0.75)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
         <div className="mx-auto flex max-w-5xl items-center justify-between px-5 py-3">
           <PrivaLogo />
           <button
             onClick={scrollToForm}
-            className="rounded-lg px-3 py-2 text-xs font-bold text-white transition-all duration-200"
-            style={{ backgroundColor: "#3B5BDB" }}
-            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#4C6EF5")}
-            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#3B5BDB")}
+            className="rounded-lg px-4 py-2 text-xs font-bold text-white transition-all duration-200"
+            style={{ backgroundColor: "#3B82F6", boxShadow: "0 0 0 1px rgba(59,130,246,0.4), 0 8px 24px -8px rgba(59,130,246,0.6)" }}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#2563EB")}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#3B82F6")}
           >
             Verificar meu CPF →
           </button>
