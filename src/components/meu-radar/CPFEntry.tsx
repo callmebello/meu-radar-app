@@ -184,7 +184,7 @@ export function CPFEntry() {
       )}
 
       {/* HERO */}
-      <section className="relative flex min-h-[100svh] flex-col justify-center overflow-hidden px-5 pt-6 pb-8 sm:py-6">
+      <section className="relative flex min-h-[calc(100svh-3rem)] flex-col justify-start overflow-hidden px-5 pt-4 pb-4 sm:py-6">
         {/* Subtle ambient — white, not blue */}
         <div
           aria-hidden
@@ -194,7 +194,7 @@ export function CPFEntry() {
               "radial-gradient(800px 400px at 50% 0%, rgba(255,255,255,0.04), transparent 70%)",
           }}
         />
-        <div className="relative mx-auto flex w-full max-w-5xl flex-col items-center gap-3 sm:gap-4">
+        <div className="relative mx-auto flex w-full max-w-5xl flex-1 flex-col items-center gap-3 sm:gap-4">
           {/* Badge — centered at top */}
           {phase !== "results" && (
             <span
@@ -219,7 +219,7 @@ export function CPFEntry() {
             }`}
           >
           <h1
-            className="max-w-[20ch] text-2xl font-extrabold leading-[1.05] tracking-[-0.03em] sm:max-w-none sm:text-4xl md:text-5xl"
+            className="max-w-[20ch] text-xl font-extrabold leading-[1.08] tracking-[-0.03em] sm:max-w-none sm:text-4xl md:text-5xl"
             style={{ color: TEXT }}
           >
             Descubra onde seus dados pessoais estão expostos.
@@ -244,12 +244,12 @@ export function CPFEntry() {
           <div
             ref={formRef}
             className={`relative w-full max-w-md text-left transition-all duration-500 ease-out ${
-              phase === "results" ? "mt-0" : "mt-6 sm:mt-8"
+              phase === "results" ? "mt-0" : "mt-4 sm:mt-8"
             }`}
           >
             {phase !== "results" ? (
               <div
-                className="rounded-2xl p-6 sm:p-7"
+                className="rounded-2xl p-5 sm:p-7"
                 style={{
                   backgroundColor: SURFACE,
                   border: `1px solid ${focused ? BLUE : BORDER}`,
@@ -275,7 +275,7 @@ export function CPFEntry() {
                   placeholder="000.000.000-00"
                   inputMode="numeric"
                   disabled={phase === "loading"}
-                  className="mt-3 w-full bg-transparent py-2 text-2xl font-medium tracking-wide outline-none transition-all duration-200 placeholder:text-white/20 sm:text-3xl"
+                  className="mt-2 w-full bg-transparent py-1.5 text-xl font-medium tracking-wide outline-none transition-all duration-200 placeholder:text-white/20 sm:text-3xl"
                   style={{ color: TEXT }}
                 />
                 <div
@@ -295,7 +295,7 @@ export function CPFEntry() {
                   onMouseLeave={(e) =>
                     (e.currentTarget.style.backgroundColor = BLUE)
                   }
-                  className="group mt-6 flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold text-white transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-40 sm:rounded-full sm:py-4 sm:text-base"
+                  className="group mt-4 flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold text-white transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-40 sm:mt-6 sm:rounded-full sm:py-4 sm:text-base"
                   style={{ backgroundColor: BLUE }}
                 >
                   {phase === "loading" ? (
@@ -319,7 +319,7 @@ export function CPFEntry() {
                 </button>
 
                 <p
-                  className="mt-4 flex items-center justify-center gap-1.5 text-[11px]"
+                  className="mt-3 flex items-center justify-center gap-1.5 text-[11px]"
                   style={{ color: TEXT_MUTED }}
                 >
                   <Lock className="h-3 w-3" />
@@ -406,27 +406,27 @@ export function CPFEntry() {
             )}
           </div>
 
-          {/* Quiet trust row */}
+          {/* Quiet trust row — single line on all sizes, pinned to bottom */}
           {phase !== "results" && (
-            <>
+            <div className="mt-auto w-full pt-4">
               <div
-                className="mt-6 flex flex-col items-center justify-center gap-1 text-xs sm:mt-10 sm:flex-row sm:gap-4 sm:text-sm"
+                className="flex flex-row flex-nowrap items-center justify-center gap-x-2 text-[10px] sm:gap-x-4 sm:text-sm"
                 style={{ color: TEXT_MUTED }}
               >
-                <span>✓ Sem cadastro</span>
-                <span className="hidden sm:inline">·</span>
-                <span>✓ Resultado em segundos</span>
-                <span className="hidden sm:inline">·</span>
-                <span>✓ Conforme a LGPD</span>
+                <span className="whitespace-nowrap">✓ Sem cadastro</span>
+                <span>·</span>
+                <span className="whitespace-nowrap">✓ Resultado em segundos</span>
+                <span>·</span>
+                <span className="whitespace-nowrap">✓ Conforme a LGPD</span>
               </div>
-              <p className="mt-3 flex items-center justify-center text-xs text-green-400 sm:mt-4 sm:text-sm">
-                <span className="relative flex h-2 w-2 mr-2">
+              <p className="mt-2 flex items-center justify-center text-center text-[11px] text-green-400 sm:mt-4 sm:text-sm">
+                <span className="relative flex h-2 w-2 mr-2 shrink-0">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
                 </span>
                 Milhares de brasileiros verificam seus dados todos os dias
               </p>
-            </>
+            </div>
           )}
         </div>
       </section>
