@@ -184,7 +184,7 @@ export function CPFEntry() {
       )}
 
       {/* HERO */}
-      <section className="relative flex min-h-[100svh] flex-col justify-center overflow-hidden px-5 py-6">
+      <section className="relative flex min-h-[100svh] flex-col justify-center overflow-hidden px-5 pt-6 pb-8 sm:py-6">
         {/* Subtle ambient — white, not blue */}
         <div
           aria-hidden
@@ -194,33 +194,32 @@ export function CPFEntry() {
               "radial-gradient(800px 400px at 50% 0%, rgba(255,255,255,0.04), transparent 70%)",
           }}
         />
-        <div className="relative mx-auto flex max-w-5xl flex-col items-center gap-2 sm:gap-4">
+        <div className="relative mx-auto flex w-full max-w-5xl flex-col items-center gap-3 sm:gap-4">
+          {/* Badge — centered at top */}
+          {phase !== "results" && (
+            <span
+              className="inline-flex items-center gap-2 self-center rounded-full px-3 py-1.5 text-[10px] font-medium uppercase tracking-[0.12em] sm:text-[11px]"
+              style={{ color: TEXT_MUTED, border: `1px solid ${BORDER}`, backgroundColor: SURFACE }}
+            >
+              <span className="relative flex h-2 w-2 mr-1.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#6366F1] opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#4F46E5]"></span>
+              </span>
+              PROTEÇÃO DE IDENTIDADE DIGITAL
+            </span>
+          )}
+
           {/* Top row: headline (left) + Live Map (right) — always side by side */}
-          <div className="flex w-full flex-row items-center justify-between gap-4 sm:gap-8">
+          <div className="flex w-full flex-row items-center justify-between gap-3 sm:gap-8">
           <div
-            className={`flex w-[58%] flex-col items-start gap-2 text-left transition-all duration-500 ease-out sm:gap-4 ${
+            className={`flex w-1/2 flex-col items-start gap-2 text-left transition-all duration-500 ease-out sm:gap-4 md:w-[58%] ${
               phase === "results"
                 ? "pointer-events-none max-h-0 -translate-y-3 overflow-hidden opacity-0"
                 : "max-h-[600px] translate-y-0 opacity-100"
             }`}
           >
-          <span
-            className="inline-flex items-center gap-2 rounded-full px-2 py-1 text-xs font-medium uppercase tracking-[0.12em] sm:px-3 sm:py-1.5 sm:text-[11px]"
-            style={{
-              color: TEXT_MUTED,
-              border: `1px solid ${BORDER}`,
-              backgroundColor: SURFACE,
-            }}
-          >
-            <span className="relative flex h-2 w-2 mr-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#6366F1] opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-[#4F46E5]"></span>
-            </span>
-            PROTEÇÃO DE IDENTIDADE DIGITAL
-          </span>
-
           <h1
-            className="mt-2 max-w-[20ch] text-2xl font-extrabold leading-[1.05] tracking-[-0.03em] sm:mt-6 sm:max-w-none sm:text-4xl md:text-5xl"
+            className="max-w-[20ch] text-2xl font-extrabold leading-[1.05] tracking-[-0.03em] sm:max-w-none sm:text-4xl md:text-5xl"
             style={{ color: TEXT }}
           >
             Descubra onde seus dados pessoais estão expostos.
@@ -235,7 +234,7 @@ export function CPFEntry() {
           </div>
 
           {phase !== "results" && (
-            <div className="w-[38%] shrink-0">
+            <div className="w-[46%] shrink-0 md:w-[40%]">
               <LiveMap />
             </div>
           )}

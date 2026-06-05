@@ -68,26 +68,27 @@ export function LiveMap() {
           />
         ))}
 
-        {/* Central radar scan over Brasília — rotating sweep + blinking core */}
-        <div className="absolute" style={{ left: "53%", top: "50%" }}>
+        {/* Central radar scan over Brasília — sized as % so it scales with the
+            map and never spills outside its area. */}
+        <div
+          className="absolute -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full"
+          style={{ left: "52%", top: "50%", width: "50%", aspectRatio: "1 / 1" }}
+        >
           {/* concentric rings */}
-          {[58, 96, 134].map((d) => (
+          {["100%", "66%", "36%"].map((s, i) => (
             <span
-              key={d}
-              className="absolute rounded-full"
-              style={{ width: d, height: d, marginLeft: -d / 2, marginTop: -d / 2, border: "1px solid rgba(139,92,246,0.25)" }}
+              key={i}
+              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full"
+              style={{ width: s, height: s, border: "1px solid rgba(139,92,246,0.28)" }}
             />
           ))}
           {/* rotating sweep wedge (360° loop) */}
           <span
-            className="radar-sweep absolute rounded-full"
-            style={{
-              width: 134, height: 134, marginLeft: -67, marginTop: -67,
-              background: "conic-gradient(from 0deg, rgba(139,92,246,0.55), rgba(139,92,246,0) 75deg)",
-            }}
+            className="radar-sweep absolute inset-0 rounded-full"
+            style={{ background: "conic-gradient(from 0deg, rgba(139,92,246,0.55), rgba(139,92,246,0) 75deg)" }}
           />
           {/* blinking core */}
-          <span className="relative flex h-3 w-3 -translate-x-1/2 -translate-y-1/2">
+          <span className="absolute left-1/2 top-1/2 flex h-3 w-3 -translate-x-1/2 -translate-y-1/2">
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-80" style={{ backgroundColor: "#C4B5FD" }} />
             <span className="relative inline-flex h-3 w-3 rounded-full" style={{ backgroundColor: "#fff", boxShadow: "0 0 16px #8B5CF6" }} />
           </span>
@@ -99,13 +100,13 @@ export function LiveMap() {
         ))}
       </div>
 
-      {/* Live indicator */}
-      <div className="mt-3 flex items-center justify-center gap-2">
-        <span className="relative flex h-2 w-2">
+      {/* Live indicator — centered under the map, single line */}
+      <div className="mt-3 flex items-center justify-center gap-2 whitespace-nowrap">
+        <span className="relative flex h-2 w-2 shrink-0">
           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
           <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500" />
         </span>
-        <span className="text-xs font-medium text-gray-300">Live Map · Atualizando agora</span>
+        <span className="text-[11px] font-medium text-gray-300">Live Map · Atualizando agora</span>
       </div>
     </div>
   );
