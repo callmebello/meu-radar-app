@@ -195,10 +195,10 @@ export function CPFEntry() {
           }}
         />
         <div className="relative mx-auto flex max-w-5xl flex-col items-center gap-2 sm:gap-4">
-          {/* Top row: headline (left) + Live Map (right) */}
-          <div className="flex w-full flex-col items-center gap-8 md:flex-row md:items-center md:justify-between md:gap-10">
+          {/* Top row: headline (left) + Live Map (right) — always side by side */}
+          <div className="flex w-full flex-row items-center justify-between gap-4 sm:gap-8">
           <div
-            className={`flex flex-col items-start gap-2 text-left transition-all duration-500 ease-out sm:gap-4 md:w-[58%] ${
+            className={`flex w-[58%] flex-col items-start gap-2 text-left transition-all duration-500 ease-out sm:gap-4 ${
               phase === "results"
                 ? "pointer-events-none max-h-0 -translate-y-3 overflow-hidden opacity-0"
                 : "max-h-[600px] translate-y-0 opacity-100"
@@ -230,13 +230,12 @@ export function CPFEntry() {
             className="mt-1 max-w-xl text-sm leading-relaxed sm:mt-4 sm:text-base md:text-lg"
             style={{ color: TEXT_MUTED }}
           >
-            Telefone, endereço, CPF e outras informações podem estar disponíveis online sem que você saiba.
-            <span className="mt-2 block">A Priva verifica sua exposição digital e ajuda você a recuperar o controle da sua privacidade.</span>
+            A Priva verifica sua exposição digital e ajuda você a recuperar o controle da sua privacidade.
           </p>
           </div>
 
           {phase !== "results" && (
-            <div className="mx-auto w-full max-w-[300px] md:mx-0 md:w-[38%] md:max-w-none md:shrink-0">
+            <div className="w-[38%] shrink-0">
               <LiveMap />
             </div>
           )}
