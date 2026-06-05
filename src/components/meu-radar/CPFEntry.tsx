@@ -3,13 +3,19 @@ import {
   Loader2,
   Lock,
   ShieldCheck,
+  ShieldAlert,
   AlertTriangle,
   ArrowRight,
+  ChevronRight,
+  CreditCard,
+  Mail,
+  Phone,
   Eye,
   Bell,
   KeyRound,
   Check,
   Menu,
+  X,
 } from "lucide-react";
 import { useApp } from "@/contexts/AppContext";
 import { PrivaLogo } from "@/components/meu-radar/PrivaLogo";
@@ -23,6 +29,30 @@ function formatCPF(v: string) {
   if (d.length > 9)
     out = d.slice(0, 3) + "." + d.slice(3, 6) + "." + d.slice(6, 9) + "-" + d.slice(9);
   return out;
+}
+
+// Deterministic mock result from the CPF digits (numbers reflect real BR exposure rates).
+function generateResult(cpf: string) {
+  const digits = cpf.replace(/\D/g, "");
+  const seed = digits.split("").reduce((a, b) => a + (parseInt(b) || 0), 0);
+  const breachOptions = [2, 3, 3, 3, 4, 4, 4, 5, 5, 6, 7];
+  const phoneOptions = [1, 1, 1, 2, 2, 2, 3, 3, 4];
+  const passOptions = [0, 0, 1, 1, 1, 2, 2, 3];
+  const breaches = breachOptions[seed % breachOptions.length];
+  const phones = phoneOptions[(seed * 3) % phoneOptions.length];
+  const passwords = passOptions[(seed * 7) % passOptions.length];
+  const score = 120 + (seed % 260);
+  return { breaches, phones, passwords, score, seed };
+}
+
+function maskedFields(cpf: string, seed: number) {
+  const digits = cpf.replace(/\D/g, "");
+  const cpfLast2 = (digits.slice(-2) || "00").padStart(2, "0");
+  const domains = ["gmail.com", "hotmail.com", "outlook.com", "yahoo.com.br", "icloud.com"];
+  const domain = domains[seed % domains.length];
+  const first = String.fromCharCode(97 + (seed % 26));
+  const phoneLast4 = String((seed * 13) % 10000).padStart(4, "0");
+  return { cpfLast2, domain, first, phoneLast4 };
 }
 
 // Trust-first palette — mono dark + brand blue as the only attention color
@@ -42,11 +72,43 @@ export function CPFEntry() {
   const [phase, setPhase] = useState<"form" | "loading" | "results">("form");
   const [focused, setFocused] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [showEmail, setShowEmail] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
+  const [email, setEmail] = useState("");
+  const [socialCount, setSocialCount] = useState(() => 87 + Math.floor(Math.random() * 48));
   const formRef = useRef<HTMLDivElement>(null);
 
   const submit = () => {
+    try {
+      sessionStorage.setItem("priva_cpf", cpf);
+    } catch {
+      /* ignore */
+    }
     setPhase("loading");
     setTimeout(() => setPhase("results"), 2200);
+  };
+
+  // social-proof counter ticks up slowly
+  useEffect(() => {
+    let t: ReturnType<typeof setTimeout>;
+    const tick = () => {
+      t = setTimeout(() => {
+        setSocialCount((c) => c + 1);
+        tick();
+      }, 9000 + Math.random() * 7000);
+    };
+    tick();
+    return () => clearTimeout(t);
+  }, []);
+
+  const sendMagicLink = () => {
+    try {
+      sessionStorage.setItem("priva_email", email);
+    } catch {
+      /* ignore */
+    }
+    // mock — real Supabase signInWithOtp(email) plugs in here later
+    setEmailSent(true);
   };
 
   const enterFree = () => setHasChecked(true);
@@ -337,147 +399,209 @@ export function CPFEntry() {
               </div>
 
             ) : (
-              <div
-                className="relative overflow-hidden rounded-2xl p-6 animate-fade-in sm:p-7"
-                style={{
-                  backgroundColor: SURFACE,
-                  border: `1px solid ${BORDER_STRONG}`,
-                  boxShadow:
-                    "0 0 0 4px rgba(248,113,113,0.06), 0 30px 80px -30px rgba(248,113,113,0.35)",
-                }}
-              >
-                {/* ambient glow */}
-                <div
-                  aria-hidden
-                  className="pointer-events-none absolute inset-x-0 -top-24 h-48"
-                  style={{
-                    background:
-                      "radial-gradient(420px 200px at 30% 50%, rgba(248,113,113,0.25), transparent 70%)",
-                  }}
-                />
-
-                <div className="relative flex items-center gap-3">
-                  <span
-                    className="grid h-12 w-12 place-items-center rounded-full animate-danger-pulse"
-                    style={{
-                      backgroundColor: "rgba(248,113,113,0.14)",
-                      boxShadow: "0 0 0 6px rgba(248,113,113,0.08)",
-                    }}
+              (() => {
+                const result = generateResult(cpf);
+                const mask = maskedFields(cpf, result.seed);
+                const rows = [
+                  { Icon: CreditCard, label: "CPF", value: `•••.•••.•••-${mask.cpfLast2}`, badge: "ALTO", color: "#F87171", bg: "rgba(239,68,68,0.2)" },
+                  { Icon: Mail, label: "E-mail", value: `${mask.first}•••••@${mask.domain}`, badge: "MÉDIO", color: "#FBBF24", bg: "rgba(245,158,11,0.2)" },
+                  { Icon: Phone, label: "Telefone", value: `(11) 9••••-${mask.phoneLast4}`, badge: "BAIXO", color: "#34D399", bg: "rgba(34,197,94,0.2)" },
+                ];
+                const dangers = [
+                  { e: "🎭", l: "Golpes" },
+                  { e: "📋", l: "Fraudes" },
+                  { e: "👤", l: "Roubo de identidade" },
+                ];
+                const avatars = [
+                  { i: "JM", c: "#6366F1" },
+                  { i: "AS", c: "#22C55E" },
+                  { i: "RC", c: "#F59E0B" },
+                ];
+                return (
+                  <div
+                    className="rounded-2xl p-5 animate-fade-in sm:p-6"
+                    style={{ backgroundColor: "#0A0A0F", border: `1px solid ${BORDER}` }}
                   >
-                    <AlertTriangle className="h-6 w-6" style={{ color: DANGER }} />
-                  </span>
-                  <div>
-                    <p
-                      className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-[0.14em] text-green-400"
-                    >
-                      <span className="relative flex h-1.5 w-1.5">
-                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
-                        <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-green-500" />
-                      </span>
-                      Análise concluída
-                    </p>
-                    <h2 className="mt-0.5 text-2xl font-bold tracking-tight" style={{ color: TEXT }}>
-                      <span style={{ color: DANGER }}>3 exposições</span> encontradas
-                    </h2>
-                  </div>
-                </div>
-
-                {/* quick stats */}
-                <div className="relative mt-5 grid grid-cols-3 gap-2">
-                  {[
-                    { label: "Alto", count: 1, color: "#F87171", bg: "rgba(248,113,113,0.10)" },
-                    { label: "Médio", count: 1, color: "#FBBF24", bg: "rgba(251,191,36,0.10)" },
-                    { label: "Baixo", count: 1, color: "#34D399", bg: "rgba(52,211,153,0.10)" },
-                  ].map((s) => (
-                    <div
-                      key={s.label}
-                      className="rounded-xl px-2 py-3 text-center"
-                      style={{ backgroundColor: s.bg, border: `1px solid ${s.color}33` }}
-                    >
-                      <div className="text-xl font-extrabold" style={{ color: s.color }}>
-                        {s.count}
-                      </div>
-                      <div
-                        className="mt-0.5 text-[10px] font-semibold uppercase tracking-wider"
-                        style={{ color: s.color }}
+                    {/* top badge */}
+                    <div className="flex justify-center">
+                      <span
+                        className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold tracking-wider"
+                        style={{ backgroundColor: "rgba(99,102,241,0.15)", border: "1px solid #4F46E5", color: "#818CF8" }}
                       >
-                        {s.label}
+                        <Check className="h-3.5 w-3.5" /> ANÁLISE CONCLUÍDA
+                      </span>
+                    </div>
+
+                    {/* hero: icon + text */}
+                    <div className="mt-5 flex items-start gap-4">
+                      <span
+                        className="grid h-16 w-16 shrink-0 place-items-center rounded-full animate-danger-pulse"
+                        style={{ backgroundColor: "rgba(239,68,68,0.15)" }}
+                      >
+                        <AlertTriangle className="h-8 w-8 text-red-500" />
+                      </span>
+                      <div>
+                        <h2 className="text-2xl font-extrabold leading-tight text-white">
+                          Seus dados foram encontrados em{" "}
+                          <span className="text-red-500">{result.breaches} vazamentos</span>
+                        </h2>
+                        <p className="mt-2 text-sm text-gray-400">
+                          Encontramos informações associadas ao seu CPF, e-mail e telefone.
+                        </p>
                       </div>
                     </div>
-                  ))}
-                </div>
 
-                <ul
-                  className="relative mt-5 space-y-px overflow-hidden rounded-xl"
-                  style={{ border: `1px solid ${BORDER}` }}
-                >
-                  {[
-                    { name: "HackBR — 2024", risk: "Alto", color: "#F87171", bg: "rgba(248,113,113,0.10)" },
-                    { name: "VarejoBR — 2024", risk: "Médio", color: "#FBBF24", bg: "rgba(251,191,36,0.10)" },
-                    { name: "StreamBR — 2023", risk: "Baixo", color: "#34D399", bg: "rgba(52,211,153,0.10)" },
-                  ].map((b) => (
-                    <li
-                      key={b.name}
-                      className="flex items-center justify-between px-4 py-3"
-                      style={{ backgroundColor: BG }}
-                    >
-                      <div className="flex items-center gap-3">
-                        <Lock className="h-3.5 w-3.5" style={{ color: TEXT_MUTED }} />
-                        <span
-                          className="select-none text-sm font-medium blur-[5px]"
-                          style={{ color: TEXT }}
+                    {/* data items */}
+                    <div className="mt-5 space-y-2">
+                      {rows.map((r) => (
+                        <div
+                          key={r.label}
+                          className="flex items-center gap-3 rounded-xl px-4 py-3"
+                          style={{ backgroundColor: "#12121A", border: "1px solid rgba(255,255,255,0.05)" }}
                         >
-                          {b.name}
-                        </span>
+                          <span className="grid place-items-center rounded-lg p-2" style={{ backgroundColor: "rgba(99,102,241,0.2)" }}>
+                            <r.Icon className="h-4 w-4" style={{ color: "#A5B4FC" }} />
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-medium text-white">{r.label}</p>
+                            <p className="text-xs text-gray-400">{r.value}</p>
+                          </div>
+                          <span className="rounded px-2 py-0.5 text-xs font-bold" style={{ color: r.color, backgroundColor: r.bg }}>
+                            {r.badge}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* risk warning box */}
+                    <div className="mt-4 rounded-xl p-4" style={{ backgroundColor: "#12121A", border: "1px solid rgba(239,68,68,0.2)" }}>
+                      <div className="flex items-center gap-2">
+                        <ShieldAlert className="h-5 w-5 shrink-0 text-red-500" />
+                        <p className="text-sm font-medium text-white">Seus dados podem estar sendo usados para:</p>
                       </div>
-                      <span
-                        className="rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider"
-                        style={{ color: b.color, backgroundColor: b.bg, border: `1px solid ${b.color}33` }}
-                      >
-                        {b.risk}
+                      <div className="mt-3 flex gap-2">
+                        {dangers.map((d) => (
+                          <div key={d.l} className="flex flex-1 flex-col items-center gap-2 text-center">
+                            <span className="grid place-items-center rounded-xl p-3 text-2xl" style={{ backgroundColor: "rgba(239,68,68,0.1)" }}>
+                              {d.e}
+                            </span>
+                            <span className="text-xs text-gray-300">{d.l}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* unlock row */}
+                    <div className="mt-4 flex items-center gap-3 rounded-xl px-4 py-3" style={{ backgroundColor: "#12121A", border: `1px solid ${BORDER}` }}>
+                      <Lock className="h-5 w-5 shrink-0" style={{ color: "#A5B4FC" }} />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium text-white">Desbloqueie seu relatório completo</p>
+                        <p className="text-xs text-gray-500">Saiba onde seus dados vazaram e como se proteger.</p>
+                      </div>
+                      <ChevronRight className="h-5 w-5 shrink-0 text-gray-600" />
+                    </div>
+
+                    {/* primary CTA */}
+                    <button
+                      onClick={() => { setEmailSent(false); setShowEmail(true); }}
+                      className="mt-4 w-full rounded-2xl py-4 text-base font-extrabold text-white transition-all duration-200 active:scale-[0.99]"
+                      style={{ background: "linear-gradient(135deg, #4F46E5 0%, #6366F1 100%)", boxShadow: "0 0 30px rgba(79,70,229,0.4)" }}
+                    >
+                      🔒 VER ONDE MEUS DADOS VAZARAM →
+                    </button>
+
+                    {/* security note */}
+                    <p className="mt-3 text-center text-xs text-gray-500">
+                      🛡️ Seguro, rápido e em conformidade com a LGPD
+                    </p>
+
+                    {/* social proof */}
+                    <div className="mt-4 flex items-center justify-center gap-3">
+                      <div className="flex -space-x-2">
+                        {avatars.map((a) => (
+                          <span
+                            key={a.i}
+                            className="grid h-7 w-7 place-items-center rounded-full text-[10px] font-bold text-white"
+                            style={{ backgroundColor: a.c, border: "2px solid #0A0A0F" }}
+                          >
+                            {a.i}
+                          </span>
+                        ))}
+                      </div>
+                      <span className="text-sm font-medium" style={{ color: "#818CF8" }}>
+                        +{socialCount} pessoas consultaram vazamentos hoje
                       </span>
-                    </li>
-                  ))}
-                </ul>
-
-                <div className="relative mt-6 space-y-2.5">
-                  <button
-                    onClick={enterFree}
-                    onMouseEnter={(e) => (e.currentTarget.style.filter = "brightness(1.1)")}
-                    onMouseLeave={(e) => (e.currentTarget.style.filter = "brightness(1)")}
-                    className="group relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-xl py-3.5 text-sm font-bold text-white shadow-lg transition-all duration-200"
-                    style={{
-                      background: `linear-gradient(135deg, ${BLUE} 0%, #7C3AED 100%)`,
-                      boxShadow: "0 12px 30px -10px rgba(79,70,229,0.6)",
-                    }}
-                  >
-                    Ver detalhes completos
-                    <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
-                  </button>
-                  <button
-                    onClick={enterPremium}
-                    className="flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-medium transition-all duration-200 hover:bg-white/[0.04]"
-                    style={{ color: TEXT, border: `1px solid ${BORDER_STRONG}` }}
-                  >
-                    <ShieldCheck className="h-4 w-4" style={{ color: BLUE }} />
-                    Ativar proteção contínua
-                  </button>
-                </div>
-
-                <p
-                  className="relative mt-4 flex items-center justify-center gap-1.5 text-[11px]"
-                  style={{ color: TEXT_MUTED }}
-                >
-                  <Lock className="h-3 w-3" />
-                  Seus dados permanecem criptografados e privados.
-                </p>
-              </div>
+                    </div>
+                  </div>
+                );
+              })()
             )}
 
           </div>
 
         </div>
       </section>
+
+      {/* EMAIL CAPTURE — magic-link flow (mock) */}
+      {showEmail && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm animate-fade-in"
+          onClick={() => setShowEmail(false)}
+        >
+          <div
+            className="w-full max-w-sm rounded-2xl p-6 animate-scale-in"
+            style={{ backgroundColor: SURFACE, border: `1px solid ${BORDER_STRONG}` }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setShowEmail(false)}
+              aria-label="Fechar"
+              className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full hover:bg-white/[0.06]"
+              style={{ color: TEXT_MUTED }}
+            >
+              <X className="h-4 w-4" />
+            </button>
+
+            {!emailSent ? (
+              <>
+                <h3 className="text-lg font-bold text-white">Para onde enviamos seu relatório?</h3>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="seu@email.com"
+                  className="mt-4 w-full rounded-xl bg-transparent px-4 py-3 text-base outline-none placeholder:text-white/25"
+                  style={{ border: `1px solid ${BORDER_STRONG}`, color: TEXT }}
+                />
+                <button
+                  onClick={sendMagicLink}
+                  disabled={!email.includes("@")}
+                  className="mt-3 w-full rounded-xl py-3.5 text-sm font-bold text-white transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-40"
+                  style={{ background: "linear-gradient(135deg, #4F46E5 0%, #6366F1 100%)" }}
+                >
+                  Enviar acesso grátis →
+                </button>
+                <p className="mt-3 text-center text-xs text-gray-500">🔒 Sem spam. Cancele quando quiser.</p>
+              </>
+            ) : (
+              <div className="text-center">
+                <div className="mx-auto grid h-14 w-14 place-items-center rounded-full" style={{ backgroundColor: "rgba(34,197,94,0.15)" }}>
+                  <Check className="h-7 w-7 text-green-400" />
+                </div>
+                <h3 className="mt-3 text-lg font-bold text-white">Link enviado para {email}</h3>
+                <p className="mt-1 text-sm text-gray-400">Verifique sua caixa de entrada</p>
+                <button
+                  onClick={enterFree}
+                  className="mt-5 w-full rounded-xl py-3.5 text-sm font-bold text-white"
+                  style={{ background: "linear-gradient(135deg, #4F46E5 0%, #6366F1 100%)" }}
+                >
+                  Entrar no app
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* HOW IT WORKS — neutral surfaces, blue only in numerals */}
       <section
