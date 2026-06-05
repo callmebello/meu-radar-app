@@ -24,7 +24,7 @@ function PulseDot({ x, y, color, size = 12, delay = 0 }: { x: number; y: number;
   return (
     <span className="absolute" style={{ left: `${x}%`, top: `${y}%` }}>
       <span className="relative flex -translate-x-1/2 -translate-y-1/2" style={{ width: size, height: size }}>
-        <span className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-80" style={{ backgroundColor: color }} />
+        <span className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-80" style={{ backgroundColor: color, animationDelay: `${delay}ms` }} />
         <span className="relative inline-flex rounded-full" style={{ width: size, height: size, backgroundColor: color, boxShadow: `0 0 8px ${color}` }} />
       </span>
     </span>
