@@ -38,7 +38,7 @@ function Tooltip({ color, title, place }: { color: string; title: string; place:
 export function LiveMap() {
   return (
     <div className="w-full">
-      <div className="relative mx-auto w-full" style={{ maxWidth: 460, aspectRatio: "1 / 1" }}>
+      <div className="relative mx-auto w-full" style={{ maxWidth: 340, aspectRatio: "1 / 1" }}>
         {/* Brazil silhouette */}
         <svg viewBox="0 0 1024 1024" fill="none" className="absolute inset-0 h-full w-full">
           <defs>

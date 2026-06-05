@@ -198,7 +198,7 @@ export function CPFEntry() {
           {/* Top row: headline (left) + Live Map (right) */}
           <div className="flex w-full flex-col items-center gap-8 md:flex-row md:items-center md:justify-between md:gap-10">
           <div
-            className={`flex flex-col items-start gap-2 text-left transition-all duration-500 ease-out sm:gap-4 md:w-[54%] ${
+            className={`flex flex-col items-start gap-2 text-left transition-all duration-500 ease-out sm:gap-4 md:w-[58%] ${
               phase === "results"
                 ? "pointer-events-none max-h-0 -translate-y-3 overflow-hidden opacity-0"
                 : "max-h-[600px] translate-y-0 opacity-100"
@@ -236,7 +236,7 @@ export function CPFEntry() {
           </div>
 
           {phase !== "results" && (
-            <div className="mx-auto w-full max-w-sm md:mx-0 md:w-[44%] md:max-w-none md:shrink-0">
+            <div className="mx-auto w-full max-w-[300px] md:mx-0 md:w-[38%] md:max-w-none md:shrink-0">
               <LiveMap />
             </div>
           )}
