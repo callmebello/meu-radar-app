@@ -72,11 +72,11 @@ export function LiveMap() {
           </g>
         </svg>
 
-        {/* Decorative network dots */}
+        {/* Decorative network dots — hidden on mobile */}
         {NODES.map((n, i) => (
           <span
             key={i}
-            className="absolute rounded-full"
+            className="absolute hidden rounded-full sm:block"
             style={{
               left: `${n.x}%`, top: `${n.y}%`,
               width: n.bright ? 6 : 4, height: n.bright ? 6 : 4,
@@ -88,12 +88,10 @@ export function LiveMap() {
           />
         ))}
 
-        {/* Blinking exposure points */}
+        {/* Blinking exposure points (new) */}
         {POINTS.map((p, i) => (
-          <PulseDot key={i} x={p.x} y={p.y} color={p.color} />
+          <PulseDot key={i} x={p.x} y={p.y} color={p.color} delay={i * 400} />
         ))}
-        {/* Blinking white core (Brasília) */}
-        <PulseDot x={51.8} y={50.8} color="#FFFFFF" size={14} />
       </div>
 
       {/* Live indicator */}
@@ -102,7 +100,7 @@ export function LiveMap() {
           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
           <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500" />
         </span>
-        <span className="text-[11px] font-medium text-gray-300">Live Map</span>
+        <span className="text-[11px] font-medium text-gray-300">Atualizado agora</span>
       </div>
     </div>
   );
