@@ -20,7 +20,7 @@ const POINTS: { x: number; y: number; color: string }[] = [
   { x: 62, y: 70, color: "#EF4444" },
 ];
 
-function PulseDot({ x, y, color, size = 12 }: { x: number; y: number; color: string; size?: number }) {
+function PulseDot({ x, y, color, size = 12, delay = 0 }: { x: number; y: number; color: string; size?: number; delay?: number }) {
   return (
     <span className="absolute" style={{ left: `${x}%`, top: `${y}%` }}>
       <span className="relative flex -translate-x-1/2 -translate-y-1/2" style={{ width: size, height: size }}>
