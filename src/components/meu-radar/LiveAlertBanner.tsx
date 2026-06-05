@@ -21,7 +21,7 @@ export function LiveAlertBanner() {
     <div
       className="sticky top-0 z-30 flex items-center gap-3 bg-[var(--color-warning)] px-4 py-2.5 text-[#1a1a1a] shadow-md animate-fade-in cursor-pointer"
       onClick={() => {
-        goToTab("darkweb");
+        goToTab("seguranca");
         setVisible(false);
       }}
     >
