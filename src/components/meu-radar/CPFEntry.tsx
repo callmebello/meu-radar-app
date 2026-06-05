@@ -184,7 +184,7 @@ export function CPFEntry() {
       )}
 
       {/* HERO */}
-      <section className="relative overflow-hidden px-5 pt-4 pb-10 sm:pt-12 sm:pb-32">
+      <section className="relative flex min-h-[100svh] flex-col justify-center overflow-hidden px-5 py-6">
         {/* Subtle ambient — white, not blue */}
         <div
           aria-hidden
@@ -246,7 +246,7 @@ export function CPFEntry() {
           <div
             ref={formRef}
             className={`relative w-full max-w-md text-left transition-all duration-500 ease-out ${
-              phase === "results" ? "mt-0" : "mt-12"
+              phase === "results" ? "mt-0" : "mt-6 sm:mt-8"
             }`}
           >
             {phase !== "results" ? (
