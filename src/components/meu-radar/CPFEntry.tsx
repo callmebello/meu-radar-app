@@ -324,9 +324,18 @@ export function CPFEntry() {
                   style={{ color: TEXT_MUTED }}
                 >
                   <Lock className="h-3 w-3" />
-                  Criptografado. Sem cadastro. Não armazenamos seu CPF.
+                  Criptografado. Sem cadastro. Conforme a LGPD.
+                </p>
+
+                <p className="mt-3 flex items-center justify-center text-center text-[11px] text-green-400">
+                  <span className="relative mr-2 flex h-2 w-2 shrink-0">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75"></span>
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500"></span>
+                  </span>
+                  Milhares de brasileiros verificam seus dados todos os dias
                 </p>
               </div>
+
             ) : (
               <div
                 className="rounded-2xl p-7 animate-fade-in"
