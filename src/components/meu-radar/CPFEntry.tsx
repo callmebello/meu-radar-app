@@ -3,7 +3,6 @@ import {
   Loader2,
   Lock,
   ShieldCheck,
-  ShieldAlert,
   AlertTriangle,
   ArrowRight,
   ChevronRight,
@@ -407,11 +406,6 @@ export function CPFEntry() {
                   { Icon: Mail, label: "E-mail", value: `${mask.first}•••••@${mask.domain}`, badge: "MÉDIO", color: "#FBBF24", bg: "rgba(245,158,11,0.2)" },
                   { Icon: Phone, label: "Telefone", value: `(11) 9••••-${mask.phoneLast4}`, badge: "BAIXO", color: "#34D399", bg: "rgba(34,197,94,0.2)" },
                 ];
-                const dangers = [
-                  { e: "🎭", l: "Golpes" },
-                  { e: "📋", l: "Fraudes" },
-                  { e: "👤", l: "Roubo de identidade" },
-                ];
                 const avatars = [
                   { i: "JM", c: "#6366F1" },
                   { i: "AS", c: "#22C55E" },
@@ -433,7 +427,7 @@ export function CPFEntry() {
                     </div>
 
                     {/* hero: icon + text */}
-                    <div className="mt-5 flex items-start gap-4">
+                    <div className="mt-4 flex items-start gap-4">
                       <span
                         className="grid h-16 w-16 shrink-0 place-items-center rounded-full animate-danger-pulse"
                         style={{ backgroundColor: "rgba(239,68,68,0.15)" }}
@@ -452,7 +446,7 @@ export function CPFEntry() {
                     </div>
 
                     {/* data items */}
-                    <div className="mt-5 space-y-2">
+                    <div className="mt-4 space-y-2">
                       {rows.map((r) => (
                         <div
                           key={r.label}
@@ -473,26 +467,8 @@ export function CPFEntry() {
                       ))}
                     </div>
 
-                    {/* risk warning box */}
-                    <div className="mt-4 rounded-xl p-4" style={{ backgroundColor: "#12121A", border: "1px solid rgba(239,68,68,0.2)" }}>
-                      <div className="flex items-center gap-2">
-                        <ShieldAlert className="h-5 w-5 shrink-0 text-red-500" />
-                        <p className="text-sm font-medium text-white">Seus dados podem estar sendo usados para:</p>
-                      </div>
-                      <div className="mt-3 flex gap-2">
-                        {dangers.map((d) => (
-                          <div key={d.l} className="flex flex-1 flex-col items-center gap-2 text-center">
-                            <span className="grid place-items-center rounded-xl p-3 text-2xl" style={{ backgroundColor: "rgba(239,68,68,0.1)" }}>
-                              {d.e}
-                            </span>
-                            <span className="text-xs text-gray-300">{d.l}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
                     {/* unlock row */}
-                    <div className="mt-4 flex items-center gap-3 rounded-xl px-4 py-3" style={{ backgroundColor: "#12121A", border: `1px solid ${BORDER}` }}>
+                    <div className="mt-3 flex items-center gap-3 rounded-xl px-4 py-3" style={{ backgroundColor: "#12121A", border: `1px solid ${BORDER}` }}>
                       <Lock className="h-5 w-5 shrink-0" style={{ color: "#A5B4FC" }} />
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-medium text-white">Desbloqueie seu relatório completo</p>
@@ -504,7 +480,7 @@ export function CPFEntry() {
                     {/* primary CTA */}
                     <button
                       onClick={() => { setEmailSent(false); setShowEmail(true); }}
-                      className="mt-4 w-full rounded-2xl py-4 text-base font-extrabold text-white transition-all duration-200 active:scale-[0.99]"
+                      className="mt-3 w-full rounded-2xl py-4 text-base font-extrabold text-white transition-all duration-200 active:scale-[0.99]"
                       style={{ background: "linear-gradient(135deg, #4F46E5 0%, #6366F1 100%)", boxShadow: "0 0 30px rgba(79,70,229,0.4)" }}
                     >
                       🔒 VER ONDE MEUS DADOS VAZARAM →
