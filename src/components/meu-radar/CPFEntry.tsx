@@ -212,7 +212,7 @@ export function CPFEntry() {
           {/* Top row: headline (left) + Live Map (right) — always side by side */}
           <div className="flex w-full flex-row items-center justify-between gap-3 sm:gap-8">
           <div
-            className={`flex w-1/2 flex-col items-start gap-2 text-left transition-all duration-500 ease-out sm:gap-4 md:w-[58%] ${
+            className={`flex w-[45%] flex-col items-start gap-2 text-left transition-all duration-500 ease-out sm:gap-4 md:w-[58%] ${
               phase === "results"
                 ? "pointer-events-none max-h-0 -translate-y-3 overflow-hidden opacity-0"
                 : "max-h-[600px] translate-y-0 opacity-100"
@@ -234,11 +234,12 @@ export function CPFEntry() {
           </div>
 
           {phase !== "results" && (
-            <div className="w-[46%] shrink-0 md:w-[40%]">
+            <div className="w-[55%] shrink-0 md:w-[40%]">
               <LiveMap />
             </div>
           )}
           </div>
+
 
           {/* CPF form — visual gravity center, neutral surface */}
           <div
