@@ -34,7 +34,7 @@ function PulseDot({ x, y, color, size = 12, delay = 0 }: { x: number; y: number;
 export function LiveMap() {
   return (
     <div className="w-full">
-      <div className="relative mx-auto w-full" style={{ maxWidth: 340, aspectRatio: "1 / 1" }}>
+      <div className="relative mx-auto w-full max-w-[306px] sm:max-w-[340px]" style={{ aspectRatio: "1 / 1" }}>
         <svg viewBox="0 0 1024 1024" fill="none" className="absolute inset-0 h-full w-full">
           <defs>
             <radialGradient id="brfill" cx="52%" cy="42%" r="62%">
