@@ -246,7 +246,7 @@ export function CPFEntry() {
       )}
 
       {/* HERO */}
-      <section className="relative flex min-h-[calc(100svh-3rem)] flex-col justify-start overflow-hidden px-5 pt-4 pb-4 sm:py-6">
+      <section className="relative flex flex-col overflow-hidden px-5 pt-4 pb-10 sm:py-10">
         {/* Subtle ambient — white, not blue */}
         <div
           aria-hidden
@@ -256,7 +256,7 @@ export function CPFEntry() {
               "radial-gradient(800px 400px at 50% 0%, rgba(255,255,255,0.04), transparent 70%)",
           }}
         />
-        <div className="relative mx-auto flex w-full max-w-5xl flex-1 flex-col items-center gap-3 sm:gap-4">
+        <div className="relative mx-auto flex w-full max-w-5xl flex-col items-center gap-3 sm:gap-4">
           {/* Badge — centered at top */}
           {phase !== "results" && (
             <span
