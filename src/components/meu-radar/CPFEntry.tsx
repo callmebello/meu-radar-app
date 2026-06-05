@@ -416,28 +416,6 @@ export function CPFEntry() {
             )}
           </div>
 
-          {/* Quiet trust row — single line on all sizes, pinned to bottom */}
-          {phase !== "results" && (
-            <div className="mt-auto w-full pt-4">
-              <div
-                className="flex flex-row flex-nowrap items-center justify-center gap-x-2 text-[10px] sm:gap-x-4 sm:text-sm"
-                style={{ color: TEXT_MUTED }}
-              >
-                <span className="whitespace-nowrap">✓ Sem cadastro</span>
-                <span>·</span>
-                <span className="whitespace-nowrap">✓ Resultado em segundos</span>
-                <span>·</span>
-                <span className="whitespace-nowrap">✓ Conforme a LGPD</span>
-              </div>
-              <p className="mt-2 flex items-center justify-center text-center text-[11px] text-green-400 sm:mt-4 sm:text-sm">
-                <span className="relative flex h-2 w-2 mr-2 shrink-0">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-                </span>
-                Milhares de brasileiros verificam seus dados todos os dias
-              </p>
-            </div>
-          )}
         </div>
       </section>
 
