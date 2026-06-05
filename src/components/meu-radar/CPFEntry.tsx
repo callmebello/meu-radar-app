@@ -338,41 +338,87 @@ export function CPFEntry() {
 
             ) : (
               <div
-                className="rounded-2xl p-7 animate-fade-in"
+                className="relative overflow-hidden rounded-2xl p-6 animate-fade-in sm:p-7"
                 style={{
                   backgroundColor: SURFACE,
-                  border: `1px solid ${BORDER}`,
+                  border: `1px solid ${BORDER_STRONG}`,
+                  boxShadow:
+                    "0 0 0 4px rgba(248,113,113,0.06), 0 30px 80px -30px rgba(248,113,113,0.35)",
                 }}
               >
-                <div className="flex items-center gap-3">
+                {/* ambient glow */}
+                <div
+                  aria-hidden
+                  className="pointer-events-none absolute inset-x-0 -top-24 h-48"
+                  style={{
+                    background:
+                      "radial-gradient(420px 200px at 30% 50%, rgba(248,113,113,0.25), transparent 70%)",
+                  }}
+                />
+
+                <div className="relative flex items-center gap-3">
                   <span
-                    className="grid h-10 w-10 place-items-center rounded-full animate-danger-pulse"
-                    style={{ backgroundColor: "rgba(248,113,113,0.10)" }}
+                    className="grid h-12 w-12 place-items-center rounded-full animate-danger-pulse"
+                    style={{
+                      backgroundColor: "rgba(248,113,113,0.14)",
+                      boxShadow: "0 0 0 6px rgba(248,113,113,0.08)",
+                    }}
                   >
-                    <AlertTriangle className="h-5 w-5" style={{ color: DANGER }} />
+                    <AlertTriangle className="h-6 w-6" style={{ color: DANGER }} />
                   </span>
                   <div>
                     <p
-                      className="text-[11px] font-medium uppercase tracking-[0.14em]"
-                      style={{ color: TEXT_MUTED }}
+                      className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-[0.14em] text-green-400"
                     >
+                      <span className="relative flex h-1.5 w-1.5">
+                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
+                        <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-green-500" />
+                      </span>
                       Análise concluída
                     </p>
-                    <h2 className="mt-0.5 text-xl font-semibold" style={{ color: TEXT }}>
-                      3 exposições encontradas
+                    <h2 className="mt-0.5 text-2xl font-bold tracking-tight" style={{ color: TEXT }}>
+                      <span style={{ color: DANGER }}>3 exposições</span> encontradas
                     </h2>
                   </div>
                 </div>
 
-                <ul className="mt-6 space-y-px overflow-hidden rounded-xl" style={{ border: `1px solid ${BORDER}` }}>
+                {/* quick stats */}
+                <div className="relative mt-5 grid grid-cols-3 gap-2">
                   {[
-                    { name: "HackBR — 2024", risk: "Alto" },
-                    { name: "VarejoBR — 2024", risk: "Médio" },
-                    { name: "StreamBR — 2023", risk: "Baixo" },
+                    { label: "Alto", count: 1, color: "#F87171", bg: "rgba(248,113,113,0.10)" },
+                    { label: "Médio", count: 1, color: "#FBBF24", bg: "rgba(251,191,36,0.10)" },
+                    { label: "Baixo", count: 1, color: "#34D399", bg: "rgba(52,211,153,0.10)" },
+                  ].map((s) => (
+                    <div
+                      key={s.label}
+                      className="rounded-xl px-2 py-3 text-center"
+                      style={{ backgroundColor: s.bg, border: `1px solid ${s.color}33` }}
+                    >
+                      <div className="text-xl font-extrabold" style={{ color: s.color }}>
+                        {s.count}
+                      </div>
+                      <div
+                        className="mt-0.5 text-[10px] font-semibold uppercase tracking-wider"
+                        style={{ color: s.color }}
+                      >
+                        {s.label}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <ul
+                  className="relative mt-5 space-y-px overflow-hidden rounded-xl"
+                  style={{ border: `1px solid ${BORDER}` }}
+                >
+                  {[
+                    { name: "HackBR — 2024", risk: "Alto", color: "#F87171", bg: "rgba(248,113,113,0.10)" },
+                    { name: "VarejoBR — 2024", risk: "Médio", color: "#FBBF24", bg: "rgba(251,191,36,0.10)" },
+                    { name: "StreamBR — 2023", risk: "Baixo", color: "#34D399", bg: "rgba(52,211,153,0.10)" },
                   ].map((b) => (
                     <li
                       key={b.name}
-                      className="flex items-center justify-between px-4 py-3.5"
+                      className="flex items-center justify-between px-4 py-3"
                       style={{ backgroundColor: BG }}
                     >
                       <div className="flex items-center gap-3">
@@ -385,8 +431,8 @@ export function CPFEntry() {
                         </span>
                       </div>
                       <span
-                        className="text-[10px] font-medium uppercase tracking-wider"
-                        style={{ color: TEXT_MUTED }}
+                        className="rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider"
+                        style={{ color: b.color, backgroundColor: b.bg, border: `1px solid ${b.color}33` }}
                       >
                         {b.risk}
                       </span>
@@ -394,26 +440,40 @@ export function CPFEntry() {
                   ))}
                 </ul>
 
-                <div className="mt-6 space-y-2.5">
+                <div className="relative mt-6 space-y-2.5">
                   <button
                     onClick={enterFree}
-                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = BLUE_HOVER)}
-                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = BLUE)}
-                    className="w-full rounded-xl py-3.5 text-sm font-semibold text-white transition-all duration-200"
-                    style={{ backgroundColor: BLUE }}
+                    onMouseEnter={(e) => (e.currentTarget.style.filter = "brightness(1.1)")}
+                    onMouseLeave={(e) => (e.currentTarget.style.filter = "brightness(1)")}
+                    className="group relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-xl py-3.5 text-sm font-bold text-white shadow-lg transition-all duration-200"
+                    style={{
+                      background: `linear-gradient(135deg, ${BLUE} 0%, #7C3AED 100%)`,
+                      boxShadow: "0 12px 30px -10px rgba(79,70,229,0.6)",
+                    }}
                   >
                     Ver detalhes completos
+                    <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
                   </button>
                   <button
                     onClick={enterPremium}
-                    className="w-full rounded-xl py-3.5 text-sm font-medium transition-all duration-200 hover:bg-white/[0.04]"
+                    className="flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-medium transition-all duration-200 hover:bg-white/[0.04]"
                     style={{ color: TEXT, border: `1px solid ${BORDER_STRONG}` }}
                   >
+                    <ShieldCheck className="h-4 w-4" style={{ color: BLUE }} />
                     Ativar proteção contínua
                   </button>
                 </div>
+
+                <p
+                  className="relative mt-4 flex items-center justify-center gap-1.5 text-[11px]"
+                  style={{ color: TEXT_MUTED }}
+                >
+                  <Lock className="h-3 w-3" />
+                  Seus dados permanecem criptografados e privados.
+                </p>
               </div>
             )}
+
           </div>
 
         </div>
