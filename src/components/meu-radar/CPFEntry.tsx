@@ -5,7 +5,6 @@ import {
   ShieldCheck,
   AlertTriangle,
   ArrowRight,
-  ChevronRight,
   CreditCard,
   Mail,
   Phone,
@@ -427,12 +426,12 @@ export function CPFEntry() {
                     </div>
 
                     {/* hero: icon + text */}
-                    <div className="mt-4 flex items-start gap-4">
+                    <div className="mt-4 flex items-center gap-3">
                       <span
-                        className="grid h-16 w-16 shrink-0 place-items-center rounded-full animate-danger-pulse"
+                        className="grid h-12 w-12 shrink-0 place-items-center rounded-full animate-danger-pulse"
                         style={{ backgroundColor: "rgba(239,68,68,0.15)" }}
                       >
-                        <AlertTriangle className="h-8 w-8 text-red-500" />
+                        <AlertTriangle className="h-6 w-6 text-red-500" />
                       </span>
                       <div>
                         <h2 className="text-2xl font-extrabold leading-tight text-white">
@@ -467,14 +466,22 @@ export function CPFEntry() {
                       ))}
                     </div>
 
-                    {/* unlock row */}
-                    <div className="mt-3 flex items-center gap-3 rounded-xl px-4 py-3" style={{ backgroundColor: "#12121A", border: `1px solid ${BORDER}` }}>
-                      <Lock className="h-5 w-5 shrink-0" style={{ color: "#A5B4FC" }} />
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium text-white">Desbloqueie seu relatório completo</p>
-                        <p className="text-xs text-gray-500">Saiba onde seus dados vazaram e como se proteger.</p>
+                    {/* social proof — moved above the CTA */}
+                    <div className="mt-3 flex items-center justify-center gap-3">
+                      <div className="flex -space-x-2">
+                        {avatars.map((a) => (
+                          <span
+                            key={a.i}
+                            className="grid h-7 w-7 place-items-center rounded-full text-[10px] font-bold text-white"
+                            style={{ backgroundColor: a.c, border: "2px solid #0A0A0F" }}
+                          >
+                            {a.i}
+                          </span>
+                        ))}
                       </div>
-                      <ChevronRight className="h-5 w-5 shrink-0 text-gray-600" />
+                      <span className="text-xs font-medium" style={{ color: "#818CF8" }}>
+                        +{socialCount} pessoas consultaram vazamentos hoje
+                      </span>
                     </div>
 
                     {/* primary CTA */}
@@ -487,27 +494,9 @@ export function CPFEntry() {
                     </button>
 
                     {/* security note */}
-                    <p className="mt-3 text-center text-xs text-gray-500">
+                    <p className="mt-2 text-center text-xs text-gray-500">
                       🛡️ Seguro, rápido e em conformidade com a LGPD
                     </p>
-
-                    {/* social proof */}
-                    <div className="mt-4 flex items-center justify-center gap-3">
-                      <div className="flex -space-x-2">
-                        {avatars.map((a) => (
-                          <span
-                            key={a.i}
-                            className="grid h-7 w-7 place-items-center rounded-full text-[10px] font-bold text-white"
-                            style={{ backgroundColor: a.c, border: "2px solid #0A0A0F" }}
-                          >
-                            {a.i}
-                          </span>
-                        ))}
-                      </div>
-                      <span className="text-sm font-medium" style={{ color: "#818CF8" }}>
-                        +{socialCount} pessoas consultaram vazamentos hoje
-                      </span>
-                    </div>
                   </div>
                 );
               })()
