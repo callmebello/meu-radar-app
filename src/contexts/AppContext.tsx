@@ -11,6 +11,8 @@ type Ctx = {
   closePaywall: () => void;
   goToTab: (t: TabId) => void;
   setGoToTab: (fn: (t: TabId) => void) => void;
+  openScan: () => void;
+  setOpenScan: (fn: () => void) => void;
 };
 
 const AppCtx = createContext<Ctx | null>(null);
@@ -42,6 +44,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
   const goToTab = useCallback((t: TabId) => goToTabFn.fn(t), [goToTabFn]);
 
+  const [openScanFn, setOpenScanFn] = useState<{ fn: () => void }>({ fn: () => {} });
+  const setOpenScan = useCallback((fn: () => void) => setOpenScanFn({ fn }), []);
+  const openScan = useCallback(() => openScanFn.fn(), [openScanFn]);
+
   return (
     <AppCtx.Provider
       value={{
@@ -54,6 +60,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         closePaywall,
         goToTab,
         setGoToTab,
+        openScan,
+        setOpenScan,
       }}
     >
       {children}

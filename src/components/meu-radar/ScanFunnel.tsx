@@ -154,8 +154,8 @@ export function ScanFunnel({ open, onClose }: { open: boolean; onClose: () => vo
           onClick={(e) => e.stopPropagation()}
         >
           <div className="mx-auto mb-6 h-1 w-12 rounded bg-gray-700" />
-          <h2 className="text-xl font-bold text-white">Iniciando análise de segurança</h2>
-          <p className="mt-2 mb-6 text-sm text-gray-400">Digite seu CPF para verificar sua exposição</p>
+          <h2 className="text-xl font-bold text-white">Scan Gratuito</h2>
+          <p className="mt-2 mb-6 text-sm text-gray-400">Digite seu CPF para verificar sua exposição digital</p>
           <input
             value={cpf}
             onChange={(e) => setCpf(formatCPF(e.target.value))}
@@ -345,7 +345,7 @@ export function ScanFunnel({ open, onClose }: { open: boolean; onClose: () => vo
             className="mt-3 w-full rounded-2xl py-5 text-base font-extrabold text-white transition-all active:scale-95 disabled:opacity-50"
             style={{ background: "linear-gradient(135deg,#4F46E5,#6366F1)", boxShadow: "0 0 30px rgba(79,70,229,0.5)" }}
           >
-            {redirecting ? "Redirecionando para pagamento seguro..." : "🔒 ATIVAR PROTEÇÃO — R$9,90/MÊS →"}
+            {redirecting ? "Redirecionando para pagamento seguro..." : "🔒 DESBLOQUEAR RELATÓRIO — R$9,90/MÊS →"}
           </button>
 
           <p className="mt-2 text-center text-xs text-indigo-300">+{activated} pessoas ativaram hoje</p>

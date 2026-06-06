@@ -35,7 +35,7 @@ function ScanButton({ onScan, scanning }: { onScan: () => void; scanning: boolea
   };
 
   return (
-    <li className="flex flex-1 justify-center">
+    <li className="flex flex-1 flex-col items-center justify-center">
       <button
         onClick={handleClick}
         aria-label="Escanear identidade"
@@ -48,6 +48,7 @@ function ScanButton({ onScan, scanning }: { onScan: () => void; scanning: boolea
       >
         <ScanIcon fast={scanning} />
       </button>
+      <span className="-mt-0.5 text-[10px] font-medium text-white">Scan Grátis</span>
     </li>
   );
 }
