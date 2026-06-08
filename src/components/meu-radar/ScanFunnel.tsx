@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { AlertTriangle, CreditCard, Mail, Phone, ShieldAlert, Lock, Check, X, ChevronDown } from "lucide-react";
+import { AlertTriangle, CreditCard, Mail, Phone, Lock, Check, X, ChevronDown } from "lucide-react";
 import { formatCPF, isValidCPF, generateResult, maskedFields, MERCADO_PAGO_URL } from "@/lib/funnel";
 import { useApp } from "@/contexts/AppContext";
 
@@ -138,11 +138,6 @@ export function ScanFunnel({ open, onClose }: { open: boolean; onClose: () => vo
     { Icon: Mail, label: "E-mail", value: `${mask.first}•••••@${mask.domain}`, badge: "MÉDIO", color: "#FBBF24", bg: "rgba(245,158,11,0.2)" },
     { Icon: Phone, label: "Telefone", value: `(11) 9••••-${mask.phoneLast4}`, badge: "BAIXO", color: "#34D399", bg: "rgba(34,197,94,0.2)" },
   ];
-  const dangers = [
-    { e: "🎭", l: "Golpes" },
-    { e: "📋", l: "Fraudes" },
-    { e: "👤", l: "Roubo de identidade" },
-  ];
 
   /* ---------- PHASE: CPF bottom sheet ---------- */
   if (phase === "cpf") {
@@ -248,7 +243,7 @@ export function ScanFunnel({ open, onClose }: { open: boolean; onClose: () => vo
 
       <div className="mx-auto max-w-md px-5 pb-10">
         {/* badge */}
-        <div className="mt-6 flex justify-center">
+        <div className="mt-2 flex justify-center">
           <span
             className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold tracking-wider"
             style={{ backgroundColor: "rgba(99,102,241,0.15)", border: "1px solid #4F46E5", color: "#A5B4FC" }}
@@ -258,69 +253,51 @@ export function ScanFunnel({ open, onClose }: { open: boolean; onClose: () => vo
         </div>
 
         {/* hero */}
-        <div className="mt-5 flex items-center gap-4">
-          <span className="grid h-16 w-16 shrink-0 place-items-center rounded-full border animate-danger-pulse" style={{ backgroundColor: "rgba(239,68,68,0.1)", borderColor: "rgba(239,68,68,0.2)" }}>
-            <AlertTriangle className="h-8 w-8 text-red-500" />
+        <div className="mt-3 flex items-center gap-3">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full border animate-danger-pulse" style={{ backgroundColor: "rgba(239,68,68,0.1)", borderColor: "rgba(239,68,68,0.2)" }}>
+            <AlertTriangle className="h-5 w-5 text-red-500" />
           </span>
           <div>
-            <h1 className="text-xl font-extrabold leading-tight text-white">
+            <h1 className="text-lg font-extrabold leading-tight text-white">
               Seus dados foram encontrados em{" "}
-              <span className="text-2xl text-red-500">{count} vazamentos</span>
+              <span className="text-xl text-red-500">{count} vazamentos</span>
             </h1>
           </div>
         </div>
-        <p className="mt-2 text-sm text-gray-400">Encontramos informações associadas ao seu CPF, e-mail e telefone.</p>
+        <p className="mt-1.5 text-xs text-gray-400">Encontramos informações associadas ao seu CPF, e-mail e telefone.</p>
 
         {/* data rows */}
-        <div className="mt-4 space-y-2">
+        <div className="mt-2.5 space-y-1.5">
           {rows.map((r) => (
-            <div key={r.label} className="flex items-center gap-3 rounded-xl px-4 py-3" style={{ backgroundColor: "#12121A", border: "1px solid rgba(255,255,255,0.05)" }}>
-              <span className="grid place-items-center rounded-lg p-2" style={{ backgroundColor: "rgba(99,102,241,0.1)" }}>
+            <div key={r.label} className="flex items-center gap-2.5 rounded-xl px-3 py-1.5" style={{ backgroundColor: "#12121A", border: "1px solid rgba(255,255,255,0.05)" }}>
+              <span className="grid place-items-center rounded-lg p-1" style={{ backgroundColor: "rgba(99,102,241,0.1)" }}>
                 <r.Icon className="h-4 w-4" style={{ color: "#A5B4FC" }} />
               </span>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium text-white">{r.label}</p>
-                <p className="text-xs text-gray-400">{r.value}</p>
-              </div>
+              <p className="text-sm font-medium text-white">{r.label}</p>
+              <p className="min-w-0 flex-1 truncate text-xs text-gray-400">{r.value}</p>
               <span className="rounded-full px-2 py-0.5 text-xs font-bold" style={{ color: r.color, backgroundColor: r.bg }}>{r.badge}</span>
             </div>
           ))}
         </div>
 
-        {/* risk box */}
-        <div className="mt-4 rounded-xl p-4" style={{ backgroundColor: "#12121A", border: "1px solid rgba(239,68,68,0.15)" }}>
-          <div className="flex items-center gap-2">
-            <ShieldAlert className="h-5 w-5 shrink-0 text-red-400" />
-            <p className="text-sm font-medium text-white">Seus dados podem estar sendo usados para:</p>
-          </div>
-          <div className="mt-3 flex gap-2">
-            {dangers.map((d) => (
-              <div key={d.l} className="flex flex-1 flex-col items-center gap-2 text-center">
-                <span className="grid place-items-center rounded-xl p-3 text-2xl" style={{ backgroundColor: "rgba(239,68,68,0.1)" }}>{d.e}</span>
-                <span className="text-xs text-gray-300">{d.l}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
         {/* divider */}
-        <div className="mt-6 flex items-center gap-3">
+        <div className="mt-3 flex items-center gap-3">
           <div className="h-px flex-1" style={{ backgroundColor: "rgba(255,255,255,0.08)" }} />
           <span className="text-xs text-gray-500">Proteja-se agora</span>
           <div className="h-px flex-1" style={{ backgroundColor: "rgba(255,255,255,0.08)" }} />
         </div>
 
         {/* Fundador plan card */}
-        <div className="relative mt-5 rounded-2xl border-2 p-5" style={{ background: "linear-gradient(135deg,#1a1a4e,#1e1b4b)", borderColor: "#6366F1" }}>
+        <div className="relative mt-3 rounded-2xl border-2 p-3.5" style={{ background: "linear-gradient(135deg,#1a1a4e,#1e1b4b)", borderColor: "#6366F1" }}>
           <span className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full px-3 py-1 text-[10px] font-bold text-white" style={{ backgroundColor: "#4F46E5" }}>
             🔥 OFERTA DE LANÇAMENTO · {vagas} VAGAS
           </span>
           <p className="mt-1 text-sm text-indigo-300">Fundador</p>
           <div className="flex items-end gap-1">
-            <span className="text-4xl font-extrabold text-white">R$9,90</span>
-            <span className="mb-1 text-sm text-gray-400">/mês · preço travado</span>
+            <span className="text-2xl font-extrabold text-white">R$9,90</span>
+            <span className="mb-0.5 text-sm text-gray-400">/mês · preço travado</span>
           </div>
-          <ul className="mt-3 space-y-1.5">
+          <ul className="mt-2 space-y-1">
             {["CPF + e-mail + telefone protegidos", "Alertas em tempo real", "Dark web monitorada", "Relatório completo desbloqueado"].map((f) => (
               <li key={f} className="flex items-center gap-2 text-sm text-gray-200">
                 <Check className="h-4 w-4 shrink-0 text-green-400" /> {f}
@@ -329,20 +306,20 @@ export function ScanFunnel({ open, onClose }: { open: boolean; onClose: () => vo
           </ul>
 
           {/* email */}
-          <p className="mt-4 mb-2 text-sm text-gray-400">Para onde enviamos seu relatório?</p>
+          <p className="mt-2.5 mb-1.5 text-sm text-gray-400">Para onde enviamos seu relatório?</p>
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="seu@email.com"
-            className="w-full rounded-xl px-4 py-3 text-white outline-none placeholder:text-white/25"
+            className="w-full rounded-xl px-4 py-2.5 text-white outline-none placeholder:text-white/25"
             style={{ backgroundColor: "#12121A", border: "1px solid rgba(99,102,241,0.3)" }}
           />
 
           <button
             onClick={checkout}
             disabled={!email.includes("@") || redirecting}
-            className="mt-3 w-full rounded-2xl py-5 text-base font-extrabold text-white transition-all active:scale-95 disabled:opacity-50"
+            className="mt-2.5 w-full rounded-2xl py-4 text-base font-extrabold text-white transition-all active:scale-95 disabled:opacity-50"
             style={{ background: "linear-gradient(135deg,#4F46E5,#6366F1)", boxShadow: "0 0 30px rgba(79,70,229,0.5)" }}
           >
             {redirecting ? "Redirecionando para pagamento seguro..." : "🔒 DESBLOQUEAR RELATÓRIO — R$9,90/MÊS →"}
