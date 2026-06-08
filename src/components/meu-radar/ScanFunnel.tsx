@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { AlertTriangle, CreditCard, Mail, Phone, Lock, Check, X, ChevronDown, Flame } from "lucide-react";
-import { formatCPF, isValidCPF, generateResult, maskedFields, MERCADO_PAGO_URL } from "@/lib/funnel";
+import { AlertTriangle, CreditCard, Mail, Phone, MapPin, Lock, Check, X, ChevronDown, Flame, ShieldCheck, Trash2 } from "lucide-react";
+import { formatCPF, isValidCPF, generateResult, maskedFields, MP_FUNDADOR_URL, MP_DEFESA_URL } from "@/lib/funnel";
 import { useApp } from "@/contexts/AppContext";
 
 const SCAN_STEPS = [
@@ -117,46 +117,51 @@ export function ScanFunnel({ open, onClose, onScanStart }: { open: boolean; onCl
     onScanStart?.(); // inline scan on the dashboard; result opens after
   };
 
-  const checkout = () => {
+  const checkout = (url: string) => {
+    if (!email.includes("@")) return;
     try {
       sessionStorage.setItem("priva_email", email);
     } catch {
       /* ignore */
     }
     // mock: create anonymous user with email (Supabase plugs in here later)
-    if (MERCADO_PAGO_URL && MERCADO_PAGO_URL !== "#") {
+    if (url && !url.includes("placeholder")) {
       setRedirecting(true);
-      window.open(MERCADO_PAGO_URL, "_blank");
+      window.open(url, "_blank");
     } else {
-      // dev/mock: simulate successful activation so flow is testable
+      // dev/mock (placeholder MP link): simulate activation so flow is testable
       setPhase("success");
     }
   };
 
+  // 1 visible data point + 3 blurred — curiosity gap
   const rows = [
-    { Icon: CreditCard, label: "CPF", value: `•••.•••.•••-${mask.cpfLast2}`, badge: "ALTO", color: "#F87171", bg: "rgba(239,68,68,0.2)" },
-    { Icon: Mail, label: "E-mail", value: `${mask.first}•••••@${mask.domain}`, badge: "MÉDIO", color: "#FBBF24", bg: "rgba(245,158,11,0.2)" },
-    { Icon: Phone, label: "Telefone", value: `(11) 9••••-${mask.phoneLast4}`, badge: "BAIXO", color: "#34D399", bg: "rgba(34,197,94,0.2)" },
+    { Icon: CreditCard, label: "CPF", value: `•••.•••.•••-${mask.cpfLast2}`, badge: "ALTO", color: "#F87171", bg: "rgba(239,68,68,0.2)", blur: false },
+    { Icon: Mail, label: "E-mail", value: `${mask.first}•••••@${mask.domain}`, badge: "MÉDIO", color: "#FBBF24", bg: "rgba(245,158,11,0.2)", blur: true },
+    { Icon: Phone, label: "Telefone", value: `(11) 9••••-${mask.phoneLast4}`, badge: "BAIXO", color: "#34D399", bg: "rgba(34,197,94,0.2)", blur: true },
+    { Icon: MapPin, label: "Endereço", value: "Rua ••••••, São Paulo — SP", badge: "ALTO", color: "#F87171", bg: "rgba(239,68,68,0.2)", blur: true },
   ];
 
-  /* ---------- PHASE: CPF bottom sheet ---------- */
+  /* ---------- PHASE: CPF — centered security modal ---------- */
   if (phase === "cpf") {
     return (
-      <div className="fixed inset-0 z-[60] flex items-end bg-black/70 backdrop-blur-sm animate-fade-in" onClick={onClose}>
+      <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm animate-fade-in" onClick={onClose}>
         <div
-          className="w-full rounded-t-3xl p-6 animate-scale-in"
-          style={{ backgroundColor: "#0A0A0F", border: "1px solid rgba(255,255,255,0.06)" }}
+          className="w-full max-w-sm rounded-3xl p-6 text-center animate-scale-in"
+          style={{ backgroundColor: "#0A0A0F", border: "1px solid rgba(99,102,241,0.25)", boxShadow: "0 0 50px rgba(79,70,229,0.25)" }}
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="mx-auto mb-6 h-1 w-12 rounded bg-gray-700" />
-          <h2 className="text-xl font-bold text-white">Scan Gratuito</h2>
-          <p className="mt-2 mb-6 text-sm text-gray-400">Digite seu CPF para verificar sua exposição digital</p>
+          <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl" style={{ backgroundColor: "rgba(99,102,241,0.15)", border: "1px solid rgba(99,102,241,0.3)" }}>
+            <ShieldCheck className="h-7 w-7 text-indigo-400" />
+          </div>
+          <h2 className="mt-4 text-xl font-bold text-white">Verificação de segurança</h2>
+          <p className="mt-2 text-sm text-gray-400">Digite seu CPF para verificar sua exposição digital</p>
           <input
             value={cpf}
             onChange={(e) => setCpf(formatCPF(e.target.value))}
             inputMode="numeric"
             placeholder="000.000.000-00"
-            className="w-full rounded-2xl px-5 py-4 text-center font-mono text-xl text-white outline-none placeholder:text-white/25"
+            className="mt-5 w-full rounded-2xl px-5 py-4 text-center font-mono text-xl text-white outline-none placeholder:text-white/25"
             style={{ backgroundColor: "#12121A", border: "1px solid rgba(99,102,241,0.3)" }}
           />
           <button
@@ -268,7 +273,7 @@ export function ScanFunnel({ open, onClose, onScanStart }: { open: boolean; onCl
         </div>
         <p className="mt-1.5 text-xs text-gray-400">Encontramos informações associadas ao seu CPF, e-mail e telefone.</p>
 
-        {/* data rows */}
+        {/* data rows — 1 visible, 3 blurred (curiosity) */}
         <div className="mt-2.5 space-y-1.5">
           {rows.map((r) => (
             <div key={r.label} className="flex items-center gap-2.5 rounded-xl px-3 py-1.5" style={{ backgroundColor: "#12121A", border: "1px solid rgba(255,255,255,0.05)" }}>
@@ -276,7 +281,8 @@ export function ScanFunnel({ open, onClose, onScanStart }: { open: boolean; onCl
                 <r.Icon className="h-4 w-4" style={{ color: "#A5B4FC" }} />
               </span>
               <p className="text-sm font-medium text-white">{r.label}</p>
-              <p className="min-w-0 flex-1 truncate text-xs text-gray-400">{r.value}</p>
+              <p className={`min-w-0 flex-1 truncate text-xs text-gray-400 ${r.blur ? "select-none blur-[4px]" : ""}`}>{r.value}</p>
+              {r.blur && <Lock className="h-3 w-3 shrink-0 text-gray-500" />}
               <span className="rounded-full px-2 py-0.5 text-xs font-bold" style={{ color: r.color, backgroundColor: r.bg }}>{r.badge}</span>
             </div>
           ))}
@@ -318,21 +324,48 @@ export function ScanFunnel({ open, onClose, onScanStart }: { open: boolean; onCl
             style={{ backgroundColor: "#12121A", border: "1px solid rgba(99,102,241,0.3)" }}
           />
 
-          <button
-            onClick={checkout}
-            disabled={!email.includes("@") || redirecting}
-            className="mt-2.5 w-full rounded-2xl py-4 text-base font-extrabold text-white transition-all active:scale-95 disabled:opacity-50"
-            style={{ background: "linear-gradient(135deg,#4F46E5,#6366F1)", boxShadow: "0 0 30px rgba(79,70,229,0.5)" }}
-          >
-            {redirecting ? (
-              "Redirecionando para pagamento seguro..."
-            ) : (
-              <span className="inline-flex items-center justify-center gap-2">
-                <Lock className="h-4 w-4" /> Desbloquear relatório →
+          {/* Two CTAs — price anchoring: R$9,90 (ver) vs R$19,90 (resolver) */}
+          <div className="mt-2.5 space-y-2">
+            <button
+              onClick={() => checkout(MP_FUNDADOR_URL)}
+              disabled={!email.includes("@") || redirecting}
+              className="flex w-full items-center justify-between rounded-2xl px-4 py-3 text-left transition-all active:scale-[0.99] disabled:opacity-50"
+              style={{ background: "linear-gradient(135deg,#4F46E5,#6366F1)", boxShadow: "0 0 24px rgba(79,70,229,0.45)" }}
+            >
+              <span className="flex items-center gap-2">
+                <Lock className="h-4 w-4 shrink-0 text-white" />
+                <span>
+                  <span className="block text-sm font-extrabold text-white">Ver relatório completo</span>
+                  <span className="block text-[11px] text-white/70">Descubra onde seus dados vazaram</span>
+                </span>
               </span>
-            )}
-          </button>
+              <span className="shrink-0 text-right">
+                <span className="block text-base font-extrabold text-white">R$9,90</span>
+                <span className="block text-[10px] text-white/70">/mês</span>
+              </span>
+            </button>
 
+            <button
+              onClick={() => checkout(MP_DEFESA_URL)}
+              disabled={!email.includes("@") || redirecting}
+              className="flex w-full items-center justify-between rounded-2xl px-4 py-3 text-left transition-all active:scale-[0.99] disabled:opacity-50"
+              style={{ backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(124,58,237,0.4)" }}
+            >
+              <span className="flex items-center gap-2">
+                <Trash2 className="h-4 w-4 shrink-0 text-purple-300" />
+                <span>
+                  <span className="block text-sm font-bold text-white">Remover meus dados</span>
+                  <span className="block text-[11px] text-gray-400">Exclusão definitiva via LGPD</span>
+                </span>
+              </span>
+              <span className="shrink-0 text-right">
+                <span className="block text-base font-extrabold text-white">R$19,90</span>
+                <span className="block text-[10px] text-gray-400">/mês</span>
+              </span>
+            </button>
+          </div>
+
+          {redirecting && <p className="mt-2 text-center text-xs text-indigo-300">Redirecionando para pagamento seguro...</p>}
           <p className="mt-2 text-center text-xs text-indigo-300">+{activated} pessoas ativaram hoje</p>
           <p className="mt-1 text-center text-xs text-gray-600">Seguro · LGPD · Cancele quando quiser</p>
         </div>
