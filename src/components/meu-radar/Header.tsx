@@ -5,7 +5,7 @@ import { useApp } from "@/contexts/AppContext";
 type Notif = { id: string; icon: "alert" | "check"; title: string; time: string; unread: boolean; level: "danger" | "success" };
 
 const initial: Notif[] = [
-  { id: "1", icon: "alert", title: "Novo vazamento — Fórum HackBR", time: "agora mesmo", unread: true, level: "danger" },
+  { id: "1", icon: "alert", title: "Base de dados comprometida — Jan 2025", time: "agora mesmo", unread: true, level: "danger" },
   { id: "2", icon: "alert", title: "Credencial comprometida — Gmail", time: "2h atrás", unread: true, level: "danger" },
   { id: "3", icon: "check", title: "Varredura dark web concluída", time: "3 dias atrás", unread: false, level: "success" },
 ];
@@ -24,7 +24,7 @@ export function AppHeader({
   const [notifs, setNotifs] = useState(initial);
   const ref = useRef<HTMLDivElement>(null);
   const unreadCount = notifs.filter((n) => n.unread).length;
-  const { goToTab } = useApp();
+  const { goToTab, scanning } = useApp();
 
   useEffect(() => {
     if (!open) return;
@@ -53,13 +53,16 @@ export function AppHeader({
         <Plus size={22} strokeWidth={2} />
       </button>
 
-      {/* CENTER — wordmark logo */}
-      <div className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center">
-        <img
-          src="/PRIVA_letter_only_logo.png"
-          alt="PRIVA"
-          className="h-5 w-auto object-contain"
-        />
+      {/* CENTER — wordmark logo / scanning indicator */}
+      <div className="absolute left-1/2 flex -translate-x-1/2 items-center justify-center gap-2">
+        {scanning ? (
+          <>
+            <span className="h-4 w-4 animate-spin rounded-full border-2 border-indigo-500/30 border-t-indigo-400" />
+            <span className="text-sm font-medium text-indigo-300">Analisando...</span>
+          </>
+        ) : (
+          <img src="/PRIVA_letter_only_logo.png" alt="PRIVA" className="h-5 w-auto object-contain" />
+        )}
       </div>
 
       {/* RIGHT — bell */}

@@ -3,7 +3,7 @@ import { useApp } from "@/contexts/AppContext";
 
 type Level = "Alto" | "Médio";
 const breaches: { source: string; date: string; tags: string[]; level: Level }[] = [
-  { source: "Fórum HackBR", date: "Jan 2025", tags: ["e-mail", "senha"], level: "Alto" },
+  { source: "Base de dados comprometida", date: "Jan 2025", tags: ["e-mail", "senha"], level: "Alto" },
   { source: "Loja VarejoBR", date: "Set 2024", tags: ["CPF", "telefone", "endereço"], level: "Alto" },
   { source: "Serviço StreamBR", date: "Mar 2024", tags: ["e-mail"], level: "Médio" },
   { source: "Plataforma EduBR", date: "Nov 2023", tags: ["nome", "e-mail"], level: "Médio" },

@@ -39,14 +39,18 @@ function ScanButton({ onScan, scanning }: { onScan: () => void; scanning: boolea
       <button
         onClick={handleClick}
         aria-label="Escanear identidade"
-        className={`scan-breathe grid h-16 w-16 place-items-center rounded-full ${popped ? "animate-scan-pop" : ""}`}
+        className={`scan-breathe grid h-16 w-16 place-items-center rounded-full ${popped ? "animate-scan-pop" : ""} ${scanning ? "pointer-events-none" : ""}`}
         style={{
           marginTop: -16,
           background: "radial-gradient(circle at center, #6366F1, #4F46E5)",
           border: "2px solid rgba(255,255,255,0.15)",
         }}
       >
-        <ScanIcon fast={scanning} />
+        {scanning ? (
+          <span className="h-7 w-7 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+        ) : (
+          <ScanIcon fast={false} />
+        )}
       </button>
       <span className="-mt-0.5 text-[10px] font-medium text-white">Scan Grátis</span>
     </li>

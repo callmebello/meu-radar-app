@@ -13,6 +13,8 @@ type Ctx = {
   setGoToTab: (fn: (t: TabId) => void) => void;
   openScan: () => void;
   setOpenScan: (fn: () => void) => void;
+  scanning: boolean;
+  setScanning: (v: boolean) => void;
 };
 
 const AppCtx = createContext<Ctx | null>(null);
@@ -48,6 +50,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const setOpenScan = useCallback((fn: () => void) => setOpenScanFn({ fn }), []);
   const openScan = useCallback(() => openScanFn.fn(), [openScanFn]);
 
+  const [scanning, setScanning] = useState(false);
+
   return (
     <AppCtx.Provider
       value={{
@@ -62,6 +66,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setGoToTab,
         openScan,
         setOpenScan,
+        scanning,
+        setScanning,
       }}
     >
       {children}

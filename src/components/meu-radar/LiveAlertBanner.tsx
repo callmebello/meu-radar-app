@@ -27,7 +27,7 @@ export function LiveAlertBanner() {
     >
       <AlertTriangle className="h-4 w-4 shrink-0" />
       <p className="flex-1 text-xs font-semibold leading-tight">
-        Novo vazamento detectado — Fórum HackBR agora mesmo
+        Base de dados comprometida — Jan 2025
       </p>
       <button
         onClick={(e) => {

@@ -41,5 +41,18 @@ export function maskedFields(cpf: string, seed: number) {
   return { cpfLast2, domain, first, phoneLast4 };
 }
 
-// Placeholder — replace with real Mercado Pago checkout links per plan.
-export const MERCADO_PAGO_URL = "#";
+// Mercado Pago checkout links per plan. Read from Vite env vars
+// (VITE_MP_*) with safe placeholders so the flow works in dev.
+const env = (import.meta as unknown as { env?: Record<string, string> }).env ?? {};
+
+export const MP_FUNDADOR_URL = env.VITE_MP_FUNDADOR_URL || "https://mpago.la/placeholder_fundador";
+export const MP_DEFESA_URL = env.VITE_MP_DEFESA_URL || "https://mpago.la/placeholder_defesa";
+export const MP_SCORE_URL = env.VITE_MP_SCORE_URL || "https://mpago.la/placeholder_score";
+export const MP_FAMILIA_URL = env.VITE_MP_FAMILIA_URL || "https://mpago.la/placeholder_familia";
+
+// Back-compat: the main checkout (Fundador plan).
+export const MERCADO_PAGO_URL = MP_FUNDADOR_URL;
+
+export function openCheckout(url: string) {
+  if (typeof window !== "undefined") window.open(url, "_blank");
+}

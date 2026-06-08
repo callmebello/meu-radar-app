@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { AlertTriangle, CreditCard, Mail, Phone, Lock, Check, X, ChevronDown } from "lucide-react";
+import { AlertTriangle, CreditCard, Mail, Phone, Lock, Check, X, ChevronDown, Flame } from "lucide-react";
 import { formatCPF, isValidCPF, generateResult, maskedFields, MERCADO_PAGO_URL } from "@/lib/funnel";
 import { useApp } from "@/contexts/AppContext";
 
@@ -26,7 +26,7 @@ function ScanRadar() {
   );
 }
 
-export function ScanFunnel({ open, onClose }: { open: boolean; onClose: () => void }) {
+export function ScanFunnel({ open, onClose, onScanStart }: { open: boolean; onClose: () => void; onScanStart?: () => void }) {
   const { setIsPremium } = useApp();
   const [phase, setPhase] = useState<"cpf" | "scanning" | "result" | "success">("cpf");
   const [cpf, setCpf] = useState("");
@@ -63,7 +63,7 @@ export function ScanFunnel({ open, onClose }: { open: boolean; onClose: () => vo
     const stored = typeof window !== "undefined" ? sessionStorage.getItem("priva_cpf") : null;
     if (stored && isValidCPF(stored)) {
       setCpf(stored);
-      startScanning();
+      setPhase("result"); // inline scan already ran on the dashboard
     } else {
       setPhase("cpf");
     }
@@ -114,7 +114,7 @@ export function ScanFunnel({ open, onClose }: { open: boolean; onClose: () => vo
     } catch {
       /* ignore */
     }
-    startScanning();
+    onScanStart?.(); // inline scan on the dashboard; result opens after
   };
 
   const checkout = () => {
@@ -167,7 +167,9 @@ export function ScanFunnel({ open, onClose }: { open: boolean; onClose: () => vo
           >
             Iniciar Scan →
           </button>
-          <p className="mt-3 text-center text-xs text-gray-600">🔒 Criptografado · Não armazenamos seu CPF</p>
+          <p className="mt-3 flex items-center justify-center gap-1.5 text-center text-xs text-gray-600">
+            <Lock className="h-3 w-3 text-indigo-400" /> Criptografado · Não armazenamos seu CPF
+          </p>
         </div>
       </div>
     );
@@ -289,8 +291,8 @@ export function ScanFunnel({ open, onClose }: { open: boolean; onClose: () => vo
 
         {/* Fundador plan card */}
         <div className="relative mt-3 rounded-2xl border-2 p-3.5" style={{ background: "linear-gradient(135deg,#1a1a4e,#1e1b4b)", borderColor: "#6366F1" }}>
-          <span className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full px-3 py-1 text-[10px] font-bold text-white" style={{ backgroundColor: "#4F46E5" }}>
-            🔥 OFERTA DE LANÇAMENTO · {vagas} VAGAS
+          <span className="absolute -top-3 left-1/2 inline-flex -translate-x-1/2 items-center gap-1 whitespace-nowrap rounded-full px-3 py-1 text-[10px] font-bold text-white" style={{ backgroundColor: "#4F46E5" }}>
+            <Flame className="h-3 w-3 text-orange-300" /> OFERTA DE LANÇAMENTO · {vagas} VAGAS
           </span>
           <p className="mt-1 text-sm text-indigo-300">Fundador</p>
           <div className="flex items-end gap-1">
@@ -322,7 +324,13 @@ export function ScanFunnel({ open, onClose }: { open: boolean; onClose: () => vo
             className="mt-2.5 w-full rounded-2xl py-4 text-base font-extrabold text-white transition-all active:scale-95 disabled:opacity-50"
             style={{ background: "linear-gradient(135deg,#4F46E5,#6366F1)", boxShadow: "0 0 30px rgba(79,70,229,0.5)" }}
           >
-            {redirecting ? "Redirecionando para pagamento seguro..." : "🔒 DESBLOQUEAR RELATÓRIO — R$9,90/MÊS →"}
+            {redirecting ? (
+              "Redirecionando para pagamento seguro..."
+            ) : (
+              <span className="inline-flex items-center justify-center gap-2">
+                <Lock className="h-4 w-4" /> Desbloquear relatório →
+              </span>
+            )}
           </button>
 
           <p className="mt-2 text-center text-xs text-indigo-300">+{activated} pessoas ativaram hoje</p>

@@ -1,45 +1,74 @@
+import { useState } from "react";
 import { AppHeader } from "../Header";
 import { AnimatedScoreGauge } from "../AnimatedScoreGauge";
 import { PaywallLock } from "../PaywallLock";
-import { AlertTriangle, CheckCircle2, ShieldAlert, Fingerprint, Mail, Phone, MapPin, X } from "lucide-react";
+import { ShieldAlert, ShieldCheck, Fingerprint, Mail, Phone, MapPin, X, ChevronRight } from "lucide-react";
 import { useApp } from "@/contexts/AppContext";
-import { useState } from "react";
+import { IdentityCardSheet, type CardType } from "../IdentityCardSheet";
+import { AlertDetailSheet, type AlertDetail } from "../AlertDetailSheet";
 
-const identityItems = [
-  { icon: Fingerprint, label: "CPF", status: "Encontrado em 2 bases", level: "danger" },
-  { icon: Mail, label: "E-mail", status: "5 vazamentos detectados", level: "danger" },
-  { icon: Phone, label: "Telefone", status: "1 ocorrência", level: "warning" },
-  { icon: MapPin, label: "Endereço", status: "Não encontrado", level: "success" },
+const identityItems: { icon: typeof Mail; label: string; status: string; level: string; type: CardType }[] = [
+  { icon: Fingerprint, label: "CPF", status: "Encontrado em 2 bases", level: "danger", type: "cpf" },
+  { icon: Mail, label: "E-mail", status: "5 vazamentos detectados", level: "danger", type: "email" },
+  { icon: Phone, label: "Telefone", status: "1 ocorrência", level: "warning", type: "telefone" },
+  { icon: MapPin, label: "Endereço", status: "Não encontrado", level: "success", type: "endereco" },
 ];
 
 const levelColor = (l: string) =>
   l === "danger" ? "var(--color-danger)" : l === "warning" ? "var(--color-warning)" : "var(--color-success)";
 
-const alerts = [
-  { icon: AlertTriangle, title: "Novo vazamento detectado", meta: "Fórum HackBR · 2h atrás", level: "danger", pulse: true },
-  { icon: ShieldAlert, title: "Credencial comprometida", meta: "Senha do e-mail · ontem", level: "warning" },
-  { icon: CheckCircle2, title: "Varredura concluída", meta: "Dark web · 3 dias atrás", level: "success" },
+const alerts: AlertDetail[] = [
+  {
+    title: "Novo vazamento detectado",
+    Icon: ShieldAlert,
+    color: "#F87171",
+    origem: "Base de dados comprometida",
+    data: "15 Jan 2025",
+    dados: "E-mail, senha",
+    level: "ALTO",
+    meaning:
+      "Seus dados foram encontrados em uma base comprometida. Isso significa que seu e-mail e senha podem estar circulando em grupos de golpistas.",
+  },
+  {
+    title: "Credencial comprometida",
+    Icon: ShieldAlert,
+    color: "#FBBF24",
+    origem: "Conta de e-mail",
+    data: "Ontem",
+    dados: "Senha",
+    level: "MÉDIO",
+    meaning:
+      "Uma senha associada à sua conta foi exposta. Recomendamos trocá-la e ativar verificação em duas etapas.",
+  },
+  {
+    title: "Varredura concluída",
+    Icon: ShieldCheck,
+    color: "#34D399",
+    origem: "Dark web",
+    data: "3 dias atrás",
+    dados: "Nenhum novo",
+    level: "BAIXO",
+    meaning: "Varredura concluída sem novas exposições críticas. Continuamos monitorando 24/7.",
+  },
 ];
 
+const alertMeta = (a: AlertDetail) => `${a.origem} · ${a.data}`;
+
 export function RadarTab() {
-  const { isPremium, goToTab, hasChecked } = useApp();
+  const { isPremium, goToTab, hasChecked, scanning } = useApp();
   const [bannerVisible, setBannerVisible] = useState(true);
+  const [cardSheet, setCardSheet] = useState<CardType | null>(null);
+  const [alertSheet, setAlertSheet] = useState<AlertDetail | null>(null);
 
   return (
     <>
-      <AppHeader title="Meu Radar" showBell showLogo />
+      <AppHeader title="" showBell />
       <div className="space-y-5 px-5 py-5">
-        {/* CPF verified banner */}
         {hasChecked && bannerVisible && (
           <div className="flex items-center gap-2 rounded-xl border border-[var(--color-teal)]/30 bg-[var(--color-teal)]/8 px-3 py-2.5">
-            <CheckCircle2 className="h-4 w-4 shrink-0 text-[var(--color-teal)]" />
-            <p className="flex-1 text-[11px] font-medium text-foreground">
-              CPF verificado · 3 ocorrências encontradas
-            </p>
-            <button
-              onClick={() => goToTab("seguranca")}
-              className="text-[11px] font-bold text-[var(--color-navy)] dark:text-[var(--color-teal)]"
-            >
+            <ShieldCheck className="h-4 w-4 shrink-0 text-[var(--color-teal)]" />
+            <p className="flex-1 text-[11px] font-medium text-foreground">CPF verificado · 3 ocorrências encontradas</p>
+            <button onClick={() => goToTab("seguranca")} className="text-[11px] font-bold text-[var(--color-teal)]">
               Ver detalhes →
             </button>
             <button onClick={() => setBannerVisible(false)} className="text-muted-foreground">
@@ -50,14 +79,21 @@ export function RadarTab() {
 
         {/* Score card */}
         <section className="rounded-2xl border border-border/60 bg-card p-6 shadow-[0_2px_20px_-8px_rgba(30,45,90,0.15)]">
-          <div className="flex flex-col items-center text-center">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Identity Score
-            </p>
-            <div className="mt-3 w-full">
-              <AnimatedScoreGauge score={67} max={100} />
-            </div>
-            <p className="mt-4 text-xs text-muted-foreground">Última verificação: hoje às 14:32</p>
+          <div className={`flex flex-col items-center text-center ${scanning ? "animate-pulse" : ""}`}>
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Identity Score</p>
+            {scanning ? (
+              <>
+                <p className="mt-6 text-5xl font-extrabold text-muted-foreground">—</p>
+                <p className="mt-6 text-xs text-muted-foreground">verificando...</p>
+              </>
+            ) : (
+              <>
+                <div className="mt-3 w-full">
+                  <AnimatedScoreGauge score={67} max={100} />
+                </div>
+                <p className="mt-4 text-xs text-muted-foreground">Última verificação: hoje às 14:32</p>
+              </>
+            )}
           </div>
         </section>
 
@@ -65,13 +101,27 @@ export function RadarTab() {
         <section>
           <h2 className="mb-3 px-1 text-sm font-semibold text-foreground">Radar de identidade</h2>
           <div className="grid grid-cols-2 gap-3">
-            {identityItems.map((it) => {
+            {scanning
+              ? identityItems.map((it) => (
+                  <div key={it.label} className="rounded-2xl border border-border/60 bg-card p-4">
+                    <div className="flex items-start justify-between">
+                      <span className="h-9 w-9 animate-pulse rounded-lg bg-gray-700" />
+                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-indigo-500/30 border-t-indigo-500" />
+                    </div>
+                    <div className="mt-3 h-4 w-20 animate-pulse rounded bg-gray-700" />
+                    <div className="mt-2 h-3 w-28 animate-pulse rounded bg-gray-800" />
+                  </div>
+                ))
+              : identityItems.map((it) => {
               const Icon = it.icon;
               const color = levelColor(it.level);
               return (
                 <div
                   key={it.label}
-                  className="rounded-2xl border border-border/60 bg-card p-4 shadow-sm transition-all duration-200"
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => setCardSheet(it.type)}
+                  className="cursor-pointer rounded-2xl border border-border/60 bg-card p-4 text-left shadow-sm transition-all duration-200 active:scale-[0.98]"
                 >
                   <div className="flex items-start justify-between">
                     <span className="grid h-9 w-9 place-items-center rounded-lg bg-secondary">
@@ -98,35 +148,34 @@ export function RadarTab() {
           <h2 className="mb-3 px-1 text-sm font-semibold text-foreground">Alertas recentes</h2>
           <ul className="space-y-2">
             {alerts.map((a, i) => {
-              const Icon = a.icon;
-              const color = levelColor(a.level);
+              const Icon = a.Icon;
               return (
-                <li
-                  key={i}
-                  className="flex items-center gap-3 rounded-xl border border-border/60 bg-card p-3.5 shadow-sm"
-                >
-                  <span
-                    className="relative grid h-9 w-9 place-items-center rounded-lg"
-                    style={{ backgroundColor: `color-mix(in oklab, ${color} 14%, transparent)` }}
+                <li key={i}>
+                  <button
+                    onClick={() => setAlertSheet(a)}
+                    className="flex w-full items-center gap-3 rounded-xl border border-border/60 bg-card p-3.5 text-left shadow-sm transition active:scale-[0.99]"
                   >
-                    {a.pulse && (
-                      <span
-                        className="absolute inset-0 animate-ping rounded-lg"
-                        style={{ backgroundColor: `color-mix(in oklab, ${color} 30%, transparent)` }}
-                      />
-                    )}
-                    <Icon className="relative h-4 w-4" style={{ color }} />
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-foreground">{a.title}</p>
-                    <p className="truncate text-[11px] text-muted-foreground">{a.meta}</p>
-                  </div>
+                    <span className="relative grid h-9 w-9 place-items-center rounded-lg" style={{ backgroundColor: `color-mix(in oklab, ${a.color} 14%, transparent)` }}>
+                      {i === 0 && (
+                        <span className="absolute inset-0 animate-ping rounded-lg" style={{ backgroundColor: `color-mix(in oklab, ${a.color} 30%, transparent)` }} />
+                      )}
+                      <Icon className="relative h-4 w-4" style={{ color: a.color }} />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-foreground">{a.title}</p>
+                      <p className="truncate text-[11px] text-muted-foreground">{alertMeta(a)}</p>
+                    </div>
+                    <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  </button>
                 </li>
               );
             })}
           </ul>
         </section>
       </div>
+
+      {cardSheet && <IdentityCardSheet type={cardSheet} onClose={() => setCardSheet(null)} />}
+      {alertSheet && <AlertDetailSheet alert={alertSheet} onClose={() => setAlertSheet(null)} />}
     </>
   );
 }

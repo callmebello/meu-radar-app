@@ -10,7 +10,7 @@ import { AppProvider, useApp } from "@/contexts/AppContext";
 import { PaywallModal } from "@/components/meu-radar/PaywallModal";
 import { ScanFunnel } from "@/components/meu-radar/ScanFunnel";
 import { TopBanner } from "@/components/meu-radar/TopBanner";
-import { LiveAlertBanner } from "@/components/meu-radar/LiveAlertBanner";
+
 import { AppHeader } from "@/components/meu-radar/Header";
 
 export const Route = createFileRoute("/")({
@@ -33,7 +33,7 @@ function Index() {
   const [tab, setTab] = useState<TabId>("radar");
   const [funnelOpen, setFunnelOpen] = useState(false);
   const [hasScanned, setHasScanned] = useState(false);
-  const { setGoToTab, isPremium, setOpenScan } = useApp();
+  const { setGoToTab, isPremium, setOpenScan, scanning, setScanning } = useApp();
 
   const onScan = () => setFunnelOpen(true);
 
@@ -45,6 +45,18 @@ function Index() {
     }
   }, [setGoToTab, setOpenScan]);
 
+  // CPF entered → run inline scan on the dashboard, then open the result sheet
+  const onScanStart = () => {
+    setHasScanned(true);
+    setTab("radar");
+    setFunnelOpen(false);
+    setScanning(true);
+    setTimeout(() => {
+      setScanning(false);
+      setFunnelOpen(true); // ScanFunnel opens straight to result (CPF already stored)
+    }, 3000);
+  };
+
   const closeFunnel = () => {
     setFunnelOpen(false);
     if (typeof window !== "undefined" && sessionStorage.getItem("priva_cpf")) {
@@ -52,13 +64,17 @@ function Index() {
     }
   };
 
-  const showEmpty = tab === "radar" && !isPremium && !hasScanned;
+  const showEmpty = tab === "radar" && !isPremium && !hasScanned && !scanning;
 
   return (
     <div className="min-h-screen bg-muted/40">
-      <div className="mx-auto flex min-h-screen max-w-[420px] flex-col bg-background shadow-2xl sm:max-w-[640px] lg:max-w-[820px]">
+      <div className="relative mx-auto flex min-h-screen max-w-[420px] flex-col bg-background shadow-2xl sm:max-w-[640px] lg:max-w-[820px]">
         {!isPremium && <TopBanner onScan={onScan} />}
-        {!showEmpty && <LiveAlertBanner />}
+        {scanning && (
+          <div className="pointer-events-none fixed left-0 right-0 top-14 z-40 h-0.5 overflow-hidden">
+            <div className="h-full w-full origin-left animate-[scanbar_3s_linear_forwards]" style={{ background: "linear-gradient(90deg,#4F46E5,#6366F1)" }} />
+          </div>
+        )}
         <main className="flex flex-1 flex-col pb-2">
           {showEmpty ? (
             <ScanEmptyState onScan={onScan} />
@@ -71,10 +87,10 @@ function Index() {
             </>
           )}
         </main>
-        <BottomNav active={tab} onChange={setTab} onScan={onScan} scanning={false} />
+        <BottomNav active={tab} onChange={setTab} onScan={onScan} scanning={scanning} />
       </div>
 
-      <ScanFunnel open={funnelOpen} onClose={closeFunnel} />
+      <ScanFunnel open={funnelOpen} onClose={closeFunnel} onScanStart={onScanStart} />
       <PaywallModal />
       <Toaster position="top-center" />
     </div>
@@ -84,7 +100,7 @@ function Index() {
 function ScanEmptyState({ onScan }: { onScan: () => void }) {
   return (
     <>
-      <AppHeader showBell />
+      <AppHeader title="" showBell />
       <div className="flex flex-1 flex-col items-center justify-center px-6 text-center">
       <button
         onClick={onScan}
