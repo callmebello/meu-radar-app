@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { AppHeader } from "../Header";
 import { Check, ChevronRight, LogOut, Moon, Sun } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
@@ -114,15 +115,31 @@ export function PerfilTab() {
               </button>
             </div>
           ))}
-          {[
-            { label: "Política de privacidade" },
-            { label: "Termos de uso" },
-          ].map((t) => (
-            <button key={t.label} className="flex w-full items-center justify-between border-t border-border/60 px-4 py-3.5 text-left hover:bg-secondary/50 transition">
-              <p className="text-sm text-foreground">{t.label}</p>
-              <ChevronRight className="h-4 w-4 text-muted-foreground" />
-            </button>
-          ))}
+          {/* Política de Privacidade — external (iubenda), opens in new tab */}
+          <a
+            href="https://www.iubenda.com/privacy-policy/23107752"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex w-full items-center justify-between border-t border-border/60 px-4 py-3.5 text-left hover:bg-secondary/50 transition"
+          >
+            <p className="text-sm text-foreground">Política de Privacidade</p>
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          </a>
+          {/* Política de Cookies — external (iubenda), opens in new tab */}
+          <a
+            href="https://www.iubenda.com/privacy-policy/23107752/cookie-policy"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex w-full items-center justify-between border-t border-border/60 px-4 py-3.5 text-left hover:bg-secondary/50 transition"
+          >
+            <p className="text-sm text-foreground">Política de Cookies</p>
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          </a>
+          {/* Termos de Uso — internal route */}
+          <Link to="/termos" className="flex w-full items-center justify-between border-t border-border/60 px-4 py-3.5 text-left hover:bg-secondary/50 transition">
+            <p className="text-sm text-foreground">Termos de Uso</p>
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          </Link>
           <button className="flex w-full items-center justify-between border-t border-border/60 px-4 py-3.5 text-left hover:bg-secondary/50 transition">
             <p className="text-sm font-medium text-[var(--color-danger)]">Sair</p>
             <LogOut className="h-4 w-4 text-[var(--color-danger)]" />
