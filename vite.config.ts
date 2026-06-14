@@ -7,6 +7,11 @@
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
 export default defineConfig({
+  // Force nitro ON with the Vercel preset. Default ("auto") only runs nitro
+  // inside Lovable's infra, so a self-hosted build (Vercel) ships no server
+  // and every SSR route 404s. The "vercel" preset emits Vercel's Build Output
+  // API (.vercel/output), which Vercel serves directly.
+  nitro: { preset: "vercel" },
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this

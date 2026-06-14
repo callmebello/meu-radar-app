@@ -42,16 +42,16 @@
 :root {
   --radius: 0.875rem;
 
-  /* Priva trust-first system (mono dark + brand blue accent) */
-  --priva-bg: #06060F;
-  --priva-surface: #0D0D17;
-  --priva-surface-2: #14141F;
-  --priva-border: rgba(255, 255, 255, 0.08);
-  --priva-border-strong: rgba(255, 255, 255, 0.14);
-  --priva-text: #FDFDFD;
-  --priva-text-muted: #9B9BA7;
+  /* Priva — LIGHT theme (default :root). Dark theme overrides under .dark */
+  --priva-bg: #F2F3F7;
+  --priva-surface: #FFFFFF;
+  --priva-surface-2: #E9EBF1;
+  --priva-border: rgba(15, 15, 30, 0.10);
+  --priva-border-strong: rgba(15, 15, 30, 0.16);
+  --priva-text: #0E0E1A;
+  --priva-text-muted: #5B5B6B;
   --priva-blue: #3B82F6;
-  --priva-blue-hover: #4F8FF7;
+  --priva-blue-hover: #2F6FE0;
 
   --navy: #4F46E5;
   --teal: #4F46E5;
@@ -83,21 +83,16 @@
 }
 
 .dark {
-  --background: var(--priva-bg);
-  --foreground: var(--priva-text);
-  --card: var(--priva-surface);
-  --card-foreground: var(--priva-text);
-  --popover: var(--priva-surface);
-  --popover-foreground: var(--priva-text);
-  --primary: var(--priva-blue);
-  --primary-foreground: #FFFFFF;
-  --secondary: var(--priva-surface-2);
-  --secondary-foreground: var(--priva-text);
-  --muted: var(--priva-surface-2);
-  --muted-foreground: var(--priva-text-muted);
-  --border: var(--priva-border);
-  --input: var(--priva-border);
-  --surface-dark: var(--priva-bg);
+  /* Dark theme — override the priva-* primitives; semantic tokens recompute */
+  --priva-bg: #06060F;
+  --priva-surface: #0D0D17;
+  --priva-surface-2: #14141F;
+  --priva-border: rgba(255, 255, 255, 0.08);
+  --priva-border-strong: rgba(255, 255, 255, 0.14);
+  --priva-text: #FDFDFD;
+  --priva-text-muted: #9B9BA7;
+  --priva-blue: #3B82F6;
+  --priva-blue-hover: #4F8FF7;
 }
 
 
@@ -184,6 +179,12 @@
   to   { transform: scaleX(0.95); }
 }
 
+/* Welcome screen progress bar (0 → 65%) */
+@keyframes welcomebar {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(0.65); }
+}
+
 /* Bottom sheet slide up */
 @keyframes sheet-up {
   from { transform: translateY(100%); }
@@ -191,6 +192,10 @@
 }
 .animate-sheet-up {
   animation: sheet-up 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+/* Slow bottom-sheet reveal for the scan result */
+.animate-sheet-up-slow {
+  animation: sheet-up 0.85s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 /* CSS-only confetti */

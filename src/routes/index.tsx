@@ -9,7 +9,10 @@ import { Toaster } from "@/components/ui/sonner";
 import { AppProvider, useApp } from "@/contexts/AppContext";
 import { PaywallModal } from "@/components/meu-radar/PaywallModal";
 import { ScanFunnel } from "@/components/meu-radar/ScanFunnel";
+import { ScanningOverlay } from "@/components/meu-radar/ScanningOverlay";
 import { TopBanner } from "@/components/meu-radar/TopBanner";
+import { WelcomeGate } from "@/components/meu-radar/WelcomeGate";
+import { isValidCPF } from "@/lib/funnel";
 
 import { AppHeader } from "@/components/meu-radar/Header";
 
@@ -35,18 +38,9 @@ function Index() {
   const [hasScanned, setHasScanned] = useState(false);
   const { setGoToTab, isPremium, setOpenScan, scanning, setScanning } = useApp();
 
-  const onScan = () => setFunnelOpen(true);
-
-  useEffect(() => {
-    setGoToTab((t: TabId) => setTab(t));
-    setOpenScan(() => setFunnelOpen(true));
-    if (typeof window !== "undefined" && sessionStorage.getItem("priva_cpf")) {
-      setHasScanned(true);
-    }
-  }, [setGoToTab, setOpenScan]);
-
-  // CPF entered → run inline scan on the dashboard, then open the result sheet
-  const onScanStart = () => {
+  // Run the inline scan (button spins + box slides up over the blurred app),
+  // then open the result sheet. Keeps the footer visible the whole time.
+  const runScan = () => {
     setHasScanned(true);
     setTab("radar");
     setFunnelOpen(false);
@@ -54,8 +48,30 @@ function Index() {
     setTimeout(() => {
       setScanning(false);
       setFunnelOpen(true); // ScanFunnel opens straight to result (CPF already stored)
-    }, 3000);
+    }, 3500);
   };
+
+  // Central scan button: if CPF already known, scan inline; else ask for it first.
+  const onScan = () => {
+    const stored = typeof window !== "undefined" ? sessionStorage.getItem("priva_cpf") : null;
+    if (stored && isValidCPF(stored)) {
+      runScan();
+    } else {
+      setFunnelOpen(true); // ScanFunnel opens the CPF entry modal
+    }
+  };
+
+  useEffect(() => {
+    setGoToTab((t: TabId) => setTab(t));
+    setOpenScan(() => onScan());
+    if (typeof window !== "undefined" && sessionStorage.getItem("priva_cpf")) {
+      setHasScanned(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [setGoToTab, setOpenScan]);
+
+  // CPF entered in the funnel → run the inline scan
+  const onScanStart = () => runScan();
 
   const closeFunnel = () => {
     setFunnelOpen(false);
@@ -70,11 +86,6 @@ function Index() {
     <div className="min-h-screen bg-muted/40">
       <div className="relative mx-auto flex min-h-screen max-w-[420px] flex-col bg-background shadow-2xl sm:max-w-[640px] lg:max-w-[820px]">
         {!isPremium && <TopBanner onScan={onScan} />}
-        {scanning && (
-          <div className="pointer-events-none fixed left-0 right-0 top-14 z-40 h-0.5 overflow-hidden">
-            <div className="h-full w-full origin-left animate-[scanbar_3s_linear_forwards]" style={{ background: "linear-gradient(90deg,#4F46E5,#6366F1)" }} />
-          </div>
-        )}
         <main className="flex flex-1 flex-col pb-2">
           {showEmpty ? (
             <ScanEmptyState onScan={onScan} />
@@ -87,9 +98,11 @@ function Index() {
             </>
           )}
         </main>
+        <ScanningOverlay open={scanning} />
         <BottomNav active={tab} onChange={setTab} onScan={onScan} scanning={scanning} />
       </div>
 
+      <WelcomeGate />
       <ScanFunnel open={funnelOpen} onClose={closeFunnel} onScanStart={onScanStart} />
       <PaywallModal />
       <Toaster position="top-center" />

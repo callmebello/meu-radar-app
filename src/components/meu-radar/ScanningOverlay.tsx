@@ -1,68 +1,93 @@
 import { useEffect, useState } from "react";
+import { Check } from "lucide-react";
 
-const STEPS: { text: string; tone: "gray" | "green" }[] = [
-  { text: "Iniciando varredura...", tone: "gray" },
-  { text: "✓ Verificando CPF...", tone: "green" },
-  { text: "✓ Checando vazamentos...", tone: "green" },
-  { text: "✓ Analisando dark web...", tone: "green" },
+const SCAN_STEPS = [
+  "Verificando CPF na Receita Federal...",
+  "Consultando bases de vazamentos...",
+  "Analisando dark web...",
+  "Cruzando informações...",
+  "Gerando relatório...",
 ];
+const STEP_AT = [0, 800, 1600, 2400, 3000];
 
-export function ScanningOverlay() {
-  const [shown, setShown] = useState<number[]>([]);
-  const [progress, setProgress] = useState(0);
+/**
+ * Scanning box that slides up from the bottom OVER the dashboard.
+ * The app stays visible behind a light blur (footer/scan button remain on top
+ * and keep spinning) so the user still feels inside the app.
+ */
+export function ScanningOverlay({ open }: { open: boolean }) {
+  const [done, setDone] = useState<number[]>([]);
+  const [bar, setBar] = useState(false);
+  const [up, setUp] = useState(false); // drives the slide-up via CSS transition
 
   useEffect(() => {
-    const timers = STEPS.map((_, i) =>
-      setTimeout(() => setShown((p) => [...p, i]), i * 600)
-    );
-
-    const start = performance.now();
-    let raf = 0;
-    const tick = (now: number) => {
-      const pct = Math.min(((now - start) / 3000) * 100, 100);
-      setProgress(pct);
-      if (pct < 100) raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-
+    if (!open) {
+      setDone([]);
+      setBar(false);
+      setUp(false);
+      return;
+    }
+    setDone([]);
+    setBar(false);
+    setUp(false);
+    // shortly after mount → transition from translateY(110%) to 0 (slides up).
+    // setTimeout (not rAF) so it still fires when the preview tab is unfocused.
+    const timers: ReturnType<typeof setTimeout>[] = [
+      setTimeout(() => setUp(true), 30),
+      setTimeout(() => setBar(true), 80),
+    ];
+    STEP_AT.forEach((at, i) => timers.push(setTimeout(() => setDone((p) => [...p, i]), at)));
     return () => {
       timers.forEach(clearTimeout);
-      cancelAnimationFrame(raf);
     };
-  }, []);
+  }, [open]);
+
+  if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/80 px-6 backdrop-blur-sm">
-      <svg width="120" height="120" viewBox="0 0 48 48" fill="none" aria-hidden>
-        <circle cx="24" cy="24" r="8" stroke="#818CF8" strokeWidth="1" fill="none" />
-        <circle cx="24" cy="24" r="16" stroke="#6366F1" strokeWidth="1" fill="none" opacity="0.7" />
-        <circle cx="24" cy="24" r="22" stroke="#4F46E5" strokeWidth="1" fill="none" opacity="0.5" />
-        <g className="radar-sweep-fast">
-          <line x1="24" y1="24" x2="40" y2="8" stroke="#A5B4FC" strokeWidth="1.5" strokeLinecap="round" />
-        </g>
-        <circle cx="24" cy="24" r="2" fill="#A5B4FC" />
-      </svg>
+    <div className="fixed inset-0 z-40 flex flex-col justify-end bg-black/25 backdrop-blur-[3px]">
+      <div
+        className="mx-3 mb-[92px] rounded-2xl border p-5"
+        style={{
+          backgroundColor: "rgba(14,14,26,0.94)",
+          borderColor: "rgba(99,102,241,0.3)",
+          boxShadow: "0 -10px 44px rgba(0,0,0,0.55)",
+          transform: up ? "translateY(0)" : "translateY(110%)",
+          opacity: up ? 1 : 0,
+          transition: "transform 0.55s cubic-bezier(0.22,1,0.36,1), opacity 0.4s ease-out",
+        }}
+      >
+        <div className="flex items-center gap-3">
+          <span className="h-9 w-9 shrink-0 animate-spin rounded-full border-2 border-indigo-500/30 border-t-indigo-400" />
+          <div>
+            <p className="text-sm font-bold text-white">Escaneando sua identidade</p>
+            <p className="text-xs text-gray-400">Mantenha o app aberto...</p>
+          </div>
+        </div>
 
-      <div className="mt-7 flex flex-col items-start gap-2">
-        {STEPS.map(
-          (s, i) =>
-            shown.includes(i) && (
-              <p
-                key={i}
-                className={`animate-scan-step text-sm ${s.tone === "green" ? "text-green-400" : "text-gray-400"}`}
-              >
-                {s.text}
-              </p>
-            )
-        )}
-      </div>
+        <div className="mt-4 flex flex-col gap-2">
+          {SCAN_STEPS.map((s, i) => {
+            const isDone = done.includes(i);
+            const active = done.length === i;
+            return (
+              <div key={i} className="flex items-center gap-2.5 text-sm">
+                {isDone ? (
+                  <Check className="h-4 w-4 shrink-0 text-green-400" />
+                ) : (
+                  <span className="h-4 w-4 shrink-0 rounded-full border border-white/15" />
+                )}
+                <span style={{ color: isDone ? "#4ADE80" : active ? "#A5B4FC" : "#5B5B6B" }}>{s}</span>
+              </div>
+            );
+          })}
+        </div>
 
-      {/* Progress bar */}
-      <div className="mt-7 h-1 w-full max-w-xs overflow-hidden rounded-full bg-white/10">
-        <div
-          className="h-full rounded-full"
-          style={{ width: `${progress}%`, backgroundColor: "#4F46E5" }}
-        />
+        <div className="mt-4 h-1 w-full overflow-hidden rounded-full" style={{ backgroundColor: "#12121A" }}>
+          <div
+            className="h-full rounded-full"
+            style={{ width: bar ? "100%" : "0%", backgroundColor: "#6366F1", transition: "width 3.4s linear" }}
+          />
+        </div>
       </div>
     </div>
   );
