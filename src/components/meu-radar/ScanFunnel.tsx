@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { AlertTriangle, CreditCard, Mail, Phone, MapPin, Lock, Check, X, ChevronDown, Flame, ShieldCheck, Trash2 } from "lucide-react";
-import { formatCPF, isValidCPF, generateResult, maskedFields, MP_FUNDADOR_URL, MP_DEFESA_URL } from "@/lib/funnel";
+import { formatCPF, isValidCPF, generateResult, maskedFields, MP_ESSENCIAL_URL, MP_PROTECAO_URL } from "@/lib/funnel";
 import { useApp } from "@/contexts/AppContext";
 
 const SCAN_STEPS = [
@@ -63,7 +63,7 @@ export function ScanFunnel({ open, onClose, onScanStart }: { open: boolean; onCl
     const stored = typeof window !== "undefined" ? sessionStorage.getItem("priva_cpf") : null;
     if (stored && isValidCPF(stored)) {
       setCpf(stored);
-      setPhase("result"); // inline scan already ran on the dashboard
+      setPhase("result"); // inline scanning overlay already ran on the dashboard
     } else {
       setPhase("cpf");
     }
@@ -114,7 +114,7 @@ export function ScanFunnel({ open, onClose, onScanStart }: { open: boolean; onCl
     } catch {
       /* ignore */
     }
-    onScanStart?.(); // inline scan on the dashboard; result opens after
+    onScanStart?.(); // inline scanning overlay runs on the dashboard, then result opens
   };
 
   const checkout = (url: string) => {
@@ -237,18 +237,25 @@ export function ScanFunnel({ open, onClose, onScanStart }: { open: boolean; onCl
     );
   }
 
-  /* ---------- PHASE: result + checkout ---------- */
+  /* ---------- PHASE: result + checkout (slides up from bottom) ---------- */
   return (
-    <div className="fixed inset-0 z-[60] overflow-y-auto" style={{ backgroundColor: "#0A0A0F" }}>
-      <button
-        onClick={onClose}
-        aria-label="Fechar"
-        className="fixed right-4 top-4 z-10 grid h-9 w-9 place-items-center rounded-full bg-white/[0.06] text-gray-300 hover:bg-white/10"
+    <div className="fixed inset-0 z-[60] flex flex-col justify-end bg-black/60 backdrop-blur-sm">
+      <div
+        className="animate-sheet-up-slow relative max-h-[94vh] overflow-y-auto rounded-t-3xl"
+        style={{ backgroundColor: "#0A0A0F", boxShadow: "0 -8px 40px rgba(0,0,0,0.6)" }}
       >
-        <X className="h-4 w-4" />
-      </button>
+        <div className="sticky top-0 z-10 flex justify-center pt-2.5">
+          <span className="h-1 w-10 rounded-full bg-white/20" />
+        </div>
+        <button
+          onClick={onClose}
+          aria-label="Fechar"
+          className="absolute right-4 top-4 z-10 grid h-9 w-9 place-items-center rounded-full bg-white/[0.06] text-gray-300 hover:bg-white/10"
+        >
+          <X className="h-4 w-4" />
+        </button>
 
-      <div className="mx-auto max-w-md px-5 pb-10">
+        <div className="mx-auto max-w-md px-5 pb-10">
         {/* badge */}
         <div className="mt-2 flex justify-center">
           <span
@@ -295,12 +302,12 @@ export function ScanFunnel({ open, onClose, onScanStart }: { open: boolean; onCl
           <div className="h-px flex-1" style={{ backgroundColor: "rgba(255,255,255,0.08)" }} />
         </div>
 
-        {/* Fundador plan card */}
+        {/* Essencial plan card */}
         <div className="relative mt-3 rounded-2xl border-2 p-3.5" style={{ background: "linear-gradient(135deg,#1a1a4e,#1e1b4b)", borderColor: "#6366F1" }}>
           <span className="absolute -top-3 left-1/2 inline-flex -translate-x-1/2 items-center gap-1 whitespace-nowrap rounded-full px-3 py-1 text-[10px] font-bold text-white" style={{ backgroundColor: "#4F46E5" }}>
             <Flame className="h-3 w-3 text-orange-300" /> OFERTA DE LANÇAMENTO · {vagas} VAGAS
           </span>
-          <p className="mt-1 text-sm text-indigo-300">Fundador</p>
+          <p className="mt-1 text-sm text-indigo-300">Essencial</p>
           <div className="flex items-end gap-1">
             <span className="text-2xl font-extrabold text-white">R$9,90</span>
             <span className="mb-0.5 text-sm text-gray-400">/mês · preço travado</span>
@@ -324,42 +331,42 @@ export function ScanFunnel({ open, onClose, onScanStart }: { open: boolean; onCl
             style={{ backgroundColor: "#12121A", border: "1px solid rgba(99,102,241,0.3)" }}
           />
 
-          {/* Two CTAs — price anchoring: R$9,90 (ver) vs R$19,90 (resolver) */}
+          {/* Two CTAs — primary: Proteção Total R$29,90 · secondary: Essencial R$9,90 */}
           <div className="mt-2.5 space-y-2">
             <button
-              onClick={() => checkout(MP_FUNDADOR_URL)}
+              onClick={() => checkout(MP_PROTECAO_URL)}
               disabled={!email.includes("@") || redirecting}
               className="flex w-full items-center justify-between rounded-2xl px-4 py-3 text-left transition-all active:scale-[0.99] disabled:opacity-50"
               style={{ background: "linear-gradient(135deg,#4F46E5,#6366F1)", boxShadow: "0 0 24px rgba(79,70,229,0.45)" }}
             >
               <span className="flex items-center gap-2">
-                <Lock className="h-4 w-4 shrink-0 text-white" />
+                <Trash2 className="h-4 w-4 shrink-0 text-white" />
                 <span>
-                  <span className="block text-sm font-extrabold text-white">Ver relatório completo</span>
-                  <span className="block text-[11px] text-white/70">Descubra onde seus dados vazaram</span>
+                  <span className="block text-sm font-extrabold text-white">Proteção Total — R$29,90/mês →</span>
+                  <span className="block text-[11px] text-white/70">Remova seus dados · exclusão via LGPD</span>
                 </span>
               </span>
               <span className="shrink-0 text-right">
-                <span className="block text-base font-extrabold text-white">R$9,90</span>
+                <span className="block text-base font-extrabold text-white">R$29,90</span>
                 <span className="block text-[10px] text-white/70">/mês</span>
               </span>
             </button>
 
             <button
-              onClick={() => checkout(MP_DEFESA_URL)}
+              onClick={() => checkout(MP_ESSENCIAL_URL)}
               disabled={!email.includes("@") || redirecting}
               className="flex w-full items-center justify-between rounded-2xl px-4 py-3 text-left transition-all active:scale-[0.99] disabled:opacity-50"
               style={{ backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(124,58,237,0.4)" }}
             >
               <span className="flex items-center gap-2">
-                <Trash2 className="h-4 w-4 shrink-0 text-purple-300" />
+                <Lock className="h-4 w-4 shrink-0 text-purple-300" />
                 <span>
-                  <span className="block text-sm font-bold text-white">Remover meus dados</span>
-                  <span className="block text-[11px] text-gray-400">Exclusão definitiva via LGPD</span>
+                  <span className="block text-sm font-bold text-white">Ver relatório — R$9,90/mês →</span>
+                  <span className="block text-[11px] text-gray-400">Descubra onde seus dados vazaram</span>
                 </span>
               </span>
               <span className="shrink-0 text-right">
-                <span className="block text-base font-extrabold text-white">R$19,90</span>
+                <span className="block text-base font-extrabold text-white">R$9,90</span>
                 <span className="block text-[10px] text-gray-400">/mês</span>
               </span>
             </button>
@@ -390,6 +397,7 @@ export function ScanFunnel({ open, onClose, onScanStart }: { open: boolean; onCl
             ))}
           </div>
         )}
+        </div>
       </div>
     </div>
   );

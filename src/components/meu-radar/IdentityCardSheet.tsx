@@ -4,7 +4,7 @@ import {
   CheckCircle2, Radar, ChevronRight, Trash2,
 } from "lucide-react";
 import { useApp } from "@/contexts/AppContext";
-import { generateResult, maskedFields, openCheckout, MP_DEFESA_URL } from "@/lib/funnel";
+import { generateResult, maskedFields, openCheckout, MP_PROTECAO_URL } from "@/lib/funnel";
 
 export type CardType = "cpf" | "email" | "telefone" | "endereco";
 
@@ -71,7 +71,7 @@ function ScanAction({ onScan }: { onScan: () => void }) {
 function DeleteCTA({ title, sub, price = "R$29,90/mês", dimmed = false }: { title: string; sub: string; price?: string; dimmed?: boolean }) {
   return (
     <button
-      onClick={() => openCheckout(MP_DEFESA_URL)}
+      onClick={() => openCheckout(MP_PROTECAO_URL)}
       className={`mt-4 flex w-full items-center justify-between rounded-xl px-4 py-3 text-left ${dimmed ? "opacity-60" : ""}`}
       style={{ border: "1px solid rgba(239,68,68,0.2)" }}
     >

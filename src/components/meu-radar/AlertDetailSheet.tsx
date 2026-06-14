@@ -1,5 +1,5 @@
 import { X, Trash2 } from "lucide-react";
-import { openCheckout, MP_DEFESA_URL } from "@/lib/funnel";
+import { openCheckout, MP_PROTECAO_URL } from "@/lib/funnel";
 
 export type AlertDetail = {
   title: string;
@@ -99,7 +99,7 @@ export function AlertDetailSheet({ alert, onClose }: { alert: AlertDetail; onClo
               Solicitar exclusão oficial via LGPD. Processo iniciado em até 48h.
             </p>
             <button
-              onClick={() => openCheckout(MP_DEFESA_URL)}
+              onClick={() => openCheckout(MP_PROTECAO_URL)}
               className="mt-4 w-full rounded-xl py-4 font-bold text-white"
               style={{ background: "linear-gradient(135deg,#7C3AED,#4F46E5)", boxShadow: "0 0 20px rgba(124,58,237,0.3)" }}
             >
