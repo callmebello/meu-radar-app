@@ -376,6 +376,32 @@ export function ScanFunnel({ open, onClose, onScanStart }: { open: boolean; onCl
               <span className="block text-xs text-gray-400">/mês</span>
             </span>
           </button>
+
+          {/* data removal teaser card (Proteção Total) */}
+          <button
+            onClick={() => checkout(MP_PROTECAO_URL)}
+            disabled={redirecting}
+            className="mx-5 mt-3 flex w-[calc(100%-2.5rem)] items-start justify-between rounded-2xl border p-4 text-left transition-all active:scale-[0.99] disabled:opacity-60"
+            style={{ backgroundColor: "#1c1014", borderColor: "rgba(239,68,68,0.25)" }}
+          >
+            <span className="flex gap-3">
+              <Trash2 className="mt-0.5 h-5 w-5 shrink-0 text-gray-400" />
+              <span>
+                <span className="block font-bold text-white">Apagar dados vazados</span>
+                <span className="mt-2 block space-y-1">
+                  {["Remoção dos dados da internet", "Solicitações LGPD automáticas", "Monitoramento contínuo"].map((f) => (
+                    <span key={f} className="flex items-center gap-2 text-sm text-gray-300">
+                      <Check className="h-4 w-4 shrink-0 text-green-400" /> {f}
+                    </span>
+                  ))}
+                </span>
+              </span>
+            </span>
+            <span className="shrink-0 text-right">
+              <span className="block text-xl font-extrabold text-red-400">R$29,90</span>
+              <span className="block text-xs text-gray-400">/mês</span>
+            </span>
+          </button>
         </div>
       </div>
     </div>
