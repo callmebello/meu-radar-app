@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { AppHeader } from "./Header";
-import { Shield, CircleCheck, Zap, Lock, IdCard, Mail, ArrowRight } from "lucide-react";
+import { Shield, ShieldCheck, CircleCheck, Zap, IdCard, Mail, ArrowRight } from "lucide-react";
 import { formatCPF, isValidCPF } from "@/lib/funnel";
 
 const FEATURES = [
-  { Icon: CircleCheck, title: "Grátis", sub: "100% gratuito" },
-  { Icon: Zap, title: "Resultado rápido", sub: "Verificação instantânea" },
-  { Icon: Lock, title: "Sem cadastro", sub: "Sem burocracia" },
+  { Icon: CircleCheck, title: "100% gratuito" },
+  { Icon: Zap, title: "Resultado rápido" },
+  { Icon: ShieldCheck, title: "Conforme LGPD" },
 ];
 
 /**
@@ -42,23 +42,12 @@ export function ScanLanding({ onSubmit }: { onSubmit: (cpf: string, email: strin
         </div>
 
         {/* headline */}
-        <h1 className="mt-6 text-center text-3xl font-extrabold leading-tight text-white">
-          Descubra se seus dados estão <span className="text-indigo-400">expostos</span>
+        <h1 className="mt-6 text-center text-[1.7rem] font-extrabold leading-tight text-white">
+          A Priva descobre onde seus dados estão <span className="text-indigo-400">expostos</span> e ajuda a <span className="text-indigo-400">removê-los</span>.
         </h1>
-        <p className="mx-auto mt-3 max-w-xs text-center text-sm leading-relaxed text-gray-400">
-          Verificamos CPF, e-mail, telefone e possíveis vazamentos na internet.
+        <p className="mx-auto mt-3 max-w-sm text-center text-sm leading-relaxed text-gray-400">
+          Analisamos CPF, e-mail, telefone e possíveis vazamentos para proteger sua identidade digital.
         </p>
-
-        {/* features */}
-        <div className="mt-7 grid grid-cols-3">
-          {FEATURES.map((f, i) => (
-            <div key={f.title} className={`px-2 text-center ${i > 0 ? "border-l border-white/10" : ""}`}>
-              <f.Icon className="mx-auto h-6 w-6 text-indigo-400" strokeWidth={1.8} />
-              <p className="mt-2 text-sm font-bold text-white">{f.title}</p>
-              <p className="mt-0.5 text-[11px] leading-tight text-gray-500">{f.sub}</p>
-            </div>
-          ))}
-        </div>
 
         {/* CPF */}
         <label className="mt-7 block text-sm font-semibold text-white">CPF</label>
@@ -98,6 +87,20 @@ export function ScanLanding({ onSubmit }: { onSubmit: (cpf: string, email: strin
         >
           Fazer Scan Grátis <ArrowRight className="h-5 w-5" />
         </button>
+
+        {/* feature cards */}
+        <div className="mt-6 grid grid-cols-3 gap-3">
+          {FEATURES.map((f) => (
+            <div
+              key={f.title}
+              className="flex flex-col items-center gap-2 rounded-xl px-2 py-3.5 text-center"
+              style={{ backgroundColor: "#12121A", border: "1px solid rgba(255,255,255,0.05)" }}
+            >
+              <f.Icon className="h-5 w-5 text-indigo-400" strokeWidth={1.8} />
+              <p className="text-[12px] font-semibold leading-tight text-white">{f.title}</p>
+            </div>
+          ))}
+        </div>
 
         {/* social proof */}
         <div className="mt-6 flex items-center gap-3">
