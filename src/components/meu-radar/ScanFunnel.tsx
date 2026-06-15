@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { AlertTriangle, CreditCard, Mail, Phone, MapPin, Lock, Check, X, ChevronDown, Flame, ShieldCheck, Trash2 } from "lucide-react";
+import { AlertTriangle, CreditCard, Mail, Phone, MapPin, Lock, Check, X, ChevronDown, ChevronRight, Flame, ShieldCheck, Trash2 } from "lucide-react";
 import { formatCPF, isValidCPF, generateResult, maskedFields, MP_ESSENCIAL_URL, MP_PROTECAO_URL } from "@/lib/funnel";
 import { useApp } from "@/contexts/AppContext";
 
@@ -118,13 +118,14 @@ export function ScanFunnel({ open, onClose, onScanStart }: { open: boolean; onCl
   };
 
   const checkout = (url: string) => {
-    if (!email.includes("@")) return;
-    try {
-      sessionStorage.setItem("priva_email", email);
-    } catch {
-      /* ignore */
+    // email is optional now (no inline field in the redesigned sheet)
+    if (email.includes("@")) {
+      try {
+        sessionStorage.setItem("priva_email", email);
+      } catch {
+        /* ignore */
+      }
     }
-    // mock: create anonymous user with email (Supabase plugs in here later)
     if (url && !url.includes("placeholder")) {
       setRedirecting(true);
       window.open(url, "_blank");
@@ -237,166 +238,144 @@ export function ScanFunnel({ open, onClose, onScanStart }: { open: boolean; onCl
     );
   }
 
-  /* ---------- PHASE: result + checkout (slides up from bottom) ---------- */
+  /* ---------- PHASE: result (redesigned bottom sheet) ---------- */
+  const exposedRows = [
+    { Icon: CreditCard, label: "CPF", value: "***.***.***-**", badge: "ALTO", tone: "alto" as const },
+    { Icon: Mail, label: "E-mail", value: "seu@email.com", badge: "MÉDIO", tone: "medio" as const },
+    { Icon: Phone, label: "Telefone", value: "(11) 99999-9999", badge: "BAIXO", tone: "baixo" as const },
+    { Icon: MapPin, label: "Endereço", value: "São Paulo, SP", badge: "ALTO", tone: "alto" as const },
+  ];
+  const badgeTone: Record<string, string> = {
+    alto: "text-red-400 bg-red-500/15",
+    medio: "text-amber-400 bg-amber-500/15",
+    baixo: "text-emerald-400 bg-emerald-500/15",
+  };
+  const dadosExpostos = 4 + result.breaches;
+
   return (
     <div className="fixed inset-0 z-[60] flex flex-col justify-end bg-black/60 backdrop-blur-sm">
       <div
-        className="animate-sheet-up-slow relative max-h-[94vh] overflow-y-auto rounded-t-3xl"
+        className="animate-sheet-up-slow relative h-[90vh] overflow-y-auto rounded-t-3xl"
         style={{ backgroundColor: "#0A0A0F", boxShadow: "0 -8px 40px rgba(0,0,0,0.6)" }}
       >
-        <div className="sticky top-0 z-10 flex justify-center pt-2.5">
-          <span className="h-1 w-10 rounded-full bg-white/20" />
-        </div>
+        {/* drag handle */}
+        <div className="mx-auto mt-3 h-1 w-10 rounded-full bg-gray-700" />
+        {/* close */}
         <button
           onClick={onClose}
           aria-label="Fechar"
-          className="absolute right-4 top-4 z-10 grid h-9 w-9 place-items-center rounded-full bg-white/[0.06] text-gray-300 hover:bg-white/10"
+          className="absolute right-4 top-4 z-10 grid h-8 w-8 place-items-center rounded-full bg-gray-800 hover:bg-gray-700"
         >
-          <X className="h-4 w-4" />
+          <X className="h-4 w-4 text-gray-400" />
         </button>
 
-        <div className="mx-auto max-w-md px-5 pb-10">
-        {/* badge */}
-        <div className="mt-2 flex justify-center">
-          <span
-            className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold tracking-wider"
-            style={{ backgroundColor: "rgba(99,102,241,0.15)", border: "1px solid #4F46E5", color: "#A5B4FC" }}
-          >
-            <Check className="h-3.5 w-3.5" /> ANÁLISE CONCLUÍDA
-          </span>
-        </div>
-
-        {/* hero */}
-        <div className="mt-3 flex items-center gap-3">
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full border animate-danger-pulse" style={{ backgroundColor: "rgba(239,68,68,0.1)", borderColor: "rgba(239,68,68,0.2)" }}>
-            <AlertTriangle className="h-5 w-5 text-red-500" />
-          </span>
-          <div>
-            <h1 className="text-lg font-extrabold leading-tight text-white">
-              Seus dados foram encontrados em{" "}
-              <span className="text-xl text-red-500">{count} vazamentos</span>
-            </h1>
-          </div>
-        </div>
-        <p className="mt-1.5 text-xs text-gray-400">Encontramos informações associadas ao seu CPF, e-mail e telefone.</p>
-
-        {/* data rows — 1 visible, 3 blurred (curiosity) */}
-        <div className="mt-2.5 space-y-1.5">
-          {rows.map((r) => (
-            <div key={r.label} className="flex items-center gap-2.5 rounded-xl px-3 py-1.5" style={{ backgroundColor: "#12121A", border: "1px solid rgba(255,255,255,0.05)" }}>
-              <span className="grid place-items-center rounded-lg p-1" style={{ backgroundColor: "rgba(99,102,241,0.1)" }}>
-                <r.Icon className="h-4 w-4" style={{ color: "#A5B4FC" }} />
-              </span>
-              <p className="text-sm font-medium text-white">{r.label}</p>
-              <p className={`min-w-0 flex-1 truncate text-xs text-gray-400 ${r.blur ? "select-none blur-[4px]" : ""}`}>{r.value}</p>
-              {r.blur && <Lock className="h-3 w-3 shrink-0 text-gray-500" />}
-              <span className="rounded-full px-2 py-0.5 text-xs font-bold" style={{ color: r.color, backgroundColor: r.bg }}>{r.badge}</span>
-            </div>
-          ))}
-        </div>
-
-        {/* divider */}
-        <div className="mt-3 flex items-center gap-3">
-          <div className="h-px flex-1" style={{ backgroundColor: "rgba(255,255,255,0.08)" }} />
-          <span className="text-xs text-gray-500">Proteja-se agora</span>
-          <div className="h-px flex-1" style={{ backgroundColor: "rgba(255,255,255,0.08)" }} />
-        </div>
-
-        {/* Essencial plan card */}
-        <div className="relative mt-3 rounded-2xl border-2 p-3.5" style={{ background: "linear-gradient(135deg,#1a1a4e,#1e1b4b)", borderColor: "#6366F1" }}>
-          <span className="absolute -top-3 left-1/2 inline-flex -translate-x-1/2 items-center gap-1 whitespace-nowrap rounded-full px-3 py-1 text-[10px] font-bold text-white" style={{ backgroundColor: "#4F46E5" }}>
-            <Flame className="h-3 w-3 text-orange-300" /> OFERTA DE LANÇAMENTO · {vagas} VAGAS
-          </span>
-          <p className="mt-1 text-sm text-indigo-300">Essencial</p>
-          <div className="flex items-end gap-1">
-            <span className="text-2xl font-extrabold text-white">R$9,90</span>
-            <span className="mb-0.5 text-sm text-gray-400">/mês · preço travado</span>
-          </div>
-          <ul className="mt-2 space-y-1">
-            {["CPF + e-mail + telefone protegidos", "Alertas em tempo real", "Dark web monitorada", "Relatório completo desbloqueado"].map((f) => (
-              <li key={f} className="flex items-center gap-2 text-sm text-gray-200">
-                <Check className="h-4 w-4 shrink-0 text-green-400" /> {f}
-              </li>
-            ))}
-          </ul>
-
-          {/* email */}
-          <p className="mt-2.5 mb-1.5 text-sm text-gray-400">Para onde enviamos seu relatório?</p>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="seu@email.com"
-            className="w-full rounded-xl px-4 py-2.5 text-white outline-none placeholder:text-white/25"
-            style={{ backgroundColor: "#12121A", border: "1px solid rgba(99,102,241,0.3)" }}
-          />
-
-          {/* Two CTAs — primary: Proteção Total R$29,90 · secondary: Essencial R$9,90 */}
-          <div className="mt-2.5 space-y-2">
-            <button
-              onClick={() => checkout(MP_PROTECAO_URL)}
-              disabled={!email.includes("@") || redirecting}
-              className="flex w-full items-center justify-between rounded-2xl px-4 py-3 text-left transition-all active:scale-[0.99] disabled:opacity-50"
-              style={{ background: "linear-gradient(135deg,#4F46E5,#6366F1)", boxShadow: "0 0 24px rgba(79,70,229,0.45)" }}
-            >
-              <span className="flex items-center gap-2">
-                <Trash2 className="h-4 w-4 shrink-0 text-white" />
-                <span>
-                  <span className="block text-sm font-extrabold text-white">Proteção Total — R$29,90/mês →</span>
-                  <span className="block text-[11px] text-white/70">Remova seus dados · exclusão via LGPD</span>
-                </span>
-              </span>
-              <span className="shrink-0 text-right">
-                <span className="block text-base font-extrabold text-white">R$29,90</span>
-                <span className="block text-[10px] text-white/70">/mês</span>
-              </span>
-            </button>
-
-            <button
-              onClick={() => checkout(MP_ESSENCIAL_URL)}
-              disabled={!email.includes("@") || redirecting}
-              className="flex w-full items-center justify-between rounded-2xl px-4 py-3 text-left transition-all active:scale-[0.99] disabled:opacity-50"
-              style={{ backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(124,58,237,0.4)" }}
-            >
-              <span className="flex items-center gap-2">
-                <Lock className="h-4 w-4 shrink-0 text-purple-300" />
-                <span>
-                  <span className="block text-sm font-bold text-white">Ver relatório — R$9,90/mês →</span>
-                  <span className="block text-[11px] text-gray-400">Descubra onde seus dados vazaram</span>
-                </span>
-              </span>
-              <span className="shrink-0 text-right">
-                <span className="block text-base font-extrabold text-white">R$9,90</span>
-                <span className="block text-[10px] text-gray-400">/mês</span>
-              </span>
-            </button>
+        <div className="mx-auto max-w-md pb-10">
+          {/* headline */}
+          <div className="mt-5 px-5 text-center">
+            <h1 className="text-2xl font-extrabold leading-tight text-white">Encontramos vazamentos</h1>
+            <h1 className="text-2xl font-extrabold leading-tight text-red-500">dos seus dados</h1>
+            <p className="mt-2 text-center text-sm leading-relaxed text-gray-400">
+              Seus dados foram encontrados em {count} vazamentos e estão expostos na internet.
+            </p>
           </div>
 
-          {redirecting && <p className="mt-2 text-center text-xs text-indigo-300">Redirecionando para pagamento seguro...</p>}
-          <p className="mt-2 text-center text-xs text-indigo-300">+{activated} pessoas ativaram hoje</p>
-          <p className="mt-1 text-center text-xs text-gray-600">Seguro · LGPD · Cancele quando quiser</p>
-        </div>
-
-        {/* other plans */}
-        <button onClick={() => setShowOther((v) => !v)} className="mx-auto mt-3 flex items-center justify-center gap-1 text-xs text-gray-600 hover:text-gray-400">
-          Ver outros planos <ChevronDown className={`h-3.5 w-3.5 transition-transform ${showOther ? "rotate-180" : ""}`} />
-        </button>
-        {showOther && (
-          <div className="mt-3 space-y-2">
-            {[
-              { n: "Score+", p: "R$29,90", d: "Score Boavista + negativações" },
-              { n: "Família", p: "R$39,90", d: "Até 6 CPFs monitorados" },
-            ].map((pl) => (
-              <div key={pl.n} className="flex items-center justify-between rounded-xl px-4 py-3" style={{ backgroundColor: "#12121A", border: "1px solid rgba(255,255,255,0.05)" }}>
-                <div>
-                  <p className="text-sm font-semibold text-white">{pl.n}</p>
-                  <p className="text-xs text-gray-500">{pl.d}</p>
-                </div>
-                <span className="text-sm font-bold text-white">{pl.p}<span className="text-xs font-normal text-gray-500">/mês</span></span>
+          {/* summary card */}
+          <div className="mx-5 mt-5 rounded-2xl border border-white/5 p-4" style={{ backgroundColor: "#12121A" }}>
+            <p className="text-center text-sm font-bold text-white">Resumo da análise</p>
+            <div className="mt-3 grid grid-cols-3 text-center">
+              <div>
+                <p className="text-3xl font-extrabold text-white">{count}</p>
+                <p className="mt-1 text-[11px] leading-tight text-gray-400">Vazamentos encontrados</p>
               </div>
-            ))}
+              <div className="border-x border-white/5">
+                <p className="text-3xl font-extrabold text-red-500">Alto</p>
+                <p className="mt-1 text-[11px] leading-tight text-gray-400">Nível de risco</p>
+              </div>
+              <div>
+                <p className="text-3xl font-extrabold text-white">{dadosExpostos}</p>
+                <p className="mt-1 text-[11px] leading-tight text-gray-400">Dados expostos</p>
+              </div>
+            </div>
           </div>
-        )}
+
+          {/* CTA: unlock full report (Essencial R$9,90) */}
+          <button
+            onClick={() => checkout(MP_ESSENCIAL_URL)}
+            disabled={redirecting}
+            className="mx-5 mt-4 flex w-[calc(100%-2.5rem)] items-center gap-3 rounded-2xl px-4 py-3.5 text-left transition-all active:scale-[0.99] disabled:opacity-60"
+            style={{ background: "linear-gradient(135deg,#4F46E5,#6366F1)", boxShadow: "0 0 24px rgba(79,70,229,0.4)" }}
+          >
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white/15">
+              <Lock className="h-5 w-5 text-white" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block font-bold text-white">Desbloquear relatório completo</span>
+              <span className="block text-xs text-white/70">Veja todos os detalhes e recomendações</span>
+            </span>
+            <ChevronRight className="h-5 w-5 shrink-0 text-white/80" />
+          </button>
+
+          {/* CTA: erase leaked data (Proteção Total R$29,90) */}
+          <button
+            onClick={() => checkout(MP_PROTECAO_URL)}
+            disabled={redirecting}
+            className="mx-5 mt-3 flex w-[calc(100%-2.5rem)] items-center gap-3 rounded-2xl px-4 py-3.5 text-left transition-all active:scale-[0.99] disabled:opacity-60"
+            style={{ background: "linear-gradient(135deg,#DC2626,#EF4444)", boxShadow: "0 0 24px rgba(220,38,38,0.4)" }}
+          >
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white/15">
+              <Trash2 className="h-5 w-5 text-white" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block font-bold text-white">Apagar dados vazados</span>
+              <span className="block text-xs text-white/70">Remova seus dados da internet</span>
+            </span>
+            <ChevronRight className="h-5 w-5 shrink-0 text-white/80" />
+          </button>
+
+          {redirecting && (
+            <p className="mt-3 px-5 text-center text-xs text-indigo-300">Redirecionando para pagamento seguro...</p>
+          )}
+
+          {/* exposed data list */}
+          <div className="mt-6 px-5">
+            <p className="text-sm font-bold text-white">Dados expostos:</p>
+            <div className="mt-3 space-y-3.5">
+              {exposedRows.map((r) => (
+                <div key={r.label} className="flex items-center gap-3">
+                  <r.Icon className="h-4 w-4 shrink-0 text-gray-500" />
+                  <span className="w-20 shrink-0 text-sm text-white">{r.label}</span>
+                  <span className="min-w-0 flex-1 truncate text-sm text-gray-300">{r.value}</span>
+                  <span className={`shrink-0 rounded-md px-2 py-0.5 text-[11px] font-bold ${badgeTone[r.tone]}`}>{r.badge}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* full report teaser card */}
+          <button
+            onClick={() => checkout(MP_ESSENCIAL_URL)}
+            disabled={redirecting}
+            className="mx-5 mt-6 flex w-[calc(100%-2.5rem)] items-start justify-between rounded-2xl border p-4 text-left transition-all active:scale-[0.99] disabled:opacity-60"
+            style={{ backgroundColor: "#101024", borderColor: "rgba(99,102,241,0.25)" }}
+          >
+            <span className="flex gap-3">
+              <Lock className="mt-0.5 h-5 w-5 shrink-0 text-gray-400" />
+              <span>
+                <span className="block font-bold text-white">Relatório completo</span>
+                <span className="mt-2 block space-y-1">
+                  {["Fontes dos vazamentos", "Dados e detalhes", "Recomendações personalizadas"].map((f) => (
+                    <span key={f} className="flex items-center gap-2 text-sm text-gray-300">
+                      <Check className="h-4 w-4 shrink-0 text-green-400" /> {f}
+                    </span>
+                  ))}
+                </span>
+              </span>
+            </span>
+            <span className="shrink-0 text-right">
+              <span className="block text-xl font-extrabold text-indigo-300">R$9,90</span>
+              <span className="block text-xs text-gray-400">/mês</span>
+            </span>
+          </button>
         </div>
       </div>
     </div>
