@@ -288,7 +288,7 @@ export function ScanFunnel({ open, onClose, onScanStart }: { open: boolean; onCl
                 <p className="mt-1 text-[11px] leading-tight text-gray-400">Vazamentos encontrados</p>
               </div>
               <div className="border-x border-white/5">
-                <p className="text-[1.78rem] font-extrabold leading-none text-red-500">Alto</p>
+                <p className="text-[1.78rem] font-extrabold leading-[2.25rem] text-red-500">Alto</p>
                 <p className="mt-1 text-[11px] leading-tight text-gray-400">Nível de risco</p>
               </div>
               <div>
