@@ -10,7 +10,7 @@ import { AppProvider, useApp } from "@/contexts/AppContext";
 import { PaywallModal } from "@/components/meu-radar/PaywallModal";
 import { ScanFunnel } from "@/components/meu-radar/ScanFunnel";
 import { ScanningOverlay } from "@/components/meu-radar/ScanningOverlay";
-import { TopBanner } from "@/components/meu-radar/TopBanner";
+import { ScanNudge } from "@/components/meu-radar/ScanNudge";
 import { WelcomeGate } from "@/components/meu-radar/WelcomeGate";
 import { isValidCPF } from "@/lib/funnel";
 
@@ -85,7 +85,6 @@ function Index() {
   return (
     <div className="min-h-screen bg-muted/40">
       <div className="relative mx-auto flex min-h-screen max-w-[420px] flex-col bg-background shadow-2xl sm:max-w-[640px] lg:max-w-[820px]">
-        {!isPremium && <TopBanner onScan={onScan} />}
         <main className="flex flex-1 flex-col pb-2">
           {showEmpty ? (
             <ScanEmptyState onScan={onScan} />
@@ -99,6 +98,7 @@ function Index() {
           )}
         </main>
         <ScanningOverlay open={scanning} />
+        <ScanNudge show={!isPremium && !hasScanned && !scanning && !funnelOpen} onScan={onScan} />
         <BottomNav active={tab} onChange={setTab} onScan={onScan} scanning={scanning} />
       </div>
 

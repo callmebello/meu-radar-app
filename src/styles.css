@@ -185,6 +185,15 @@
   to   { transform: scaleX(0.65); }
 }
 
+/* Floating scan nudge — gentle bounce to draw the eye to the Scan button */
+@keyframes nudge-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+.animate-nudge-bounce {
+  animation: nudge-bounce 1.8s ease-in-out infinite;
+}
+
 /* Bottom sheet slide up */
 @keyframes sheet-up {
   from { transform: translateY(100%); }

@@ -45,7 +45,7 @@ export function ScanningOverlay({ open }: { open: boolean }) {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-40 flex flex-col justify-end bg-black/25 backdrop-blur-[3px]">
+    <div className="fixed inset-0 z-40 flex flex-col justify-end bg-black/10 backdrop-blur-[1.5px]">
       <div
         className="mx-3 mb-[92px] rounded-2xl border p-5"
         style={{
