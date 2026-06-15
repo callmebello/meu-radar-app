@@ -1,12 +1,18 @@
 import { useState } from "react";
 import { AppHeader } from "./Header";
-import { Shield, ShieldCheck, CircleCheck, Zap, IdCard, Mail, ArrowRight } from "lucide-react";
-import { formatCPF, isValidCPF } from "@/lib/funnel";
+import { ShieldCheck, CircleCheck, Zap, IdCard, Mail, ArrowRight } from "lucide-react";
+import { formatCPF, isValidCPF, isValidEmail } from "@/lib/funnel";
 
 const FEATURES = [
   { Icon: CircleCheck, title: "100% gratuito" },
   { Icon: Zap, title: "Resultado rápido" },
   { Icon: ShieldCheck, title: "Conforme LGPD" },
+];
+
+const AVATARS = [
+  "https://i.pravatar.cc/64?img=12",
+  "https://i.pravatar.cc/64?img=32",
+  "https://i.pravatar.cc/64?img=45",
 ];
 
 /**
@@ -17,7 +23,7 @@ export function ScanLanding({ onSubmit }: { onSubmit: (cpf: string, email: strin
   const [cpf, setCpf] = useState("");
   const [email, setEmail] = useState("");
 
-  const valid = isValidCPF(cpf);
+  const valid = isValidCPF(cpf) && isValidEmail(email);
   const submit = () => {
     if (!valid) return;
     onSubmit(cpf, email.trim());
@@ -26,19 +32,9 @@ export function ScanLanding({ onSubmit }: { onSubmit: (cpf: string, email: strin
   return (
     <>
       <AppHeader title="" showBell />
-      <div className="flex flex-1 flex-col px-6 pb-5 pt-1">
-        {/* hero shield (no letter) */}
-        <div className="relative mx-auto mt-1 grid h-20 w-20 place-items-center">
-          <span className="absolute h-20 w-20 rounded-full border border-indigo-500/15" />
-          <Shield
-            className="h-14 w-14 text-indigo-400"
-            strokeWidth={1.4}
-            style={{ filter: "drop-shadow(0 0 18px rgba(99,102,241,0.6))" }}
-          />
-        </div>
-
-        {/* headline (compact) */}
-        <h1 className="mt-3 text-center text-xl font-extrabold leading-snug text-white">
+      <div className="flex flex-1 flex-col px-6 pb-5 pt-3">
+        {/* headline (compact, ~2 lines) */}
+        <h1 className="mt-2 text-center text-[15px] font-extrabold leading-snug text-white">
           A Priva descobre onde seus dados estão <span className="text-indigo-400">expostos</span> e ajuda a{" "}
           <span className="text-indigo-400">removê-los</span>.
         </h1>
@@ -114,11 +110,14 @@ export function ScanLanding({ onSubmit }: { onSubmit: (cpf: string, email: strin
         {/* social proof */}
         <div className="mt-4 flex items-center gap-3">
           <div className="flex -space-x-2.5">
-            {["#6366F1", "#8B5CF6", "#4F46E5"].map((c, i) => (
-              <span
+            {AVATARS.map((src, i) => (
+              <img
                 key={i}
-                className="h-8 w-8 rounded-full border-2"
-                style={{ background: `linear-gradient(135deg, ${c}, #1e1b4b)`, borderColor: "#0A0A0F" }}
+                src={src}
+                alt=""
+                loading="lazy"
+                className="h-8 w-8 rounded-full border-2 object-cover"
+                style={{ borderColor: "#0A0A0F" }}
               />
             ))}
           </div>

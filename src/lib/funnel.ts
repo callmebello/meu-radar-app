@@ -13,8 +13,28 @@ export function cpfDigits(v: string) {
   return v.replace(/\D/g, "");
 }
 
+// Full CPF check-digit validation (no network) — only real CPFs pass.
 export function isValidCPF(v: string) {
-  return cpfDigits(v).length === 11;
+  const d = cpfDigits(v);
+  if (d.length !== 11) return false;
+  if (/^(\d)\1{10}$/.test(d)) return false; // rejects 000.., 111.., etc.
+
+  let sum = 0;
+  for (let i = 0; i < 9; i++) sum += parseInt(d[i], 10) * (10 - i);
+  let dv1 = (sum * 10) % 11;
+  if (dv1 === 10) dv1 = 0;
+  if (dv1 !== parseInt(d[9], 10)) return false;
+
+  sum = 0;
+  for (let i = 0; i < 10; i++) sum += parseInt(d[i], 10) * (11 - i);
+  let dv2 = (sum * 10) % 11;
+  if (dv2 === 10) dv2 = 0;
+  return dv2 === parseInt(d[10], 10);
+}
+
+// Basic e-mail format validation (no network).
+export function isValidEmail(v: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim());
 }
 
 // Numbers reflect real BR exposure rates — mostly high, never zero.
