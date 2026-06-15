@@ -288,7 +288,7 @@ export function ScanFunnel({ open, onClose, onScanStart }: { open: boolean; onCl
                 <p className="mt-1 text-[11px] leading-tight text-gray-400">Vazamentos encontrados</p>
               </div>
               <div className="border-x border-white/5">
-                <p className="text-3xl font-extrabold text-red-500">Alto</p>
+                <p className="text-[1.78rem] font-extrabold leading-none text-red-500">Alto</p>
                 <p className="mt-1 text-[11px] leading-tight text-gray-400">Nível de risco</p>
               </div>
               <div>
@@ -309,8 +309,8 @@ export function ScanFunnel({ open, onClose, onScanStart }: { open: boolean; onCl
               <Lock className="h-5 w-5 text-white" />
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block font-bold text-white">Desbloquear relatório completo</span>
-              <span className="block text-xs text-white/70">Veja todos os detalhes e recomendações</span>
+              <span className="block truncate font-bold text-white">Desbloquear Relatório</span>
+              <span className="block text-xs text-white/70">Veja relatório completo</span>
             </span>
             <ChevronRight className="h-5 w-5 shrink-0 text-white/80" />
           </button>
@@ -344,7 +344,7 @@ export function ScanFunnel({ open, onClose, onScanStart }: { open: boolean; onCl
                 <div key={r.label} className="flex items-center gap-3">
                   <r.Icon className="h-4 w-4 shrink-0 text-gray-500" />
                   <span className="w-20 shrink-0 text-sm text-white">{r.label}</span>
-                  <span className="min-w-0 flex-1 truncate text-sm text-gray-300">{r.value}</span>
+                  <span className="min-w-0 flex-1 select-none truncate text-sm text-gray-300 blur-[4px]">{r.value}</span>
                   <span className={`shrink-0 rounded-md px-2 py-0.5 text-[11px] font-bold ${badgeTone[r.tone]}`}>{r.badge}</span>
                 </div>
               ))}
