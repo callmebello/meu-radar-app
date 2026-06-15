@@ -11,7 +11,7 @@ import { PaywallModal } from "@/components/meu-radar/PaywallModal";
 import { ScanFunnel } from "@/components/meu-radar/ScanFunnel";
 import { ScanningOverlay } from "@/components/meu-radar/ScanningOverlay";
 import { ScanNudge } from "@/components/meu-radar/ScanNudge";
-import { WelcomeGate } from "@/components/meu-radar/WelcomeGate";
+import { ScanLanding } from "@/components/meu-radar/ScanLanding";
 import { isValidCPF } from "@/lib/funnel";
 
 import { AppHeader } from "@/components/meu-radar/Header";
@@ -73,6 +73,17 @@ function Index() {
   // CPF entered in the funnel → run the inline scan
   const onScanStart = () => runScan();
 
+  // Landing form submit → store CPF + e-mail, then run the inline scan
+  const startScanWith = (cpf: string, email: string) => {
+    try {
+      sessionStorage.setItem("priva_cpf", cpf);
+      if (email) sessionStorage.setItem("priva_email", email);
+    } catch {
+      /* ignore */
+    }
+    runScan();
+  };
+
   const closeFunnel = () => {
     setFunnelOpen(false);
     if (typeof window !== "undefined" && sessionStorage.getItem("priva_cpf")) {
@@ -87,7 +98,7 @@ function Index() {
       <div className="relative mx-auto flex min-h-screen max-w-[420px] flex-col bg-background shadow-2xl sm:max-w-[640px] lg:max-w-[820px]">
         <main className="flex flex-1 flex-col pb-2">
           {showEmpty ? (
-            <ScanEmptyState onScan={onScan} />
+            <ScanLanding onSubmit={startScanWith} />
           ) : (
             <>
               {tab === "radar" && <RadarTab />}
@@ -98,11 +109,10 @@ function Index() {
           )}
         </main>
         <ScanningOverlay open={scanning} />
-        <ScanNudge show={!isPremium && !hasScanned && !scanning && !funnelOpen} onScan={onScan} />
+        <ScanNudge show={!isPremium && !hasScanned && !scanning && !funnelOpen && tab !== "radar"} onScan={onScan} />
         <BottomNav active={tab} onChange={setTab} onScan={onScan} scanning={scanning} />
       </div>
 
-      <WelcomeGate />
       <ScanFunnel open={funnelOpen} onClose={closeFunnel} onScanStart={onScanStart} />
       <PaywallModal />
       <Toaster position="top-center" />
