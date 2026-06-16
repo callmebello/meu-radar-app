@@ -36,8 +36,7 @@ export function ScanLanding({ onSubmit }: { onSubmit: (cpf: string, email: strin
         {/* headline */}
         <div>
           <h1 className="text-center text-[22px] font-extrabold leading-snug text-white">
-            A Priva descobre onde seus dados estão <span className="text-indigo-400">expostos</span> e ajuda a{" "}
-            <span className="text-indigo-400">removê-los</span>.
+            Descubra se seus dados estão <span className="text-indigo-400">expostos</span> na internet.
           </h1>
           <p className="mx-auto mt-3 max-w-sm text-center text-sm leading-relaxed text-gray-400">
             Analisamos CPF, e-mail, telefone e possíveis vazamentos para proteger sua identidade digital.
