@@ -39,7 +39,7 @@ export function ScanLanding({ onSubmit }: { onSubmit: (cpf: string, email: strin
             Seu CPF foi <span className="text-indigo-400">vazado?</span>
           </h1>
           <p className="mx-auto mt-2 max-w-sm text-center text-base leading-relaxed text-gray-300">
-            Descubra agora e remova seus dados da internet.
+            Descubra e remova seus dados da internet.
           </p>
           <p className="mx-auto mt-3 max-w-sm text-center text-sm leading-relaxed text-gray-400">
             Analisamos CPF, e-mail, telefone e possíveis vazamentos para proteger sua identidade digital.
