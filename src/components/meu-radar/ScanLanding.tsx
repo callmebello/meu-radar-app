@@ -35,11 +35,11 @@ export function ScanLanding({ onSubmit }: { onSubmit: (cpf: string, email: strin
       <div className="flex flex-1 flex-col justify-between px-6 pb-7 pt-5">
         {/* headline */}
         <div>
-          <h1 className="text-center text-[22px] font-extrabold leading-snug text-white">
-            Descubra se seus dados estão <span className="text-indigo-400">expostos</span> na internet.
+          <h1 className="text-center text-3xl font-extrabold leading-tight text-white md:text-4xl">
+            Seu CPF foi <span className="text-indigo-400">vazado?</span>
           </h1>
-          <p className="mx-auto mt-3 max-w-sm text-center text-sm leading-relaxed text-gray-400">
-            Analisamos CPF, e-mail, telefone e possíveis vazamentos para proteger sua identidade digital.
+          <p className="mx-auto mt-2 max-w-sm text-center text-base leading-relaxed text-gray-300">
+            Descubra agora e remova seus dados da internet.
           </p>
         </div>
 
