@@ -118,10 +118,9 @@ function Index() {
     setGoToTab((t: TabId) => setTab(t));
     setOpenScan(() => onScan());
     const storedCpf = typeof window !== "undefined" ? sessionStorage.getItem("priva_cpf") : null;
-    const paid = typeof window !== "undefined" ? localStorage.getItem("priva_is_paid") === "true" : false;
     if (storedCpf) setHasScanned(true);
-    // First visit (no CPF yet, not already paid) → show the LGPD capture modal.
-    if (!storedCpf && !paid) setShowCpfModal(true);
+    // The landing page is the entry — no auto CPF modal pop-up. The modal only
+    // opens as a fallback if the user taps Scan without a stored CPF (onScan).
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [setGoToTab, setOpenScan]);
 
