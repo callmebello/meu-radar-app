@@ -9,17 +9,11 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as TesteHibpRouteImport } from './routes/teste-hibp'
 import { Route as TermosRouteImport } from './routes/termos'
 import { Route as PrivacidadeRouteImport } from './routes/privacidade'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
 
-const TesteHibpRoute = TesteHibpRouteImport.update({
-  id: '/teste-hibp',
-  path: '/teste-hibp',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const TermosRoute = TermosRouteImport.update({
   id: '/termos',
   path: '/termos',
@@ -45,14 +39,12 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/privacidade': typeof PrivacidadeRoute
   '/termos': typeof TermosRoute
-  '/teste-hibp': typeof TesteHibpRoute
   '/auth/callback': typeof AuthCallbackRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/privacidade': typeof PrivacidadeRoute
   '/termos': typeof TermosRoute
-  '/teste-hibp': typeof TesteHibpRoute
   '/auth/callback': typeof AuthCallbackRoute
 }
 export interface FileRoutesById {
@@ -60,40 +52,25 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/privacidade': typeof PrivacidadeRoute
   '/termos': typeof TermosRoute
-  '/teste-hibp': typeof TesteHibpRoute
   '/auth/callback': typeof AuthCallbackRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/privacidade' | '/termos' | '/teste-hibp' | '/auth/callback'
+  fullPaths: '/' | '/privacidade' | '/termos' | '/auth/callback'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/privacidade' | '/termos' | '/teste-hibp' | '/auth/callback'
-  id:
-    | '__root__'
-    | '/'
-    | '/privacidade'
-    | '/termos'
-    | '/teste-hibp'
-    | '/auth/callback'
+  to: '/' | '/privacidade' | '/termos' | '/auth/callback'
+  id: '__root__' | '/' | '/privacidade' | '/termos' | '/auth/callback'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   PrivacidadeRoute: typeof PrivacidadeRoute
   TermosRoute: typeof TermosRoute
-  TesteHibpRoute: typeof TesteHibpRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/teste-hibp': {
-      id: '/teste-hibp'
-      path: '/teste-hibp'
-      fullPath: '/teste-hibp'
-      preLoaderRoute: typeof TesteHibpRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/termos': {
       id: '/termos'
       path: '/termos'
@@ -129,7 +106,6 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   PrivacidadeRoute: PrivacidadeRoute,
   TermosRoute: TermosRoute,
-  TesteHibpRoute: TesteHibpRoute,
   AuthCallbackRoute: AuthCallbackRoute,
 }
 export const routeTree = rootRouteImport
