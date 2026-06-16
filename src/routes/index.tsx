@@ -109,7 +109,7 @@ function Index() {
           )}
         </main>
         <ScanningOverlay open={scanning} />
-        <ScanNudge show={!isPremium && !hasScanned && !scanning && !funnelOpen && tab !== "radar"} onScan={onScan} />
+        <ScanNudge show={!isPremium && !hasScanned && !scanning && !funnelOpen} onScan={onScan} />
         <BottomNav active={tab} onChange={setTab} onScan={onScan} scanning={scanning} />
       </div>
 
