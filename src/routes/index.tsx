@@ -12,7 +12,13 @@ import { ScanFunnel } from "@/components/meu-radar/ScanFunnel";
 import { ScanningOverlay } from "@/components/meu-radar/ScanningOverlay";
 import { ScanNudge } from "@/components/meu-radar/ScanNudge";
 import { ScanLanding } from "@/components/meu-radar/ScanLanding";
-import { isValidCPF } from "@/lib/funnel";
+import { CPFModal } from "@/components/CPFModal";
+import { AccountCreation } from "@/components/AccountCreation";
+import { isValidCPF, generateResult } from "@/lib/funnel";
+import { track } from "@/lib/analytics";
+import { saveUser } from "@/lib/api/saveUser";
+import { saveScan } from "@/lib/api/saveScan";
+import { checkHibp } from "@/lib/api/hibp.functions";
 
 import { AppHeader } from "@/components/meu-radar/Header";
 
@@ -36,52 +42,94 @@ function Index() {
   const [tab, setTab] = useState<TabId>("radar");
   const [funnelOpen, setFunnelOpen] = useState(false);
   const [hasScanned, setHasScanned] = useState(false);
-  const { setGoToTab, isPremium, setOpenScan, scanning, setScanning } = useApp();
+  const [showCpfModal, setShowCpfModal] = useState(false);
+  const { setGoToTab, isPremium, setOpenScan, scanning, setScanning, setScanResult } = useApp();
 
-  // Run the inline scan (button spins + box slides up over the blurred app),
-  // then open the result sheet. Keeps the footer visible the whole time.
-  const runScan = () => {
+  // Core scan: spins the button, slides up the scanning box, then opens the
+  // result sheet. In parallel it persists the user (hashed CPF), queries HIBP for
+  // the real breach count, and caches the scan — all best-effort (guarded).
+  const runScan = (cpf: string, email: string) => {
     setHasScanned(true);
     setTab("radar");
     setFunnelOpen(false);
     setScanning(true);
+
+    const mock = generateResult(cpf);
+    let breachCount = mock.breaches;
+    let userId: string | null = null;
+    let cpfHash = "";
+
+    void saveUser({ data: { email, cpf } })
+      .then((u) => {
+        userId = u.userId;
+        cpfHash = u.cpfHash;
+        if (u.userId) {
+          try {
+            localStorage.setItem("priva_user_id", u.userId);
+          } catch {
+            /* ignore */
+          }
+        }
+      })
+      .catch(() => {});
+
+    if (email) {
+      void checkHibp({ data: { email } })
+        .then((h) => {
+          if (h && typeof h.count === "number" && h.count > 0) breachCount = h.count;
+          setScanResult({ breachCount, hibp: h });
+        })
+        .catch(() => {});
+    }
+
     setTimeout(() => {
+      setScanResult({ breachCount, hibp: null });
       setScanning(false);
-      setFunnelOpen(true); // ScanFunnel opens straight to result (CPF already stored)
+      setFunnelOpen(true);
+      track("ViewContent");
+      void saveScan({
+        data: { userId, cpfHash, email, result: { breachCount, mock }, breachCount },
+      }).catch(() => {});
     }, 3500);
   };
 
-  // Central scan button: if CPF already known, scan inline; else ask for it first.
-  const onScan = () => {
-    const stored = typeof window !== "undefined" ? sessionStorage.getItem("priva_cpf") : null;
-    if (stored && isValidCPF(stored)) {
-      runScan();
-    } else {
-      setFunnelOpen(true); // ScanFunnel opens the CPF entry modal
-    }
-  };
-
-  useEffect(() => {
-    setGoToTab((t: TabId) => setTab(t));
-    setOpenScan(() => onScan());
-    if (typeof window !== "undefined" && sessionStorage.getItem("priva_cpf")) {
-      setHasScanned(true);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [setGoToTab, setOpenScan]);
-
-  // CPF entered in the funnel → run the inline scan
-  const onScanStart = () => runScan();
-
-  // Landing form submit → store CPF + e-mail, then run the inline scan
-  const startScanWith = (cpf: string, email: string) => {
+  // Single entry point used by the landing form and the CPF modal.
+  const beginScan = (cpf: string, email: string) => {
     try {
       sessionStorage.setItem("priva_cpf", cpf);
       if (email) sessionStorage.setItem("priva_email", email);
     } catch {
       /* ignore */
     }
-    runScan();
+    track("Lead");
+    setShowCpfModal(false);
+    runScan(cpf, email);
+  };
+
+  // Central scan button: scan inline if CPF is known, else open the capture modal.
+  const onScan = () => {
+    const c = typeof window !== "undefined" ? sessionStorage.getItem("priva_cpf") : null;
+    const e = (typeof window !== "undefined" ? sessionStorage.getItem("priva_email") : null) ?? "";
+    if (c && isValidCPF(c)) runScan(c, e);
+    else setShowCpfModal(true);
+  };
+
+  useEffect(() => {
+    setGoToTab((t: TabId) => setTab(t));
+    setOpenScan(() => onScan());
+    const storedCpf = typeof window !== "undefined" ? sessionStorage.getItem("priva_cpf") : null;
+    const paid = typeof window !== "undefined" ? localStorage.getItem("priva_is_paid") === "true" : false;
+    if (storedCpf) setHasScanned(true);
+    // First visit (no CPF yet, not already paid) → show the LGPD capture modal.
+    if (!storedCpf && !paid) setShowCpfModal(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [setGoToTab, setOpenScan]);
+
+  // CPF entered in the legacy funnel modal → run the inline scan from session.
+  const onScanStart = () => {
+    const c = sessionStorage.getItem("priva_cpf") || "";
+    const e = sessionStorage.getItem("priva_email") || "";
+    runScan(c, e);
   };
 
   const closeFunnel = () => {
@@ -98,7 +146,7 @@ function Index() {
       <div className="relative mx-auto flex min-h-screen max-w-[420px] flex-col bg-background shadow-2xl sm:max-w-[640px] lg:max-w-[820px]">
         <main className="flex flex-1 flex-col pb-2">
           {showEmpty ? (
-            <ScanLanding onSubmit={startScanWith} />
+            <ScanLanding onSubmit={beginScan} />
           ) : (
             <>
               {tab === "radar" && <RadarTab />}
@@ -114,6 +162,8 @@ function Index() {
       </div>
 
       <ScanFunnel open={funnelOpen} onClose={closeFunnel} onScanStart={onScanStart} />
+      {showCpfModal && !isPremium && <CPFModal onSubmit={beginScan} />}
+      <AccountCreation />
       <PaywallModal />
       <Toaster position="top-center" />
     </div>

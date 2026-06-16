@@ -51,6 +51,28 @@ export function generateResult(cpf: string) {
   return { breaches, phones, passwords, score, seed };
 }
 
+// Deterministic Identity Score from CPF + breach count (lower = worse).
+export function getScore(cpf: string, breachCount: number) {
+  const digits = cpfDigits(cpf);
+  const seed = digits.split("").reduce((a, b) => a + (parseInt(b, 10) || 0), 0);
+  const base = 45 + (seed % 30); // 45–74
+  const penalty = breachCount * 8;
+  return Math.max(20, base - penalty);
+}
+
+export function scoreBadge(score: number): { label: string; tone: "green" | "amber" | "red" } {
+  if (score >= 70) return { label: "BOM", tone: "green" };
+  if (score >= 45) return { label: "RISCO MÉDIO", tone: "amber" };
+  return { label: "RISCO ALTO", tone: "red" };
+}
+
+// Risk label from breach count (used in the result summary).
+export function riskFromBreaches(n: number): { label: string; tone: "red" | "amber" | "green" } {
+  if (n >= 5) return { label: "Alto", tone: "red" };
+  if (n >= 2) return { label: "Médio", tone: "amber" };
+  return { label: "Baixo", tone: "green" };
+}
+
 export function maskedFields(cpf: string, seed: number) {
   const digits = cpfDigits(cpf);
   const cpfLast2 = (digits.slice(-2) || "00").padStart(2, "0");

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { AlertTriangle, CreditCard, Mail, Phone, MapPin, Lock, Check, X, ChevronDown, ChevronRight, Flame, ShieldCheck, Trash2 } from "lucide-react";
-import { formatCPF, isValidCPF, generateResult, maskedFields, MP_ESSENCIAL_URL, MP_PROTECAO_URL } from "@/lib/funnel";
+import { formatCPF, isValidCPF, generateResult, maskedFields, riskFromBreaches, MP_ESSENCIAL_URL, MP_PROTECAO_URL } from "@/lib/funnel";
 import { useApp } from "@/contexts/AppContext";
 
 const SCAN_STEPS = [
@@ -27,7 +27,7 @@ function ScanRadar() {
 }
 
 export function ScanFunnel({ open, onClose, onScanStart }: { open: boolean; onClose: () => void; onScanStart?: () => void }) {
-  const { setIsPremium } = useApp();
+  const { setIsPremium, scanResult } = useApp();
   const [phase, setPhase] = useState<"cpf" | "scanning" | "result" | "success">("cpf");
   const [cpf, setCpf] = useState("");
   const [email, setEmail] = useState("");
@@ -73,6 +73,8 @@ export function ScanFunnel({ open, onClose, onScanStart }: { open: boolean; onCl
 
   const result = generateResult(cpf);
   const mask = maskedFields(cpf, result.seed);
+  // Real breach count from HIBP (via scan flow), falling back to the mock.
+  const breaches = scanResult?.breachCount ?? result.breaches;
 
   // count up hero number when result shows
   useEffect(() => {
@@ -82,13 +84,13 @@ export function ScanFunnel({ open, onClose, onScanStart }: { open: boolean; onCl
     let raf = 0;
     const tick = (now: number) => {
       const p = Math.min((now - start) / 800, 1);
-      setCount(Math.round(p * result.breaches));
+      setCount(Math.round(p * breaches));
       if (p < 1) raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase]);
+  }, [phase, breaches]);
 
   // success → unlock app after the confetti
   useEffect(() => {
@@ -250,7 +252,9 @@ export function ScanFunnel({ open, onClose, onScanStart }: { open: boolean; onCl
     medio: "text-amber-400 bg-amber-500/15",
     baixo: "text-emerald-400 bg-emerald-500/15",
   };
-  const dadosExpostos = 4 + result.breaches;
+  const dadosExpostos = 4 + breaches;
+  const risk = riskFromBreaches(breaches);
+  const riskColor = risk.tone === "red" ? "#F87171" : risk.tone === "amber" ? "#FBBF24" : "#34D399";
 
   return (
     <div className="fixed inset-0 z-[60] flex flex-col justify-end bg-black/60 backdrop-blur-sm">
@@ -288,7 +292,7 @@ export function ScanFunnel({ open, onClose, onScanStart }: { open: boolean; onCl
                 <p className="mt-1 text-[11px] leading-tight text-gray-400">Vazamentos encontrados</p>
               </div>
               <div className="border-x border-white/5">
-                <p className="text-[1.78rem] font-extrabold leading-[2.25rem] text-red-500">Alto</p>
+                <p className="text-[1.78rem] font-extrabold leading-[2.25rem]" style={{ color: riskColor }}>{risk.label}</p>
                 <p className="mt-1 text-[11px] leading-tight text-gray-400">Nível de risco</p>
               </div>
               <div>

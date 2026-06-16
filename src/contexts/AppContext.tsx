@@ -15,6 +15,13 @@ type Ctx = {
   setOpenScan: (fn: () => void) => void;
   scanning: boolean;
   setScanning: (v: boolean) => void;
+  scanResult: ScanResult | null;
+  setScanResult: (v: ScanResult | null) => void;
+};
+
+export type ScanResult = {
+  breachCount: number;
+  hibp?: { count: number; breaches: unknown[] } | null;
 };
 
 const AppCtx = createContext<Ctx | null>(null);
@@ -51,6 +58,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const openScan = useCallback(() => openScanFn.fn(), [openScanFn]);
 
   const [scanning, setScanning] = useState(false);
+  const [scanResult, setScanResult] = useState<ScanResult | null>(null);
 
   return (
     <AppCtx.Provider
@@ -68,6 +76,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setOpenScan,
         scanning,
         setScanning,
+        scanResult,
+        setScanResult,
       }}
     >
       {children}
