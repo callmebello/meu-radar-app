@@ -40,6 +40,13 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
+      // Mercado Pago webhook — handled before the SSR app so MP can POST to it.
+      const { pathname } = new URL(request.url);
+      if (request.method === "POST" && pathname === "/api/webhook/mercadopago") {
+        const { handleMercadoPagoWebhook } = await import("./lib/api/mercadopago-webhook");
+        return await handleMercadoPagoWebhook(request);
+      }
+
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
       return await normalizeCatastrophicSsrResponse(response);

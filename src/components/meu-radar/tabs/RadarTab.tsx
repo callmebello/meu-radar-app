@@ -4,6 +4,8 @@ import { AnimatedScoreGauge } from "../AnimatedScoreGauge";
 import { PaywallLock } from "../PaywallLock";
 import { ShieldAlert, ShieldCheck, Fingerprint, Mail, Phone, MapPin, X, ChevronRight } from "lucide-react";
 import { useApp } from "@/contexts/AppContext";
+import { getScore } from "@/lib/funnel";
+import { UpsellBanner, shouldShowUpsell } from "../UpsellBanner";
 import { IdentityCardSheet, type CardType } from "../IdentityCardSheet";
 import { AlertDetailSheet, type AlertDetail } from "../AlertDetailSheet";
 
@@ -55,7 +57,11 @@ const alerts: AlertDetail[] = [
 const alertMeta = (a: AlertDetail) => `${a.origem} · ${a.data}`;
 
 export function RadarTab() {
-  const { isPremium, goToTab, hasChecked, scanning } = useApp();
+  const { isPremium, goToTab, hasChecked, scanning, scanResult } = useApp();
+  // Dynamic Identity Score from the scanned CPF + real breach count.
+  const cpf = typeof window !== "undefined" ? sessionStorage.getItem("priva_cpf") || "" : "";
+  const breachCount = scanResult?.breachCount ?? 0;
+  const score = cpf ? getScore(cpf, breachCount) : 67;
   const [bannerVisible, setBannerVisible] = useState(true);
   const [cardSheet, setCardSheet] = useState<CardType | null>(null);
   const [alertSheet, setAlertSheet] = useState<AlertDetail | null>(null);
@@ -89,13 +95,15 @@ export function RadarTab() {
             ) : (
               <>
                 <div className="mt-3 w-full">
-                  <AnimatedScoreGauge score={67} max={100} />
+                  <AnimatedScoreGauge score={score} max={100} />
                 </div>
                 <p className="mt-4 text-xs text-muted-foreground">Última verificação: hoje às 14:32</p>
               </>
             )}
           </div>
         </section>
+
+        {shouldShowUpsell(isPremium) && <UpsellBanner />}
 
         {/* Identity radar grid */}
         <section>

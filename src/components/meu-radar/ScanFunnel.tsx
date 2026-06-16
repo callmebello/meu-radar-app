@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { AlertTriangle, CreditCard, Mail, Phone, MapPin, Lock, Check, X, ChevronDown, ChevronRight, Flame, ShieldCheck, Trash2 } from "lucide-react";
 import { formatCPF, isValidCPF, generateResult, maskedFields, riskFromBreaches, MP_ESSENCIAL_URL, MP_PROTECAO_URL } from "@/lib/funnel";
 import { useApp } from "@/contexts/AppContext";
+import { track } from "@/lib/analytics";
 
 const SCAN_STEPS = [
   { t: "Verificando CPF na Receita Federal...", at: 0 },
@@ -120,6 +121,7 @@ export function ScanFunnel({ open, onClose, onScanStart }: { open: boolean; onCl
   };
 
   const checkout = (url: string) => {
+    track("InitiateCheckout");
     // email is optional now (no inline field in the redesigned sheet)
     if (email.includes("@")) {
       try {

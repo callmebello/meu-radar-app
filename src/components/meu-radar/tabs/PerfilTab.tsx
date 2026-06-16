@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { AppHeader } from "../Header";
 import { Check, ChevronRight, LogOut, Moon, Sun } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
+import { getUser, signInWithEmail, signOut } from "@/lib/auth";
+import { isSupabaseConfigured } from "@/lib/supabase";
 
 const monitored = [
   { label: "CPF", value: "•••.456.789-••" },
@@ -11,23 +13,90 @@ const monitored = [
   { label: "Endereço", value: "São Paulo, SP" },
 ];
 
+const PLAN_LABEL: Record<string, string> = {
+  essencial: "Essencial",
+  protecao_total: "Proteção Total",
+  free: "Grátis",
+};
+
 export function PerfilTab() {
   const [s, setS] = useState({ push: true, email: true, scan: true, bio: true });
   const { theme, toggle } = useTheme();
   const isDark = theme === "dark";
 
+  // Auth state
+  const [authedEmail, setAuthedEmail] = useState<string | null>(null);
+  const [plan, setPlan] = useState("free");
+  const [loginEmail, setLoginEmail] = useState("");
+  const [linkSent, setLinkSent] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const user = await getUser();
+      if (user?.email) setAuthedEmail(user.email);
+    })();
+    try {
+      setPlan(localStorage.getItem("priva_plan") || "free");
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  const sendLink = async () => {
+    const email = loginEmail.trim();
+    if (!email) return;
+    const { error } = await signInWithEmail(email);
+    if (!error) setLinkSent(true);
+  };
+
+  const logout = async () => {
+    await signOut();
+    setAuthedEmail(null);
+  };
+
   return (
     <>
       <AppHeader title="Perfil" showBell />
       <div className="space-y-5 px-5 py-5">
-        {/* Avatar */}
-        <div className="flex items-center gap-4">
-          <span className="grid h-16 w-16 place-items-center rounded-full bg-[var(--color-navy)] text-xl font-bold text-white">JS</span>
-          <div>
-            <p className="text-lg font-bold text-foreground">João Silva</p>
-            <span className="mt-1 inline-block rounded-full bg-[var(--color-teal)]/20 px-2.5 py-0.5 text-[11px] font-semibold text-[var(--color-navy)]">Plano Família</span>
+        {/* Account / auth */}
+        {authedEmail ? (
+          <div className="flex items-center justify-between rounded-2xl border border-border/60 bg-card p-4 shadow-sm">
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-foreground">{authedEmail}</p>
+              <span className="mt-1 inline-block rounded-full bg-[var(--color-teal)]/20 px-2.5 py-0.5 text-[11px] font-semibold text-[var(--color-navy)]">
+                {PLAN_LABEL[plan] ?? "Grátis"}
+              </span>
+            </div>
+            <button onClick={logout} className="flex items-center gap-1.5 text-sm font-medium text-[var(--color-danger)]">
+              Sair <LogOut className="h-4 w-4" />
+            </button>
           </div>
-        </div>
+        ) : (
+          <div className="rounded-2xl border border-border/60 bg-card p-4 shadow-sm">
+            <p className="text-sm font-semibold text-foreground">Já tem conta?</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">Entre com seu e-mail para acessar sua proteção.</p>
+            {linkSent ? (
+              <p className="mt-3 text-sm text-[var(--color-success)]">Link enviado para {loginEmail} ✓</p>
+            ) : (
+              <div className="mt-3 flex gap-2">
+                <input
+                  type="email"
+                  value={loginEmail}
+                  onChange={(e) => setLoginEmail(e.target.value)}
+                  placeholder="seu@email.com"
+                  className="min-w-0 flex-1 rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground outline-none"
+                />
+                <button
+                  onClick={sendLink}
+                  disabled={!isSupabaseConfigured}
+                  className="shrink-0 rounded-xl bg-[var(--color-navy)] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
+                >
+                  Entrar
+                </button>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Monitored */}
         <section className="rounded-2xl border border-border/60 bg-card shadow-sm">
@@ -140,11 +209,14 @@ export function PerfilTab() {
             <p className="text-sm text-foreground">Termos de Uso</p>
             <ChevronRight className="h-4 w-4 text-muted-foreground" />
           </Link>
-          <button className="flex w-full items-center justify-between border-t border-border/60 px-4 py-3.5 text-left hover:bg-secondary/50 transition">
+          <button onClick={logout} className="flex w-full items-center justify-between border-t border-border/60 px-4 py-3.5 text-left hover:bg-secondary/50 transition">
             <p className="text-sm font-medium text-[var(--color-danger)]">Sair</p>
             <LogOut className="h-4 w-4 text-[var(--color-danger)]" />
           </button>
         </section>
+
+        {/* Legal footer */}
+        <p className="py-4 text-center text-xs text-gray-700">© 2025 Priva · LGPD · Privacidade · Termos</p>
       </div>
     </>
   );
