@@ -1,10 +1,11 @@
 import { useState, type ReactNode } from "react";
 import {
   CreditCard, Mail, Phone, MapPin, X, AlertCircle, ShieldAlert, PhoneCall,
-  CheckCircle2, Radar, ChevronRight, Trash2,
+  CheckCircle2, Radar, ChevronRight, Trash2, Check,
 } from "lucide-react";
 import { useApp } from "@/contexts/AppContext";
 import { generateResult, maskedFields, openCheckout, MP_PROTECAO_URL } from "@/lib/funnel";
+import { getProfile, saveProfile, type ProfileData } from "@/lib/profile";
 
 export type CardType = "cpf" | "email" | "telefone" | "endereco";
 
@@ -20,8 +21,8 @@ function Sheet({ icon, title, onClose, children }: { icon: ReactNode; title: str
   return (
     <div className="fixed inset-0 z-50 flex items-end bg-black/70 backdrop-blur-sm animate-fade-in" onClick={onClose}>
       <div
-        className="flex h-[75vh] w-full flex-col rounded-t-3xl animate-sheet-up"
-        style={{ backgroundColor: "#0A0A0F", borderTop: "1px solid rgba(255,255,255,0.06)" }}
+        className="flex h-[92vh] w-full flex-col rounded-t-3xl animate-sheet-up"
+        style={{ backgroundColor: "#0A0A0F", borderTop: "1px solid rgba(255,255,255,0.06)", boxShadow: "0 -10px 44px rgba(0,0,0,0.6)" }}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mx-auto mb-1 mt-3 h-1 w-10 rounded-full bg-gray-700" />
@@ -92,14 +93,44 @@ function DeleteCTA({ title, sub, price = "R$29,90/mês", dimmed = false }: { tit
 
 const valueBox = { backgroundColor: "#12121A" };
 
+function SaveButton({ label, saved, onClick, variant = "solid" }: { label: string; saved: boolean; onClick: () => void; variant?: "solid" | "outline" }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`mt-3 flex w-full items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-semibold transition-all active:scale-[0.99] ${
+        variant === "outline" ? "border border-indigo-500/40 text-indigo-300" : "bg-indigo-600 text-white"
+      }`}
+    >
+      {saved ? (
+        <>
+          <Check className="h-4 w-4" /> Salvo
+        </>
+      ) : (
+        label
+      )}
+    </button>
+  );
+}
+
 export function IdentityCardSheet({ type, onClose }: { type: CardType; onClose: () => void }) {
   const { openScan } = useApp();
-  const [a, setA] = useState("");
-  const [b, setB] = useState("");
+  const profile = getProfile();
+  const init = (k: keyof ProfileData) => profile[k] ?? "";
+  const [a, setA] = useState(() =>
+    type === "cpf" ? init("cpfName") : type === "email" ? init("extraEmail") : type === "telefone" ? init("extraPhone") : init("addrCep"),
+  );
+  const [b, setB] = useState(() => (type === "cpf" ? init("cpfBirth") : type === "endereco" ? init("addrStreet") : ""));
+  const [c, setC] = useState(() => (type === "endereco" ? init("addrCity") : ""));
+  const [saved, setSaved] = useState(false);
   const cpf = getCpf();
   const result = generateResult(cpf);
   const mask = maskedFields(cpf, result.seed);
   const scan = () => { onClose(); openScan(); };
+  const persist = (patch: Partial<ProfileData>) => {
+    saveProfile(patch);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2200);
+  };
 
   if (type === "cpf") {
     return (
@@ -115,7 +146,7 @@ export function IdentityCardSheet({ type, onClose }: { type: CardType; onClose: 
         <p className="mt-1 text-xs text-gray-400">Adicione dados para monitoramento mais preciso</p>
         <Input placeholder="Seu nome completo" value={a} onChange={setA} />
         <Input placeholder="DD/MM/AAAA" value={b} onChange={setB} />
-        <button className="mt-3 w-full rounded-xl bg-indigo-600 py-3 text-sm font-semibold text-white">Salvar</button>
+        <SaveButton label="Salvar" saved={saved} onClick={() => persist({ cpfName: a, cpfBirth: b })} />
 
         <ScanAction onScan={scan} />
         <DeleteCTA title="Remover dados da internet" sub="Solicitar remoção via LGPD" />
@@ -151,7 +182,7 @@ export function IdentityCardSheet({ type, onClose }: { type: CardType; onClose: 
 
         <p className="mt-5 font-medium text-white">Adicionar outro e-mail</p>
         <Input placeholder="outro@email.com" value={a} onChange={setA} />
-        <button className="mt-3 w-full rounded-xl border border-indigo-500/40 py-3 text-sm font-semibold text-indigo-300">Monitorar este e-mail também</button>
+        <SaveButton label="Monitorar este e-mail também" variant="outline" saved={saved} onClick={() => persist({ extraEmail: a })} />
 
         <ScanAction onScan={scan} />
         <DeleteCTA title="Remover e-mail da internet" sub="Solicitar exclusão de bases de dados" />
@@ -174,7 +205,7 @@ export function IdentityCardSheet({ type, onClose }: { type: CardType; onClose: 
 
         <p className="mt-5 font-medium text-white">Adicionar outro número</p>
         <Input placeholder="(11) 99999-9999" value={a} onChange={(v) => setA(v)} />
-        <button className="mt-3 w-full rounded-xl bg-indigo-600 py-3 text-sm font-semibold text-white">Salvar</button>
+        <SaveButton label="Salvar" saved={saved} onClick={() => persist({ extraPhone: a })} />
 
         <ScanAction onScan={scan} />
         <DeleteCTA title="Remover telefone de bases públicas" sub="Solicitar remoção via LGPD" />
@@ -194,8 +225,8 @@ export function IdentityCardSheet({ type, onClose }: { type: CardType; onClose: 
       <p className="mt-5 font-medium text-white">Adicionar endereço para monitoramento</p>
       <Input placeholder="CEP" value={a} onChange={setA} />
       <Input placeholder="Rua e número" value={b} onChange={setB} />
-      <Input placeholder="Cidade, Estado" value="" onChange={() => {}} />
-      <button className="mt-3 w-full rounded-xl bg-indigo-600 py-3 text-sm font-semibold text-white">Salvar e monitorar</button>
+      <Input placeholder="Cidade, Estado" value={c} onChange={setC} />
+      <SaveButton label="Salvar e monitorar" saved={saved} onClick={() => persist({ addrCep: a, addrStreet: b, addrCity: c })} />
 
       <ScanAction onScan={scan} />
       <DeleteCTA title="Monitoramento preventivo" sub="Proteção contínua do endereço" dimmed />

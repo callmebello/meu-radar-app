@@ -17,6 +17,9 @@ type Ctx = {
   setScanning: (v: boolean) => void;
   scanResult: ScanResult | null;
   setScanResult: (v: ScanResult | null) => void;
+  familyAddPending: boolean;
+  requestFamilyAdd: () => void;
+  clearFamilyAdd: () => void;
 };
 
 export type ScanResult = {
@@ -59,6 +62,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const [scanning, setScanning] = useState(false);
   const [scanResult, setScanResult] = useState<ScanResult | null>(null);
+  const [familyAddPending, setFamilyAddPending] = useState(false);
+  const requestFamilyAdd = useCallback(() => setFamilyAddPending(true), []);
+  const clearFamilyAdd = useCallback(() => setFamilyAddPending(false), []);
 
   return (
     <AppCtx.Provider
@@ -78,6 +84,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setScanning,
         scanResult,
         setScanResult,
+        familyAddPending,
+        requestFamilyAdd,
+        clearFamilyAdd,
       }}
     >
       {children}

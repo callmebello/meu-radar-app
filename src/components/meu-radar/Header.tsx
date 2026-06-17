@@ -1,13 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { Bell, AlertCircle, CheckCircle2, Plus } from "lucide-react";
+import { Bell, AlertCircle, CheckCircle2, Plus, UserPlus, Users, Building2 } from "lucide-react";
 import { useApp } from "@/contexts/AppContext";
 
 type Notif = { id: string; icon: "alert" | "check"; title: string; time: string; unread: boolean; level: "danger" | "success" };
 
+// Real, widely-reported Brazilian data-leak headline (Serasa megavazamento, 2021).
 const initial: Notif[] = [
-  { id: "1", icon: "alert", title: "Base de dados comprometida — Jan 2025", time: "agora mesmo", unread: true, level: "danger" },
-  { id: "2", icon: "alert", title: "Credencial comprometida — Gmail", time: "2h atrás", unread: true, level: "danger" },
-  { id: "3", icon: "check", title: "Varredura dark web concluída", time: "3 dias atrás", unread: false, level: "success" },
+  { id: "1", icon: "alert", title: "Megavazamento expôs CPF de 223 milhões de brasileiros", time: "Notícia · proteja seus dados", unread: true, level: "danger" },
 ];
 
 export function AppHeader({
@@ -21,19 +20,28 @@ export function AppHeader({
   showLogo?: boolean;
 }) {
   const [open, setOpen] = useState(false);
+  const [addOpen, setAddOpen] = useState(false);
   const [notifs, setNotifs] = useState(initial);
   const ref = useRef<HTMLDivElement>(null);
+  const addRef = useRef<HTMLDivElement>(null);
   const unreadCount = notifs.filter((n) => n.unread).length;
-  const { goToTab, scanning } = useApp();
+  const { goToTab, scanning, requestFamilyAdd } = useApp();
 
   useEffect(() => {
-    if (!open) return;
+    if (!open && !addOpen) return;
     const onClick = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      if (addRef.current && !addRef.current.contains(e.target as Node)) setAddOpen(false);
     };
     document.addEventListener("mousedown", onClick);
     return () => document.removeEventListener("mousedown", onClick);
-  }, [open]);
+  }, [open, addOpen]);
+
+  const goFamily = (withAdd: boolean) => {
+    setAddOpen(false);
+    if (withAdd) requestFamilyAdd();
+    goToTab("familia");
+  };
 
   return (
     <header
@@ -44,14 +52,32 @@ export function AppHeader({
         borderBottom: "1px solid rgba(255,255,255,0.04)",
       }}
     >
-      {/* LEFT — Plus */}
-      <button
-        onClick={() => goToTab("familia")}
-        aria-label="Adicionar à família"
-        className="flex h-11 w-11 items-center justify-center text-white transition-opacity active:opacity-70"
-      >
-        <Plus size={22} strokeWidth={2} />
-      </button>
+      {/* LEFT — Plus menu */}
+      <div className="relative" ref={addRef}>
+        <button
+          onClick={() => setAddOpen((v) => !v)}
+          aria-label="Adicionar"
+          className="flex h-11 w-11 items-center justify-center text-white transition-opacity active:opacity-70"
+        >
+          <Plus size={22} strokeWidth={2} />
+        </button>
+        {addOpen && (
+          <div className="absolute left-0 top-12 z-50 w-60 overflow-hidden rounded-2xl border border-border bg-card shadow-2xl animate-scale-in">
+            <button onClick={() => goFamily(true)} className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-secondary/40 transition">
+              <UserPlus className="h-4 w-4 text-[var(--color-navy)]" />
+              <span className="text-sm font-medium text-foreground">Adicionar familiar</span>
+            </button>
+            <button onClick={() => goFamily(true)} className="flex w-full items-center gap-3 border-t border-border/60 px-4 py-3 text-left hover:bg-secondary/40 transition">
+              <Users className="h-4 w-4 text-[var(--color-navy)]" />
+              <span className="text-sm font-medium text-foreground">Adicionar outro membro</span>
+            </button>
+            <button onClick={() => goFamily(false)} className="flex w-full items-center gap-3 border-t border-border/60 px-4 py-3 text-left hover:bg-secondary/40 transition">
+              <Building2 className="h-4 w-4 text-[var(--color-navy)]" />
+              <span className="text-sm font-medium text-foreground">Para empresas</span>
+            </button>
+          </div>
+        )}
+      </div>
 
       {/* CENTER — wordmark logo / scanning indicator */}
       <div className="absolute left-1/2 flex -translate-x-1/2 items-center justify-center gap-2">
