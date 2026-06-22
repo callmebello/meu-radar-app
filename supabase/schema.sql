@@ -39,6 +39,15 @@ create table if not exists subscriptions (
   updated_at timestamp default now()
 );
 
+-- API usage counter (monthly budget guard for paid APIs like SerpAPI)
+create table if not exists api_usage (
+  id uuid default gen_random_uuid() primary key,
+  api_name text not null,
+  month text not null,
+  count integer default 0,
+  unique (api_name, month)
+);
+
 -- Alerts table
 create table if not exists alerts (
   id uuid default gen_random_uuid() primary key,

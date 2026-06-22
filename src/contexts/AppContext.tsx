@@ -17,6 +17,8 @@ type Ctx = {
   setScanning: (v: boolean) => void;
   scanResult: ScanResult | null;
   setScanResult: (v: ScanResult | null) => void;
+  exposure: ExposureResult | null;
+  setExposure: (v: ExposureResult | null) => void;
   familyAddPending: boolean;
   requestFamilyAdd: () => void;
   clearFamilyAdd: () => void;
@@ -25,6 +27,14 @@ type Ctx = {
 export type ScanResult = {
   breachCount: number;
   hibp?: { count: number; breaches: unknown[] } | null;
+};
+
+export type ExposureSource = { title: string; link: string; snippet: string };
+export type GithubRepo = { repo: string; path: string; url: string };
+export type ExposureResult = {
+  github?: { found: boolean; count: number; repos: GithubRepo[] };
+  cpf?: { found: boolean; count: number; sources: ExposureSource[] };
+  phone?: { found: boolean; count: number; sources: ExposureSource[] } | null;
 };
 
 const AppCtx = createContext<Ctx | null>(null);
@@ -62,6 +72,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const [scanning, setScanning] = useState(false);
   const [scanResult, setScanResult] = useState<ScanResult | null>(null);
+  const [exposure, setExposure] = useState<ExposureResult | null>(null);
   const [familyAddPending, setFamilyAddPending] = useState(false);
   const requestFamilyAdd = useCallback(() => setFamilyAddPending(true), []);
   const clearFamilyAdd = useCallback(() => setFamilyAddPending(false), []);
@@ -84,6 +95,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setScanning,
         scanResult,
         setScanResult,
+        exposure,
+        setExposure,
         familyAddPending,
         requestFamilyAdd,
         clearFamilyAdd,

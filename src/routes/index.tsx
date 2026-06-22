@@ -19,6 +19,8 @@ import { track } from "@/lib/analytics";
 import { saveUser } from "@/lib/api/saveUser";
 import { saveScan } from "@/lib/api/saveScan";
 import { checkHibp } from "@/lib/api/hibp.functions";
+import { searchExposure } from "@/lib/api/serpapi.functions";
+import { searchGithubExposure } from "@/lib/api/github.functions";
 
 import { AppHeader } from "@/components/meu-radar/Header";
 
@@ -43,7 +45,7 @@ function Index() {
   const [funnelOpen, setFunnelOpen] = useState(false);
   const [hasScanned, setHasScanned] = useState(false);
   const [showCpfModal, setShowCpfModal] = useState(false);
-  const { setGoToTab, isPremium, setOpenScan, scanning, setScanning, setScanResult } = useApp();
+  const { setGoToTab, isPremium, setOpenScan, scanning, setScanning, setScanResult, setExposure } = useApp();
 
   // Core scan: spins the button, slides up the scanning box, then opens the
   // result sheet. In parallel it persists the user (hashed CPF), queries HIBP for
@@ -80,6 +82,29 @@ function Index() {
           setScanResult({ breachCount, hibp: h });
         })
         .catch(() => {});
+    }
+
+    // Dashboard-only real free sources (GitHub + SerpAPI). Best-effort: the LP
+    // mock (ScanFunnel result) is untouched; this only feeds the dashboard cards.
+    {
+      const cpfDigits = cpf.replace(/\D/g, "");
+      let phone = "";
+      try {
+        phone = (JSON.parse(localStorage.getItem("priva_profile") || "{}").extraPhone as string) || "";
+      } catch {
+        /* ignore */
+      }
+      void Promise.allSettled([
+        email ? searchGithubExposure({ data: { email } }) : Promise.resolve(null),
+        cpfDigits ? searchExposure({ data: { query: cpfDigits, type: "cpf" } }) : Promise.resolve(null),
+        phone ? searchExposure({ data: { query: phone, type: "phone" } }) : Promise.resolve(null),
+      ]).then(([gh, cpfRes, phoneRes]) => {
+        setExposure({
+          github: gh.status === "fulfilled" && gh.value ? gh.value : undefined,
+          cpf: cpfRes.status === "fulfilled" && cpfRes.value ? cpfRes.value : undefined,
+          phone: phoneRes.status === "fulfilled" ? phoneRes.value : null,
+        });
+      });
     }
 
     setTimeout(() => {

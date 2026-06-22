@@ -11,7 +11,7 @@ type Pill = "credenciais" | "score" | "darkweb";
 const pills: { id: Pill; label: string }[] = [
   { id: "credenciais", label: "Credenciais" },
   { id: "score", label: "Score" },
-  { id: "darkweb", label: "Dark Web" },
+  { id: "darkweb", label: "Exposição pública" },
 ];
 
 export function SegurancaTab({ initial = "credenciais" }: { initial?: Pill }) {
