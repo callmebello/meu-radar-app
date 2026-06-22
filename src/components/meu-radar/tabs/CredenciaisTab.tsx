@@ -2,6 +2,7 @@ import { useState } from "react";
 import { ChevronRight, Copy, RefreshCw, ShieldAlert, AlertTriangle, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { useApp } from "@/contexts/AppContext";
+import { PasswordChecker } from "../PasswordChecker";
 
 type Status = "Comprometida" | "Fraca" | "Segura";
 const items: { name: string; status: Status; when: string }[] = [
@@ -57,6 +58,9 @@ export function CredenciaisTab() {
   return (
     <>
       <div className="space-y-5 px-5 py-5">
+        {/* Pwned Passwords checker (standalone tool) */}
+        <PasswordChecker />
+
         {/* Summary banners */}
         <div className="grid gap-2.5">
           <div className="flex items-center gap-3 rounded-xl p-3.5" style={{ backgroundColor: "rgba(239,68,68,0.1)", borderLeft: "4px solid #EF4444" }}>
