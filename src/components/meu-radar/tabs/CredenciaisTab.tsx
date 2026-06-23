@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronRight, Copy, RefreshCw, ShieldAlert, AlertTriangle, Lock } from "lucide-react";
+import { ChevronRight, Copy, RefreshCw, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { useApp } from "@/contexts/AppContext";
 import { PasswordChecker } from "../PasswordChecker";
@@ -61,62 +61,6 @@ export function CredenciaisTab() {
         {/* Pwned Passwords checker (standalone tool) */}
         <PasswordChecker />
 
-        {/* Summary banners */}
-        <div className="grid gap-2.5">
-          <div className="flex items-center gap-3 rounded-xl p-3.5" style={{ backgroundColor: "rgba(239,68,68,0.1)", borderLeft: "4px solid #EF4444" }}>
-            <ShieldAlert className="h-5 w-5" style={{ color: "#EF4444" }} />
-            <p className="text-sm font-semibold" style={{ color: "#EF4444" }}>3 senhas comprometidas encontradas</p>
-          </div>
-          <div className="flex items-center gap-3 rounded-xl p-3.5" style={{ backgroundColor: "rgba(245,158,11,0.1)", borderLeft: "4px solid #F59E0B" }}>
-            <AlertTriangle className="h-5 w-5" style={{ color: "#F59E0B" }} />
-            <p className="text-sm font-semibold" style={{ color: "#F59E0B" }}>2 senhas fracas detectadas</p>
-          </div>
-        </div>
-
-        {/* List */}
-        <section>
-          <h2 className="mb-3 px-1 text-sm font-semibold text-foreground">Suas credenciais</h2>
-          <ul className="overflow-hidden rounded-2xl border border-border/60 bg-card shadow-sm">
-            {items.map((it, i) => {
-              const c = statusColor(it.status);
-              const locked = !isPremium && it.status === "Comprometida";
-              return (
-                <li key={it.name} className={`flex items-center gap-3 px-4 py-3.5 ${i > 0 ? "border-t border-border/60" : ""}`}>
-                  <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
-                    <img
-                      src={getServiceLogo(it.name)}
-                      alt={it.name}
-                      className="w-9 h-9 object-contain"
-                      onError={(e) => {
-                        e.currentTarget.style.display = 'none';
-                        e.currentTarget.parentElement!.innerHTML =
-                          `<span class="text-foreground font-bold text-sm">${it.name[0]}</span>`;
-                      }}
-                    />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-foreground">{it.name}</p>
-                    <p className="text-[11px] text-muted-foreground">{it.when}</p>
-                  </div>
-                  {locked ? (
-                    <button
-                      onClick={openPaywall}
-                      className="inline-flex items-center gap-1 rounded-full bg-secondary px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-muted-foreground hover:bg-secondary/80 transition"
-                    >
-                      <Lock className="h-3 w-3" /> Bloqueado
-                    </button>
-                  ) : (
-                    <span className="rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide" style={{ backgroundColor: `color-mix(in oklab, ${c} 14%, transparent)`, color: c }}>
-                      {it.status}
-                    </span>
-                  )}
-                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                </li>
-              );
-            })}
-          </ul>
-        </section>
-
         {/* Generator */}
         <section className="rounded-2xl border border-border/60 bg-card p-5 shadow-sm">
           <h2 className="text-sm font-semibold text-foreground">Gerador de Senhas</h2>
@@ -165,6 +109,50 @@ export function CredenciaisTab() {
               <Copy className="h-4 w-4" /> Copiar
             </button>
           </div>
+        </section>
+
+        {/* List */}
+        <section>
+          <h2 className="mb-3 px-1 text-sm font-semibold text-foreground">Suas credenciais</h2>
+          <ul className="overflow-hidden rounded-2xl border border-border/60 bg-card shadow-sm">
+            {items.map((it, i) => {
+              const c = statusColor(it.status);
+              const locked = !isPremium && it.status === "Comprometida";
+              return (
+                <li key={it.name} className={`flex items-center gap-3 px-4 py-3.5 ${i > 0 ? "border-t border-border/60" : ""}`}>
+                  <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
+                    <img
+                      src={getServiceLogo(it.name)}
+                      alt={it.name}
+                      className="w-9 h-9 object-contain"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                        e.currentTarget.parentElement!.innerHTML =
+                          `<span class="text-foreground font-bold text-sm">${it.name[0]}</span>`;
+                      }}
+                    />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-foreground">{it.name}</p>
+                    <p className="text-[11px] text-muted-foreground">{it.when}</p>
+                  </div>
+                  {locked ? (
+                    <button
+                      onClick={openPaywall}
+                      className="inline-flex items-center gap-1 rounded-full bg-secondary px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-muted-foreground hover:bg-secondary/80 transition"
+                    >
+                      <Lock className="h-3 w-3" /> Bloqueado
+                    </button>
+                  ) : (
+                    <span className="rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide" style={{ backgroundColor: `color-mix(in oklab, ${c} 14%, transparent)`, color: c }}>
+                      {it.status}
+                    </span>
+                  )}
+                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                </li>
+              );
+            })}
+          </ul>
         </section>
       </div>
     </>
