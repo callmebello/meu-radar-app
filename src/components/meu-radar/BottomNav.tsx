@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Shield, Users, User } from "lucide-react";
+import { useIsDark } from "@/hooks/use-is-dark";
 
 export type TabId = "radar" | "seguranca" | "familia" | "perfil";
 
@@ -70,6 +71,7 @@ export function BottomNav({
 }) {
   const left = tabs.slice(0, 2);
   const right = tabs.slice(2);
+  const isDark = useIsDark();
 
   const renderTab = (t: (typeof tabs)[number]) => {
     const Icon = t.icon;
@@ -82,17 +84,14 @@ export function BottomNav({
           className="flex w-full flex-col items-center gap-1 py-1.5"
         >
           {t.logo ? (
-            <span
-              className="grid place-items-center overflow-hidden rounded-[7px]"
-              style={{ width: 24, height: 24, backgroundColor: "#0B1020", opacity: isActive ? 1 : 0.5 }}
-            >
-              <img
-                src="/PRIVA_BLACK_WEB.png"
-                alt="Priva"
-                className="h-6 object-cover"
-                style={{ objectPosition: "left", width: 24, height: 24 }}
-              />
-            </span>
+            // Outline "P" mark, theme-aware, sized to match the lucide tab icons.
+            // Opacity mirrors the active/inactive treatment of the others.
+            <img
+              src={isDark ? "/PRIVA_icon_dark_theme.png" : "/PRIVA_icon_light_theme.png"}
+              alt="Priva"
+              className="object-contain"
+              style={{ width: 26, height: 26, opacity: isActive ? 1 : 0.5 }}
+            />
           ) : (
             Icon && <Icon size={22} style={{ color }} strokeWidth={isActive ? 2.2 : 2} />
           )}

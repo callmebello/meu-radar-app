@@ -1,23 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Bell, AlertCircle, CheckCircle2, Plus, UserPlus, Users, Building2 } from "lucide-react";
 import { useApp } from "@/contexts/AppContext";
-
-// Tracks the live theme by observing the `.dark` class on <html>, so the logo
-// swaps instantly no matter which component toggled the theme.
-function useIsDark() {
-  const [isDark, setIsDark] = useState(
-    () => typeof document !== "undefined" && document.documentElement.classList.contains("dark"),
-  );
-  useEffect(() => {
-    const el = document.documentElement;
-    const sync = () => setIsDark(el.classList.contains("dark"));
-    sync();
-    const obs = new MutationObserver(sync);
-    obs.observe(el, { attributes: true, attributeFilter: ["class"] });
-    return () => obs.disconnect();
-  }, []);
-  return isDark;
-}
+import { useIsDark } from "@/hooks/use-is-dark";
 
 type Notif = { id: string; icon: "alert" | "check"; title: string; time: string; unread: boolean; level: "danger" | "success" };
 
