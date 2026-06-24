@@ -2,53 +2,15 @@ import { useState } from "react";
 import { AppHeader } from "../Header";
 import { AnimatedScoreGauge } from "../AnimatedScoreGauge";
 import { PaywallLock } from "../PaywallLock";
-import { ShieldAlert, ShieldCheck, Fingerprint, Mail, Phone, MapPin, X, ChevronRight, Lock } from "lucide-react";
+import { ShieldCheck, Fingerprint, Mail, Phone, MapPin, X, Lock } from "lucide-react";
 import { useApp } from "@/contexts/AppContext";
 import { getScore, openCheckout, MP_PROTECAO_URL } from "@/lib/funnel";
 import { track } from "@/lib/analytics";
 import { UpsellBanner, shouldShowUpsell } from "../UpsellBanner";
 import { IdentityCardSheet, type CardType } from "../IdentityCardSheet";
-import { AlertDetailSheet, type AlertDetail } from "../AlertDetailSheet";
 
 const levelColor = (l: string) =>
   l === "danger" ? "var(--color-danger)" : l === "warning" ? "var(--color-warning)" : "var(--color-success)";
-
-const alerts: AlertDetail[] = [
-  {
-    title: "Novo vazamento detectado",
-    Icon: ShieldAlert,
-    color: "#F87171",
-    origem: "Base de dados comprometida",
-    data: "15 Jan 2025",
-    dados: "E-mail, senha",
-    level: "ALTO",
-    meaning:
-      "Seus dados foram encontrados em uma base comprometida. Isso significa que seu e-mail e senha podem estar circulando em grupos de golpistas.",
-  },
-  {
-    title: "Credencial comprometida",
-    Icon: ShieldAlert,
-    color: "#FBBF24",
-    origem: "Conta de e-mail",
-    data: "Ontem",
-    dados: "Senha",
-    level: "MÉDIO",
-    meaning:
-      "Uma senha associada à sua conta foi exposta. Recomendamos trocá-la e ativar verificação em duas etapas.",
-  },
-  {
-    title: "Varredura concluída",
-    Icon: ShieldCheck,
-    color: "#34D399",
-    origem: "Dark web",
-    data: "3 dias atrás",
-    dados: "Nenhum novo",
-    level: "BAIXO",
-    meaning: "Varredura concluída sem novas exposições críticas. Continuamos monitorando 24/7.",
-  },
-];
-
-const alertMeta = (a: AlertDetail) => `${a.origem} · ${a.data}`;
 
 type DashCard =
   | { kind: "card"; icon: typeof Mail; label: string; type: CardType; status: string; level: string; sub?: string }
@@ -62,7 +24,6 @@ export function RadarTab() {
   const score = cpf ? getScore(cpf, breachCount) : 67;
   const [bannerVisible, setBannerVisible] = useState(true);
   const [cardSheet, setCardSheet] = useState<CardType | null>(null);
-  const [alertSheet, setAlertSheet] = useState<AlertDetail | null>(null);
 
   // Real free-source results (dashboard only) — degrade to safe "not found".
   const cpfEx = exposure?.cpf;
@@ -201,40 +162,9 @@ export function RadarTab() {
             })}
           </div>
         </section>
-
-        {/* Alerts */}
-        <section>
-          <h2 className="mb-3 px-1 text-sm font-semibold text-foreground">Alertas recentes</h2>
-          <ul className="space-y-2">
-            {alerts.map((a, i) => {
-              const Icon = a.Icon;
-              return (
-                <li key={i}>
-                  <button
-                    onClick={() => setAlertSheet(a)}
-                    className="flex w-full items-center gap-3 rounded-xl border border-border/60 bg-card p-3.5 text-left shadow-sm transition active:scale-[0.99]"
-                  >
-                    <span className="relative grid h-9 w-9 place-items-center rounded-lg" style={{ backgroundColor: `color-mix(in oklab, ${a.color} 14%, transparent)` }}>
-                      {i === 0 && (
-                        <span className="absolute inset-0 animate-ping rounded-lg" style={{ backgroundColor: `color-mix(in oklab, ${a.color} 30%, transparent)` }} />
-                      )}
-                      <Icon className="relative h-4 w-4" style={{ color: a.color }} />
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium text-foreground">{a.title}</p>
-                      <p className="truncate text-[11px] text-muted-foreground">{alertMeta(a)}</p>
-                    </div>
-                    <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        </section>
       </div>
 
       {cardSheet && <IdentityCardSheet type={cardSheet} onClose={() => setCardSheet(null)} />}
-      {alertSheet && <AlertDetailSheet alert={alertSheet} onClose={() => setAlertSheet(null)} />}
     </>
   );
 }
