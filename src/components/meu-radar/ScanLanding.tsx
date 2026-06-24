@@ -32,7 +32,10 @@ export function ScanLanding({ onSubmit }: { onSubmit: (cpf: string, email: strin
   return (
     <>
       <AppHeader title="" showBell />
-      <div className="flex flex-1 flex-col justify-between px-6 pb-7 pt-5">
+      {/* Desktop (lg+) only: center the landing in a narrow column with more
+          breathing room so it doesn't read as a stretched phone screen. Every
+          added class is lg:-prefixed → mobile layout is untouched. */}
+      <div className="flex flex-1 flex-col justify-between px-6 pb-7 pt-5 lg:mx-auto lg:max-w-lg lg:justify-center lg:gap-8 lg:px-8">
         {/* headline */}
         <div>
           <h1 className="text-center text-3xl font-extrabold leading-tight text-white md:text-4xl">
