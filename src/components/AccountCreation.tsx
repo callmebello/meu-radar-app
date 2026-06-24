@@ -4,17 +4,23 @@ import { useApp } from "@/contexts/AppContext";
 import { signUpWithPassword, signInWithEmail } from "@/lib/auth";
 import { isSupabaseConfigured } from "@/lib/supabase";
 import { markUserPaid } from "@/lib/api/account.functions";
+import { generateRelatorioPdf } from "@/lib/api/generateRelatorio.functions";
+import { LgpdAuthorization } from "@/components/LgpdAuthorization";
 import { track } from "@/lib/analytics";
 
 /**
- * Post-payment account creation. Appears once when the user returns from
- * Mercado Pago (URL ?payment=... or localStorage priva_is_paid) and has no
- * account yet. Lets them set a password, request a magic link, or skip.
+ * Post-payment flow. Appears once when the user returns from Mercado Pago
+ * (URL ?payment=... or localStorage priva_is_paid). Steps:
+ *   1. "account" — set a password / magic link / skip.
+ *   2. "lgpd"    — ONLY for Proteção Total: formal removal authorization.
+ * The dashboard unlocks (and the relatório is e-mailed once) at the end.
  */
 export function AccountCreation() {
   const { setIsPremium } = useApp();
   const [show, setShow] = useState(false);
+  const [phase, setPhase] = useState<"account" | "lgpd">("account");
   const [email, setEmail] = useState("");
+  const [userId, setUserId] = useState<string | null>(null);
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -28,22 +34,52 @@ export function AccountCreation() {
     const isPaid = localStorage.getItem("priva_is_paid") === "true";
     const hasAccount = localStorage.getItem("priva_has_account") === "true";
     const prompted = localStorage.getItem("priva_account_prompted") === "true";
+    const plan = localStorage.getItem("priva_plan") || "essencial";
+    const lgpdAuthorized = localStorage.getItem("priva_lgpd_authorized") === "true";
 
-    if ((paidNow || isPaid) && !hasAccount && !prompted) {
+    const needAccount = (paidNow || isPaid) && !hasAccount && !prompted;
+    const needLgpd = (paidNow || isPaid) && plan === "protecao_total" && !lgpdAuthorized;
+
+    if (needAccount || needLgpd) {
       try {
         localStorage.setItem("priva_is_paid", "true");
       } catch {
         /* ignore */
       }
       setIsPremium(true);
-      if (paidNow) track("Purchase", { value: 9.9, currency: "BRL" });
+      if (paidNow) track("Purchase", { value: plan === "protecao_total" ? 29.9 : 9.9, currency: "BRL" });
       setEmail(sessionStorage.getItem("priva_email") || "");
+      setUserId(localStorage.getItem("priva_user_id"));
+      setPhase(needAccount ? "account" : "lgpd");
       setShow(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (!show) return null;
+
+  // Final step: unlock the app + e-mail the relatório once (best-effort).
+  const unlockAndClose = () => {
+    setIsPremium(true);
+    try {
+      const uid = localStorage.getItem("priva_user_id");
+      if (uid && localStorage.getItem("priva_relatorio_emailed") !== "true") {
+        localStorage.setItem("priva_relatorio_emailed", "true");
+        void generateRelatorioPdf({ data: { userId: uid, deliverEmail: true } }).catch(() => {});
+      }
+    } catch {
+      /* ignore */
+    }
+    setShow(false);
+  };
+
+  // After the account step, branch to LGPD (Proteção Total) or unlock.
+  const proceed = () => {
+    const plan = localStorage.getItem("priva_plan") || "essencial";
+    const authorized = localStorage.getItem("priva_lgpd_authorized") === "true";
+    if (plan === "protecao_total" && !authorized) setPhase("lgpd");
+    else unlockAndClose();
+  };
 
   const finishAccount = () => {
     try {
@@ -52,8 +88,7 @@ export function AccountCreation() {
     } catch {
       /* ignore */
     }
-    setIsPremium(true);
-    setShow(false);
+    proceed();
   };
 
   const skip = () => {
@@ -62,7 +97,7 @@ export function AccountCreation() {
     } catch {
       /* ignore */
     }
-    setShow(false);
+    proceed();
   };
 
   const createAccount = async () => {
@@ -96,6 +131,12 @@ export function AccountCreation() {
     else setLinkSent(true);
   };
 
+  // STEP 2 — LGPD authorization (Proteção Total only)
+  if (phase === "lgpd") {
+    return <LgpdAuthorization email={email} userId={userId} onDone={unlockAndClose} />;
+  }
+
+  // STEP 1 — account creation
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto" style={{ backgroundColor: "#0A0A0F" }}>
       <div className="mx-auto flex min-h-full max-w-sm flex-col px-5 pb-10">

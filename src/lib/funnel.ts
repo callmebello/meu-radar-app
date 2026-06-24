@@ -96,6 +96,26 @@ export const MP_FAMILIA_URL = env.VITE_MP_FAMILIA_URL || "https://mpago.la/place
 // Back-compat: the main checkout (Essencial plan).
 export const MERCADO_PAGO_URL = MP_ESSENCIAL_URL;
 
+// Map a checkout URL back to its plan id (used to gate the post-payment flow,
+// e.g. only Proteção Total triggers the LGPD authorization screen).
+export function planForUrl(url: string): string {
+  if (url === MP_PROTECAO_URL) return "protecao_total";
+  if (url === MP_FAMILIA_URL) return "familia";
+  if (url === MP_SCORE_URL) return "score";
+  return "essencial";
+}
+
+// Persist the plan the user is buying BEFORE redirecting to Mercado Pago, so it
+// survives the round-trip and is readable when they return with ?payment=success.
+export function rememberCheckoutPlan(url: string) {
+  try {
+    localStorage.setItem("priva_plan", planForUrl(url));
+  } catch {
+    /* ignore */
+  }
+}
+
 export function openCheckout(url: string) {
+  rememberCheckoutPlan(url);
   if (typeof window !== "undefined") window.open(url, "_blank");
 }

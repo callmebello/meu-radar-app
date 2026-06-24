@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { AlertTriangle, CreditCard, Mail, Phone, MapPin, Lock, Check, X, ChevronDown, ChevronRight, Flame, ShieldCheck, Trash2 } from "lucide-react";
-import { formatCPF, isValidCPF, generateResult, maskedFields, riskFromBreaches, MP_ESSENCIAL_URL, MP_PROTECAO_URL } from "@/lib/funnel";
+import { formatCPF, isValidCPF, generateResult, maskedFields, riskFromBreaches, rememberCheckoutPlan, MP_ESSENCIAL_URL, MP_PROTECAO_URL } from "@/lib/funnel";
 import { useApp } from "@/contexts/AppContext";
 import { track } from "@/lib/analytics";
 
@@ -76,6 +76,9 @@ export function ScanFunnel({ open, onClose, onScanStart }: { open: boolean; onCl
   const mask = maskedFields(cpf, result.seed);
   // Real breach count from HIBP (via scan flow), falling back to the mock.
   const breaches = scanResult?.breachCount ?? result.breaches;
+  // Never show "0" on the result screen — there is always public exposure to
+  // surface (and it converts better). Floor the visible count at 2.
+  const displayBreaches = Math.max(2, breaches);
 
   // count up hero number when result shows
   useEffect(() => {
@@ -85,13 +88,13 @@ export function ScanFunnel({ open, onClose, onScanStart }: { open: boolean; onCl
     let raf = 0;
     const tick = (now: number) => {
       const p = Math.min((now - start) / 800, 1);
-      setCount(Math.round(p * breaches));
+      setCount(Math.round(p * displayBreaches));
       if (p < 1) raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase, breaches]);
+  }, [phase, displayBreaches]);
 
   // success → unlock app after the confetti
   useEffect(() => {
@@ -122,6 +125,7 @@ export function ScanFunnel({ open, onClose, onScanStart }: { open: boolean; onCl
 
   const checkout = (url: string) => {
     track("InitiateCheckout");
+    rememberCheckoutPlan(url); // so the post-payment flow knows which plan was bought
     // email is optional now (no inline field in the redesigned sheet)
     if (email.includes("@")) {
       try {
@@ -243,19 +247,25 @@ export function ScanFunnel({ open, onClose, onScanStart }: { open: boolean; onCl
   }
 
   /* ---------- PHASE: result (redesigned bottom sheet) ---------- */
+  // CPF and e-mail are data the user already typed — show them (no blur).
+  // Phone / address are the cross-referenced findings unlocked after payment.
+  const sessionEmail = typeof window !== "undefined" ? sessionStorage.getItem("priva_email") || "" : "";
+  const cpfNum = cpf.replace(/\D/g, "");
+  const cpfDisplay = cpfNum.length === 11 ? `•••.${cpfNum.slice(3, 6)}.${cpfNum.slice(6, 9)}-••` : "•••.•••.•••-••";
+  const emailDisplay = sessionEmail || `${mask.first}•••••@${mask.domain}`;
   const exposedRows = [
-    { Icon: CreditCard, label: "CPF", value: "***.***.***-**", badge: "ALTO", tone: "alto" as const },
-    { Icon: Mail, label: "E-mail", value: "seu@email.com", badge: "MÉDIO", tone: "medio" as const },
-    { Icon: Phone, label: "Telefone", value: "(11) 99999-9999", badge: "BAIXO", tone: "baixo" as const },
-    { Icon: MapPin, label: "Endereço", value: "São Paulo, SP", badge: "ALTO", tone: "alto" as const },
+    { Icon: CreditCard, label: "CPF", value: cpfDisplay, badge: "ALTO", tone: "alto" as const, blur: false },
+    { Icon: Mail, label: "E-mail", value: emailDisplay, badge: "MÉDIO", tone: "medio" as const, blur: false },
+    { Icon: Phone, label: "Telefone", value: "(11) 9••••-••••", badge: "BAIXO", tone: "baixo" as const, blur: true },
+    { Icon: MapPin, label: "Endereço", value: "Rua ••••••, São Paulo — SP", badge: "ALTO", tone: "alto" as const, blur: true },
   ];
   const badgeTone: Record<string, string> = {
     alto: "text-red-400 bg-red-500/15",
     medio: "text-amber-400 bg-amber-500/15",
     baixo: "text-emerald-400 bg-emerald-500/15",
   };
-  const dadosExpostos = 4 + breaches;
-  const risk = riskFromBreaches(breaches);
+  const dadosExpostos = 4 + displayBreaches;
+  const risk = riskFromBreaches(displayBreaches);
   const riskColor = risk.tone === "red" ? "#F87171" : risk.tone === "amber" ? "#FBBF24" : "#34D399";
 
   return (
@@ -350,7 +360,7 @@ export function ScanFunnel({ open, onClose, onScanStart }: { open: boolean; onCl
                 <div key={r.label} className="flex items-center gap-3">
                   <r.Icon className="h-4 w-4 shrink-0 text-gray-500" />
                   <span className="w-20 shrink-0 text-sm text-white">{r.label}</span>
-                  <span className="min-w-0 flex-1 select-none truncate text-sm text-gray-300 blur-[4px]">{r.value}</span>
+                  <span className={`min-w-0 flex-1 truncate text-sm text-gray-300 ${r.blur ? "select-none blur-[4px]" : ""}`}>{r.value}</span>
                   <span className={`shrink-0 rounded-md px-2 py-0.5 text-[11px] font-bold ${badgeTone[r.tone]}`}>{r.badge}</span>
                 </div>
               ))}

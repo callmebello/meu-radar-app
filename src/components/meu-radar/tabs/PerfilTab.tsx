@@ -1,17 +1,44 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { AppHeader } from "../Header";
-import { Check, ChevronRight, LogOut, Moon, Sun } from "lucide-react";
+import { Check, ChevronRight, LogOut, Moon, Sun, Lock, FileText, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { useTheme } from "@/hooks/use-theme";
+import { useApp } from "@/contexts/AppContext";
 import { getUser, signInWithEmail, signOut } from "@/lib/auth";
 import { isSupabaseConfigured } from "@/lib/supabase";
+import { getProfile } from "@/lib/profile";
+import { openCheckout, MP_PROTECAO_URL } from "@/lib/funnel";
+import { generateRelatorioPdf } from "@/lib/api/generateRelatorio.functions";
+import { track } from "@/lib/analytics";
 
-const monitored = [
-  { label: "CPF", value: "•••.456.789-••" },
-  { label: "E-mail", value: "jo***@gmail.com" },
-  { label: "Telefone", value: "(11) 9****-4521" },
-  { label: "Endereço", value: "São Paulo, SP" },
-];
+// Real, user-entered data (CPF/e-mail from the scan, phone/address from the
+// profile card). Partially masked — it's the user's own data.
+function buildMonitored() {
+  if (typeof window === "undefined") {
+    return [
+      { label: "CPF", value: "—" },
+      { label: "E-mail", value: "—" },
+      { label: "Telefone", value: "Não informado" },
+      { label: "Endereço", value: "Não informado" },
+    ];
+  }
+  const cpf = (sessionStorage.getItem("priva_cpf") || "").replace(/\D/g, "");
+  const email = sessionStorage.getItem("priva_email") || "";
+  const p = getProfile();
+  const maskCpf = cpf.length === 11 ? `•••.${cpf.slice(3, 6)}.${cpf.slice(6, 9)}-••` : "—";
+  const maskEmail = email
+    ? `${email.slice(0, 2)}***@${email.split("@")[1] ?? ""}`
+    : "—";
+  const phone = p.extraPhone?.trim();
+  const city = p.addrCity?.trim();
+  return [
+    { label: "CPF", value: maskCpf },
+    { label: "E-mail", value: maskEmail },
+    { label: "Telefone", value: phone || "Não informado" },
+    { label: "Endereço", value: city || "Não informado" },
+  ];
+}
 
 const PLAN_LABEL: Record<string, string> = {
   essencial: "Essencial",
@@ -20,15 +47,36 @@ const PLAN_LABEL: Record<string, string> = {
 };
 
 export function PerfilTab() {
-  const [s, setS] = useState({ push: true, email: true, scan: true, bio: true });
+  const [s, setS] = useState({ push: true, email: true, scan: false, bio: true });
   const { theme, toggle } = useTheme();
+  const { isPremium } = useApp();
   const isDark = theme === "dark";
+  const monitored = buildMonitored();
 
   // Auth state
   const [authedEmail, setAuthedEmail] = useState<string | null>(null);
   const [plan, setPlan] = useState("free");
   const [loginEmail, setLoginEmail] = useState("");
   const [linkSent, setLinkSent] = useState(false);
+  const [pdfBusy, setPdfBusy] = useState(false);
+
+  // Generate (or refresh) the full Relatório de Exposição Digital and open it.
+  const downloadRelatorio = async () => {
+    const uid = typeof window !== "undefined" ? localStorage.getItem("priva_user_id") : null;
+    if (!uid) {
+      toast.error("Faça um scan primeiro para gerar o relatório.");
+      return;
+    }
+    setPdfBusy(true);
+    try {
+      const res = await generateRelatorioPdf({ data: { userId: uid } });
+      if (res.ok && res.url) window.open(res.url, "_blank");
+      else toast.error("Não foi possível gerar o relatório agora.");
+    } catch {
+      toast.error("Não foi possível gerar o relatório agora.");
+    }
+    setPdfBusy(false);
+  };
 
   useEffect(() => {
     (async () => {
@@ -96,6 +144,18 @@ export function PerfilTab() {
               </div>
             )}
           </div>
+        )}
+
+        {/* Download full report — available once the account is unlocked */}
+        {isPremium && (
+          <button
+            onClick={downloadRelatorio}
+            disabled={pdfBusy}
+            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[var(--color-navy)] px-4 py-3.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-90 disabled:opacity-60"
+          >
+            {pdfBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
+            {pdfBusy ? "Gerando relatório..." : "📄 Baixar relatório completo"}
+          </button>
         )}
 
         {/* Monitored */}
@@ -169,21 +229,40 @@ export function PerfilTab() {
         <section className="rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden">
 
           {[
-            { k: "push" as const, label: "Notificações push" },
-            { k: "email" as const, label: "Alertas por e-mail" },
-            { k: "scan" as const, label: "Varredura automática" },
-            { k: "bio" as const, label: "Autenticação biométrica" },
-          ].map((t, i) => (
-            <div key={t.k} className={`flex items-center justify-between px-4 py-3.5 ${i > 0 ? "border-t border-border/60" : ""}`}>
-              <p className="text-sm text-foreground">{t.label}</p>
-              <button
-                onClick={() => setS({ ...s, [t.k]: !s[t.k] })}
-                className={`relative h-6 w-11 rounded-full transition ${s[t.k] ? "bg-[var(--color-teal)]" : "bg-muted"}`}
-              >
-                <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition ${s[t.k] ? "left-[22px]" : "left-0.5"}`} />
-              </button>
-            </div>
-          ))}
+            { k: "push" as const, label: "Notificações push", paid: false },
+            { k: "email" as const, label: "Alertas por e-mail", paid: false },
+            { k: "scan" as const, label: "Varredura automática", paid: true },
+            { k: "bio" as const, label: "Autenticação biométrica", paid: false },
+          ].map((t, i) => {
+            const locked = t.paid && !isPremium;
+            return (
+              <div key={t.k} className={`flex items-center justify-between px-4 py-3.5 ${i > 0 ? "border-t border-border/60" : ""}`}>
+                <div className="flex items-center gap-2">
+                  <p className="text-sm text-foreground">{t.label}</p>
+                  {locked && <span className="rounded-full bg-secondary px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-muted-foreground">Pago</span>}
+                </div>
+                <button
+                  onClick={() => {
+                    if (locked) {
+                      track("InitiateCheckout");
+                      openCheckout(MP_PROTECAO_URL);
+                      return;
+                    }
+                    setS({ ...s, [t.k]: !s[t.k] });
+                  }}
+                  className={`relative h-6 w-11 rounded-full transition ${locked ? "bg-muted" : s[t.k] ? "bg-[var(--color-teal)]" : "bg-muted"}`}
+                >
+                  {locked ? (
+                    <span className="absolute inset-0 grid place-items-center">
+                      <Lock className="h-3 w-3 text-muted-foreground" />
+                    </span>
+                  ) : (
+                    <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition ${s[t.k] ? "left-[22px]" : "left-0.5"}`} />
+                  )}
+                </button>
+              </div>
+            );
+          })}
           {/* Política de Privacidade — external (iubenda), opens in new tab */}
           <a
             href="https://www.iubenda.com/privacy-policy/23107752"

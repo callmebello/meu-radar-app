@@ -58,3 +58,20 @@ create table if not exists alerts (
   read boolean default false,
   created_at timestamp default now()
 );
+
+-- LGPD removal authorizations (Proteção Total). Formal record that the user
+-- authorized Priva to send data-removal requests on their behalf (Art. 18, LGPD).
+create table if not exists lgpd_authorizations (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references users(id),
+  full_name text not null,
+  cpf_hash text not null,
+  authorized_at timestamp default now(),
+  ip_address text
+);
+
+-- Storage buckets used by the PDF generators are created on first use by the
+-- server functions (admin.storage.createBucket). They are PRIVATE; the app
+-- serves time-limited signed URLs (7 days):
+--   'relatorios'   -> {userId}/relatorio.pdf   (plano Essencial)
+--   'cartas-lgpd'  -> {userId}/carta-lgpd.pdf  (plano Proteção Total)

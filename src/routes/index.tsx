@@ -14,7 +14,7 @@ import { ScanNudge } from "@/components/meu-radar/ScanNudge";
 import { ScanLanding } from "@/components/meu-radar/ScanLanding";
 import { CPFModal } from "@/components/CPFModal";
 import { AccountCreation } from "@/components/AccountCreation";
-import { isValidCPF, generateResult } from "@/lib/funnel";
+import { isValidCPF, generateResult, getScore } from "@/lib/funnel";
 import { track } from "@/lib/analytics";
 import { saveUser } from "@/lib/api/saveUser";
 import { saveScan } from "@/lib/api/saveScan";
@@ -58,63 +58,96 @@ function Index() {
 
     const mock = generateResult(cpf);
     let breachCount = mock.breaches;
-    let userId: string | null = null;
-    let cpfHash = "";
 
-    void saveUser({ data: { email, cpf } })
-      .then((u) => {
-        userId = u.userId;
-        cpfHash = u.cpfHash;
-        if (u.userId) {
-          try {
-            localStorage.setItem("priva_user_id", u.userId);
-          } catch {
-            /* ignore */
-          }
+    const cpfDigits = cpf.replace(/\D/g, "");
+    const cpfLast2 = cpfDigits.slice(-2);
+    let profileName = "";
+    let phone = "";
+    try {
+      const prof = JSON.parse(localStorage.getItem("priva_profile") || "{}");
+      profileName = (prof.cpfName as string) || "";
+      phone = (prof.extraPhone as string) || "";
+    } catch {
+      /* ignore */
+    }
+
+    // Fire user + all sources in parallel (best-effort, guarded). The dashboard
+    // cards + result sheet update as each resolves; the full scan is persisted
+    // once everything settles so the PDF generators have real data.
+    const userP = saveUser({ data: { email, cpf } }).catch(() => null);
+    const hibpP = email ? checkHibp({ data: { email } }).catch(() => null) : Promise.resolve(null);
+    const ghP = email ? searchGithubExposure({ data: { email } }).catch(() => null) : Promise.resolve(null);
+    const cpfP = cpfDigits ? searchExposure({ data: { query: cpfDigits, type: "cpf" } }).catch(() => null) : Promise.resolve(null);
+    const phoneP = phone ? searchExposure({ data: { query: phone, type: "phone" } }).catch(() => null) : Promise.resolve(null);
+
+    // initial result-sheet count from the mock; HIBP refines it below
+    setScanResult({ breachCount, hibp: null });
+
+    void userP.then((u) => {
+      if (u?.userId) {
+        try {
+          localStorage.setItem("priva_user_id", u.userId);
+        } catch {
+          /* ignore */
         }
-      })
-      .catch(() => {});
-
-    if (email) {
-      void checkHibp({ data: { email } })
-        .then((h) => {
-          if (h && typeof h.count === "number" && h.count > 0) breachCount = h.count;
-          setScanResult({ breachCount, hibp: h });
-        })
-        .catch(() => {});
-    }
-
-    // Dashboard-only real free sources (GitHub + SerpAPI). Best-effort: the LP
-    // mock (ScanFunnel result) is untouched; this only feeds the dashboard cards.
-    {
-      const cpfDigits = cpf.replace(/\D/g, "");
-      let phone = "";
-      try {
-        phone = (JSON.parse(localStorage.getItem("priva_profile") || "{}").extraPhone as string) || "";
-      } catch {
-        /* ignore */
       }
-      void Promise.allSettled([
-        email ? searchGithubExposure({ data: { email } }) : Promise.resolve(null),
-        cpfDigits ? searchExposure({ data: { query: cpfDigits, type: "cpf" } }) : Promise.resolve(null),
-        phone ? searchExposure({ data: { query: phone, type: "phone" } }) : Promise.resolve(null),
-      ]).then(([gh, cpfRes, phoneRes]) => {
-        setExposure({
-          github: gh.status === "fulfilled" && gh.value ? gh.value : undefined,
-          cpf: cpfRes.status === "fulfilled" && cpfRes.value ? cpfRes.value : undefined,
-          phone: phoneRes.status === "fulfilled" ? phoneRes.value : null,
-        });
+    });
+
+    void hibpP.then((h) => {
+      if (h && typeof h.count === "number" && h.count > 0) breachCount = h.count;
+      setScanResult({ breachCount, hibp: h });
+    });
+
+    // Dashboard-only real free sources (GitHub + SerpAPI). The LP mock
+    // (ScanFunnel result) is untouched; this only feeds the dashboard cards.
+    void Promise.all([ghP, cpfP, phoneP]).then(([gh, cpfRes, phoneRes]) => {
+      setExposure({
+        github: gh ?? undefined,
+        cpf: cpfRes ?? undefined,
+        phone: phoneRes ?? null,
       });
-    }
+    });
+
+    // Persist the rich scan (HIBP breach list + public exposure) for PDFs.
+    void Promise.all([userP, hibpP, ghP, cpfP, phoneP]).then(([u, h, gh, cpfRes, phoneRes]) => {
+      const finalBreaches = h && typeof h.count === "number" && h.count > 0 ? h.count : breachCount;
+      const hibpStored = h
+        ? {
+            count: h.count,
+            breaches: (h.breaches ?? []).map((raw) => {
+              const b = raw as Record<string, unknown>;
+              return {
+                name: String(b.Name ?? b.Title ?? "Vazamento"),
+                date: String(b.BreachDate ?? b.AddedDate ?? ""),
+                dataClasses: Array.isArray(b.DataClasses) ? (b.DataClasses as string[]) : [],
+              };
+            }),
+          }
+        : null;
+      void saveScan({
+        data: {
+          userId: u?.userId ?? null,
+          cpfHash: u?.cpfHash ?? "",
+          email,
+          result: {
+            breachCount: finalBreaches,
+            score: getScore(cpf, finalBreaches),
+            name: profileName,
+            cpfLast2,
+            email,
+            hibp: hibpStored,
+            exposure: { github: gh ?? null, cpf: cpfRes ?? null, phone: phoneRes ?? null },
+            mock,
+          },
+          breachCount: finalBreaches,
+        },
+      }).catch(() => {});
+    });
 
     setTimeout(() => {
-      setScanResult({ breachCount, hibp: null });
       setScanning(false);
       setFunnelOpen(true);
       track("ViewContent");
-      void saveScan({
-        data: { userId, cpfHash, email, result: { breachCount, mock }, breachCount },
-      }).catch(() => {});
     }, 3500);
   };
 
@@ -181,7 +214,8 @@ function Index() {
           )}
         </main>
         <ScanningOverlay open={scanning} />
-        <ScanNudge show={!isPremium && !hasScanned && !scanning && !funnelOpen} onScan={onScan} />
+        {/* Nudge stays visible until the lead converts (buys) — not just until first scan. */}
+        <ScanNudge show={!isPremium && !scanning && !funnelOpen} onScan={onScan} />
         <BottomNav active={tab} onChange={setTab} onScan={onScan} scanning={scanning} />
       </div>
 
