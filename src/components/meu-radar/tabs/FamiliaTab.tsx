@@ -131,7 +131,7 @@ export function FamiliaTab() {
         <section className="rounded-2xl bg-[var(--color-navy)] p-5 text-white shadow-lg">
           <p className="text-xs font-bold uppercase tracking-wider text-white/80">Upgrade</p>
           <h3 className="mt-1 text-lg font-bold">Plano Família — até 6 membros</h3>
-          <p className="mt-1 text-sm text-white/70">R$ 39/mês — você usa {members.length} de 6 slots</p>
+          <p className="mt-1 text-sm text-white/70">R$ 49,90/mês — você usa {members.length} de 6 slots</p>
           <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/10">
             <div className="h-full rounded-full bg-white" style={{ width: `${Math.min(100, (members.length / 6) * 100)}%` }} />
           </div>

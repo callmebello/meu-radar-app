@@ -2,6 +2,23 @@ import { useEffect, useRef, useState } from "react";
 import { Bell, AlertCircle, CheckCircle2, Plus, UserPlus, Users, Building2 } from "lucide-react";
 import { useApp } from "@/contexts/AppContext";
 
+// Tracks the live theme by observing the `.dark` class on <html>, so the logo
+// swaps instantly no matter which component toggled the theme.
+function useIsDark() {
+  const [isDark, setIsDark] = useState(
+    () => typeof document !== "undefined" && document.documentElement.classList.contains("dark"),
+  );
+  useEffect(() => {
+    const el = document.documentElement;
+    const sync = () => setIsDark(el.classList.contains("dark"));
+    sync();
+    const obs = new MutationObserver(sync);
+    obs.observe(el, { attributes: true, attributeFilter: ["class"] });
+    return () => obs.disconnect();
+  }, []);
+  return isDark;
+}
+
 type Notif = { id: string; icon: "alert" | "check"; title: string; time: string; unread: boolean; level: "danger" | "success" };
 
 // Real, widely-reported Brazilian data-leak headline (Serasa megavazamento, 2021).
@@ -26,6 +43,8 @@ export function AppHeader({
   const addRef = useRef<HTMLDivElement>(null);
   const unreadCount = notifs.filter((n) => n.unread).length;
   const { goToTab, scanning, requestFamilyAdd } = useApp();
+  const isDark = useIsDark();
+  const logoSrc = isDark ? "/PRIVA_logo_dark_theme.png" : "/PRIVA_logo_light_theme.png";
 
   useEffect(() => {
     if (!open && !addOpen) return;
@@ -57,7 +76,7 @@ export function AppHeader({
         <button
           onClick={() => setAddOpen((v) => !v)}
           aria-label="Adicionar"
-          className="flex h-11 w-11 items-center justify-center text-white transition-opacity active:opacity-70"
+          className="flex h-11 w-11 items-center justify-center text-foreground transition-opacity active:opacity-70"
         >
           <Plus size={22} strokeWidth={2} />
         </button>
@@ -87,7 +106,7 @@ export function AppHeader({
             <span className="text-sm font-medium text-indigo-300">Analisando...</span>
           </>
         ) : (
-          <img src="/PRIVA_letter_only_logo.png" alt="PRIVA" className="h-5 w-auto object-contain" />
+          <img src={logoSrc} alt="PRIVA" className="h-5 w-auto object-contain" />
         )}
       </div>
 

@@ -52,7 +52,7 @@ function ScanButton({ onScan, scanning }: { onScan: () => void; scanning: boolea
           <ScanIcon fast={false} />
         )}
       </button>
-      <span className="-mt-0.5 text-[10px] font-medium text-white">Scan Grátis</span>
+      <span className="-mt-0.5 text-[10px] font-medium text-foreground">Scan Grátis</span>
     </li>
   );
 }
@@ -74,7 +74,7 @@ export function BottomNav({
   const renderTab = (t: (typeof tabs)[number]) => {
     const Icon = t.icon;
     const isActive = active === t.id;
-    const color = isActive ? "#FFFFFF" : "#8B93A7";
+    const color = isActive ? "var(--color-foreground)" : "var(--color-muted-foreground)";
     return (
       <li key={t.id} className="flex-1">
         <button
@@ -83,8 +83,8 @@ export function BottomNav({
         >
           {t.logo ? (
             <span
-              className="grid place-items-center overflow-hidden"
-              style={{ width: 24, height: 24, opacity: isActive ? 1 : 0.5 }}
+              className="grid place-items-center overflow-hidden rounded-[7px]"
+              style={{ width: 24, height: 24, backgroundColor: "#0B1020", opacity: isActive ? 1 : 0.5 }}
             >
               <img
                 src="/PRIVA_BLACK_WEB.png"
@@ -112,8 +112,8 @@ export function BottomNav({
     <nav
       className="sticky bottom-0 z-50"
       style={{
-        background: "#0B1020",
-        borderTop: "1px solid rgba(255,255,255,0.06)",
+        background: "var(--color-card)",
+        borderTop: "1px solid var(--color-border)",
         paddingBottom: "env(safe-area-inset-bottom)",
       }}
     >

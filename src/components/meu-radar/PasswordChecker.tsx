@@ -1,13 +1,16 @@
 import { useState } from "react";
-import { ShieldCheck, ShieldAlert, Eye, EyeOff, Loader2, KeyRound } from "lucide-react";
+import { ShieldCheck, ShieldAlert, Eye, EyeOff, Loader2, KeyRound, Lock } from "lucide-react";
 import { checkPwnedPassword } from "@/lib/pwned";
+import { useApp } from "@/contexts/AppContext";
 
 /**
  * Standalone utility: checks whether a password appears in known breaches via
  * the HIBP Pwned Passwords k-anonymity model. 100% client-side — the password
  * is hashed locally and only the first 5 hex chars of the hash are sent.
+ * Premium-only: locked behind a paid plan until the user converts.
  */
 export function PasswordChecker() {
+  const { isPremium, openPaywall } = useApp();
   const [pwd, setPwd] = useState("");
   const [show, setShow] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -15,6 +18,10 @@ export function PasswordChecker() {
   const [error, setError] = useState("");
 
   const check = async () => {
+    if (!isPremium) {
+      openPaywall();
+      return;
+    }
     if (!pwd || loading) return;
     setLoading(true);
     setError("");
@@ -35,6 +42,7 @@ export function PasswordChecker() {
           <KeyRound className="h-4 w-4 text-[var(--color-navy)]" />
         </span>
         <h2 className="text-sm font-semibold text-foreground">Verificar se uma senha foi vazada</h2>
+        {!isPremium && <Lock className="ml-auto h-4 w-4 text-muted-foreground" />}
       </div>
       <p className="mt-2 text-xs text-muted-foreground">
         Verificação segura: sua senha é processada apenas no seu aparelho e <strong className="text-foreground">nunca é enviada</strong> aos nossos servidores.
@@ -44,31 +52,38 @@ export function PasswordChecker() {
         <input
           type={show ? "text" : "password"}
           value={pwd}
+          disabled={!isPremium}
           onChange={(e) => {
             setPwd(e.target.value);
             setResult(null);
           }}
           onKeyDown={(e) => e.key === "Enter" && check()}
-          placeholder="Digite uma senha para testar"
+          placeholder={isPremium ? "Digite uma senha para testar" : "Disponível no plano pago"}
           autoComplete="off"
-          className="w-full rounded-xl border border-border bg-background px-4 py-3 pr-11 text-sm text-foreground outline-none"
+          className="w-full rounded-xl border border-border bg-background px-4 py-3 pr-11 text-sm text-foreground outline-none disabled:opacity-60"
         />
-        <button
-          onClick={() => setShow((v) => !v)}
-          aria-label={show ? "Ocultar" : "Mostrar"}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-        >
-          {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-        </button>
+        {isPremium && (
+          <button
+            onClick={() => setShow((v) => !v)}
+            aria-label={show ? "Ocultar" : "Mostrar"}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+          >
+            {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </button>
+        )}
       </div>
 
       <button
         onClick={check}
-        disabled={!pwd || loading}
+        disabled={isPremium && (!pwd || loading)}
         className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold text-white transition disabled:opacity-50"
         style={{ backgroundColor: "#4F46E5" }}
       >
-        {loading ? (
+        {!isPremium ? (
+          <>
+            <Lock className="h-4 w-4" /> Desbloquear verificação
+          </>
+        ) : loading ? (
           <>
             <Loader2 className="h-4 w-4 animate-spin" /> Verificando...
           </>
