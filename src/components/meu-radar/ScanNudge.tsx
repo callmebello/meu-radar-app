@@ -10,7 +10,7 @@ export function ScanNudge({ show, onScan }: { show: boolean; onScan: () => void 
   if (!show || dismissed) return null;
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-[82px] z-40 flex justify-center px-4">
+    <div className="pointer-events-none fixed inset-x-0 bottom-[82px] z-40 flex justify-center px-4 lg:hidden">
       <div className="animate-nudge-bounce pointer-events-auto relative">
         <button
           onClick={onScan}

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { AppHeader } from "../Header";
-import { Plus, Lock, X, Trash2, Gift, ChevronRight } from "lucide-react";
+import { Plus, X, Trash2, Gift, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { useApp } from "@/contexts/AppContext";
 import { getScore } from "@/lib/funnel";
@@ -12,7 +12,7 @@ const riskColor = (r: Risk) => (r === "Alto" ? "var(--color-danger)" : r === "M�
 const riskFromScore = (score: number): Risk => (score >= 70 ? "Baixo" : score >= 45 ? "Médio" : "Alto");
 
 export function FamiliaTab() {
-  const { isPremium, openPaywall, familyAddPending, clearFamilyAdd, scanResult } = useApp();
+  const { familyAddPending, clearFamilyAdd, scanResult } = useApp();
   const [members, setMembers] = useState<Member[]>(() => getMembers());
   const [adding, setAdding] = useState(false);
   const [name, setName] = useState("");
@@ -75,9 +75,6 @@ export function FamiliaTab() {
         <ul className="space-y-3">
           {members.map((m) => {
             const isYou = m.rel === "Você" || m.id === "you";
-            const displayScore = isYou ? homeScore : m.score;
-            const displayRisk = isYou ? youRisk : m.risk;
-            const c = riskColor(displayRisk);
             return (
               <li key={m.id} className="rounded-2xl border border-border/60 bg-card p-4 shadow-sm">
                 <div className="flex items-center gap-3">
@@ -85,24 +82,23 @@ export function FamiliaTab() {
                     {m.name.split(" ").map((n) => n[0]).slice(0, 2).join("")}
                   </span>
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <p className="truncate text-sm font-semibold text-foreground">{m.name}</p>
-                      {m.attention && (
-                        <span className="rounded-full bg-[var(--color-danger)] px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white">Atenção</span>
-                      )}
+                    <p className="truncate text-sm font-semibold text-foreground">{m.name}</p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {isYou ? "Você" : `${m.rel} · adicionado ${m.when}`}
+                    </p>
+                  </div>
+                  {isYou ? (
+                    <div className="text-right">
+                      <p className="text-xl font-extrabold tracking-tight text-foreground">{homeScore}</p>
+                      <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: riskColor(youRisk) }}>
+                        Risco {youRisk}
+                      </p>
                     </div>
-                    <p className="text-[11px] text-muted-foreground">{m.rel} · verificado {m.when}</p>
-                  </div>
-                  <div className="text-right">
-                    {isPremium || isYou ? (
-                      <p className="text-xl font-extrabold tracking-tight text-foreground">{displayScore}</p>
-                    ) : (
-                      <button onClick={openPaywall} className="inline-flex items-center gap-1 text-xl font-extrabold text-muted-foreground transition hover:text-foreground">
-                        <Lock className="h-3.5 w-3.5" />—
-                      </button>
-                    )}
-                    <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: c }}>Risco {displayRisk}</p>
-                  </div>
+                  ) : (
+                    <span className="shrink-0 rounded-full bg-[var(--color-teal)]/15 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[var(--color-navy)]">
+                      Monitorando
+                    </span>
+                  )}
                   {!isYou && (
                     <button onClick={() => removeMember(m.id)} aria-label="Remover membro" className="ml-1 grid h-7 w-7 shrink-0 place-items-center rounded-full text-gray-500 hover:bg-secondary/60 hover:text-red-400">
                       <Trash2 className="h-3.5 w-3.5" />

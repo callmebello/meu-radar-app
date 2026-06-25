@@ -28,6 +28,8 @@ export function RadarTab() {
   // Real free-source results (dashboard only) — degrade to safe "not found".
   const cpfEx = exposure?.cpf;
   const phoneEx = exposure?.phone;
+  // Real occurrence count: e-mail breaches (HIBP) + public exposure (web + GitHub).
+  const occurrences = breachCount + (cpfEx?.count ?? 0) + (phoneEx?.count ?? 0) + (exposure?.github?.count ?? 0);
   const cards: DashCard[] = [
     {
       kind: "card", icon: Fingerprint, label: "CPF", type: "cpf",
@@ -58,7 +60,9 @@ export function RadarTab() {
         {hasChecked && bannerVisible && (
           <div className="flex items-center gap-2 rounded-xl border border-[var(--color-teal)]/30 bg-[var(--color-teal)]/8 px-3 py-2.5">
             <ShieldCheck className="h-4 w-4 shrink-0 text-[var(--color-teal)]" />
-            <p className="flex-1 text-[11px] font-medium text-foreground">CPF verificado · 3 ocorrências encontradas</p>
+            <p className="flex-1 text-[11px] font-medium text-foreground">
+              CPF verificado · {occurrences} {occurrences === 1 ? "ocorrência encontrada" : "ocorrências encontradas"}
+            </p>
             <button onClick={() => goToTab("seguranca")} className="text-[11px] font-bold text-[var(--color-teal)]">
               Ver detalhes →
             </button>
@@ -82,7 +86,7 @@ export function RadarTab() {
                 <div className="mt-3 w-full">
                   <AnimatedScoreGauge score={score} max={100} />
                 </div>
-                <p className="mt-4 text-xs text-muted-foreground">Última verificação: hoje às 14:32</p>
+                <p className="mt-4 text-xs text-muted-foreground">Última verificação: hoje</p>
               </>
             )}
           </div>

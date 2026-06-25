@@ -96,7 +96,7 @@ export function BottomNav({
 
   return (
     <nav
-      className="sticky bottom-0 z-50"
+      className="sticky bottom-0 z-50 lg:hidden"
       style={{
         background: "var(--color-card)",
         borderTop: "1px solid var(--color-border)",

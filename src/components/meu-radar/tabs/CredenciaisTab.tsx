@@ -1,7 +1,6 @@
 import { useState } from "react";
-import { ChevronRight, Copy, RefreshCw, Lock, Plus, X, Trash2, Loader2 } from "lucide-react";
+import { Copy, RefreshCw, Plus, X, Trash2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { useApp } from "@/contexts/AppContext";
 import { PasswordChecker } from "../PasswordChecker";
 import { checkPwnedPassword } from "@/lib/pwned";
 import {
@@ -11,16 +10,6 @@ import {
   type Credential,
   type CredStatus,
 } from "@/lib/credentials";
-
-type Status = "Comprometida" | "Fraca" | "Segura";
-const items: { name: string; status: Status; when: string }[] = [
-  { name: "Gmail", status: "Comprometida", when: "verificado hoje" },
-  { name: "Instagram", status: "Comprometida", when: "verificado hoje" },
-  { name: "Nubank", status: "Segura", when: "verificado ontem" },
-  { name: "iFood", status: "Fraca", when: "verificado ontem" },
-  { name: "LinkedIn", status: "Comprometida", when: "verificado 2 dias atrás" },
-  { name: "Spotify", status: "Segura", when: "verificado 3 dias atrás" },
-];
 
 const statusColor = (s: CredStatus) =>
   s === "Comprometida"
@@ -68,9 +57,8 @@ export function CredenciaisTab() {
   const [numbers, setNumbers] = useState(true);
   const [symbols, setSymbols] = useState(true);
   const [pwd, setPwd] = useState("Kx#9mP$vL2@nQ8");
-  const { isPremium, openPaywall } = useApp();
 
-  // User-managed credentials (persisted). Mock items only show before subscribing.
+  // User-managed credentials (persisted) — real data only, no demo entries.
   const [creds, setCreds] = useState<Credential[]>(() => getCredentials());
   const [adding, setAdding] = useState(false);
   const [cName, setCName] = useState("");
@@ -247,47 +235,8 @@ export function CredenciaisTab() {
               );
             })}
 
-            {/* Mock demo credentials — only shown before subscribing */}
-            {!isPremium &&
-              items.map((it) => {
-                const c = statusColor(it.status);
-                const locked = it.status === "Comprometida";
-                return (
-                  <li key={it.name} className="flex items-center gap-3 border-t border-border/60 px-4 py-3.5">
-                    <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center">
-                      <img
-                        src={getServiceLogo(it.name)}
-                        alt={it.name}
-                        className="h-9 w-9 object-contain"
-                        onError={(e) => {
-                          e.currentTarget.style.display = "none";
-                          e.currentTarget.parentElement!.innerHTML = `<span class="text-foreground font-bold text-sm">${it.name[0]}</span>`;
-                        }}
-                      />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-semibold text-foreground">{it.name}</p>
-                      <p className="text-[11px] text-muted-foreground">{it.when}</p>
-                    </div>
-                    {locked ? (
-                      <button
-                        onClick={openPaywall}
-                        className="inline-flex items-center gap-1 rounded-full bg-secondary px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-muted-foreground transition hover:bg-secondary/80"
-                      >
-                        <Lock className="h-3 w-3" /> Bloqueado
-                      </button>
-                    ) : (
-                      <span className="rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide" style={{ backgroundColor: `color-mix(in oklab, ${c} 14%, transparent)`, color: c }}>
-                        {it.status}
-                      </span>
-                    )}
-                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                  </li>
-                );
-              })}
-
-            {/* Empty state — premium with no credentials yet */}
-            {isPremium && creds.length === 0 && !adding && (
+            {/* Empty state */}
+            {creds.length === 0 && !adding && (
               <li className="border-t border-border/60 px-4 py-6 text-center">
                 <p className="text-sm text-muted-foreground">Nenhuma credencial ainda.</p>
                 <p className="mt-1 text-[11px] text-muted-foreground">Toque em “Adicionar credencial” para começar.</p>

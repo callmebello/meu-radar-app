@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { BottomNav, type TabId } from "@/components/meu-radar/BottomNav";
+import { DesktopSidebar } from "@/components/meu-radar/DesktopSidebar";
 import { RadarTab } from "@/components/meu-radar/tabs/RadarTab";
 import { SegurancaTab } from "@/components/meu-radar/tabs/SegurancaTab";
 import { FamiliaTab } from "@/components/meu-radar/tabs/FamiliaTab";
@@ -20,6 +21,8 @@ import { saveScan } from "@/lib/api/saveScan";
 import { checkHibp } from "@/lib/api/hibp.functions";
 import { searchExposure } from "@/lib/api/serpapi.functions";
 import { searchGithubExposure } from "@/lib/api/github.functions";
+import { getUser } from "@/lib/auth";
+import { getUserPlan } from "@/lib/api/account.functions";
 
 import { AppHeader } from "@/components/meu-radar/Header";
 
@@ -43,7 +46,36 @@ function Index() {
   const [tab, setTab] = useState<TabId>("radar");
   const [funnelOpen, setFunnelOpen] = useState(false);
   const [hasScanned, setHasScanned] = useState(false);
-  const { setGoToTab, isPremium, setOpenScan, scanning, setScanning, setScanResult, setExposure } = useApp();
+  const { setGoToTab, isPremium, setIsPremium, setOpenScan, scanning, setScanning, setScanResult, setExposure } = useApp();
+
+  // Restore the logged-in account on load: if there's a Supabase session, sync
+  // the plan/paid state and e-mail so the user stays logged in with their data.
+  useEffect(() => {
+    (async () => {
+      const user = await getUser();
+      if (!user?.email) return;
+      try {
+        sessionStorage.setItem("priva_email", user.email);
+      } catch {
+        /* ignore */
+      }
+      try {
+        const res = await getUserPlan({ data: { email: user.email } });
+        if (res.found) {
+          if (res.isPaid) setIsPremium(true);
+          try {
+            localStorage.setItem("priva_plan", res.plan);
+          } catch {
+            /* ignore */
+          }
+          setHasScanned(true);
+        }
+      } catch {
+        /* best-effort */
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Core scan: spins the button, slides up the scanning box, then opens the
   // result sheet. In parallel it persists the user (hashed CPF), queries HIBP for
@@ -201,23 +233,30 @@ function Index() {
 
   return (
     <div className="min-h-screen bg-muted/40">
-      <div className="relative mx-auto flex min-h-screen max-w-[420px] flex-col bg-background shadow-2xl sm:max-w-[640px] lg:max-w-[820px]">
-        <main className="flex flex-1 flex-col pb-2">
-          {showEmpty ? (
-            <ScanLanding onSubmit={beginScan} />
-          ) : (
-            <>
-              {tab === "radar" && <RadarTab />}
-              {tab === "seguranca" && <SegurancaTab />}
-              {tab === "familia" && <FamiliaTab />}
-              {tab === "perfil" && <PerfilTab />}
-            </>
-          )}
-        </main>
-        <ScanningOverlay open={scanning} />
-        {/* Nudge stays visible until the lead converts (buys) — not just until first scan. */}
-        <ScanNudge show={!isPremium && !scanning && !funnelOpen} onScan={onScan} />
-        <BottomNav active={tab} onChange={setTab} onScan={onScan} scanning={scanning} />
+      <div className="relative mx-auto flex min-h-screen max-w-[420px] bg-background shadow-2xl sm:max-w-[640px] lg:max-w-[1120px]">
+        {/* Desktop-only left nav (lg+). Mobile keeps the BottomNav untouched. */}
+        <DesktopSidebar active={tab} onChange={setTab} onScan={onScan} scanning={scanning} />
+
+        {/* Content column */}
+        <div className="relative flex min-h-screen flex-1 flex-col">
+          <main className="flex flex-1 flex-col pb-2 lg:mx-auto lg:w-full lg:max-w-3xl lg:px-2">
+            {showEmpty ? (
+              <ScanLanding onSubmit={beginScan} />
+            ) : (
+              <>
+                {tab === "radar" && <RadarTab />}
+                {tab === "seguranca" && <SegurancaTab />}
+                {tab === "familia" && <FamiliaTab />}
+                {tab === "perfil" && <PerfilTab />}
+              </>
+            )}
+          </main>
+          <ScanningOverlay open={scanning} />
+          {/* Nudge stays visible until the lead converts (buys). Hidden on desktop
+              (no bottom scan button to point at — the sidebar has its own). */}
+          <ScanNudge show={!isPremium && !scanning && !funnelOpen} onScan={onScan} />
+          <BottomNav active={tab} onChange={setTab} onScan={onScan} scanning={scanning} />
+        </div>
       </div>
 
       <ScanFunnel open={funnelOpen} onClose={closeFunnel} onScanStart={onScanStart} />
