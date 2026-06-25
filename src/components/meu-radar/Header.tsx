@@ -10,6 +10,20 @@ const initial: Notif[] = [
   { id: "1", icon: "alert", title: "Megavazamento expôs CPF de 223 milhões de brasileiros", time: "Notícia · proteja seus dados", unread: true, level: "danger" },
 ];
 
+const DISMISSED_KEY = "priva_notifs_dismissed";
+
+// Persisted across header remounts (each tab renders its own AppHeader): once a
+// notification is clicked it stays dismissed.
+function loadNotifs(): Notif[] {
+  if (typeof window === "undefined") return initial;
+  try {
+    const dismissed = JSON.parse(localStorage.getItem(DISMISSED_KEY) || "[]") as string[];
+    return initial.filter((n) => !dismissed.includes(n.id));
+  } catch {
+    return initial;
+  }
+}
+
 export function AppHeader({
   title,
   subtitle,
@@ -22,13 +36,29 @@ export function AppHeader({
 }) {
   const [open, setOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
-  const [notifs, setNotifs] = useState(initial);
+  const [notifs, setNotifs] = useState<Notif[]>(loadNotifs);
   const ref = useRef<HTMLDivElement>(null);
   const addRef = useRef<HTMLDivElement>(null);
   const unreadCount = notifs.filter((n) => n.unread).length;
-  const { goToTab, scanning, requestFamilyAdd } = useApp();
+  const { goToTab, scanning, requestFamilyAdd, isPremium } = useApp();
   const isDark = useIsDark();
   const logoSrc = isDark ? "/PRIVA_logo_dark_theme.png" : "/PRIVA_logo_light_theme.png";
+
+  // Free / new users see the news notification; paid users only get the upsell.
+  useEffect(() => {
+    if (isPremium) setNotifs([]);
+  }, [isPremium]);
+
+  // Clicking a notification dismisses it (persisted so it stays gone).
+  const dismissNotif = (id: string) => {
+    setNotifs((ns) => ns.filter((n) => n.id !== id));
+    try {
+      const dismissed = JSON.parse(localStorage.getItem(DISMISSED_KEY) || "[]") as string[];
+      if (!dismissed.includes(id)) localStorage.setItem(DISMISSED_KEY, JSON.stringify([...dismissed, id]));
+    } catch {
+      /* ignore */
+    }
+  };
 
   useEffect(() => {
     if (!open && !addOpen) return;
@@ -114,30 +144,30 @@ export function AppHeader({
                 <p className="text-sm font-bold text-foreground">Notificações</p>
               </div>
               <ul className="max-h-80 overflow-y-auto">
-                {notifs.map((n) => {
-                  const Icon = n.icon === "alert" ? AlertCircle : CheckCircle2;
-                  const color = n.level === "danger" ? "var(--color-danger)" : "var(--color-success)";
-                  return (
-                    <li
-                      key={n.id}
-                      className="flex items-start gap-3 px-4 py-3 border-b border-border/60 last:border-0 hover:bg-secondary/40 transition"
-                    >
-                      <Icon className="mt-0.5 h-4 w-4 shrink-0" style={{ color }} />
-                      <div className="min-w-0 flex-1">
-                        <p className="text-xs font-semibold text-foreground leading-snug">{n.title}</p>
-                        <p className="text-[10px] text-muted-foreground mt-0.5">{n.time}</p>
-                      </div>
-                      {n.unread && <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-[var(--color-teal)]" />}
-                    </li>
-                  );
-                })}
+                {notifs.length === 0 ? (
+                  <li className="px-4 py-6 text-center text-xs text-muted-foreground">Nenhuma notificação</li>
+                ) : (
+                  notifs.map((n) => {
+                    const Icon = n.icon === "alert" ? AlertCircle : CheckCircle2;
+                    const color = n.level === "danger" ? "var(--color-danger)" : "var(--color-success)";
+                    return (
+                      <li key={n.id} className="border-b border-border/60 last:border-0">
+                        <button
+                          onClick={() => dismissNotif(n.id)}
+                          className="flex w-full items-start gap-3 px-4 py-3 text-left hover:bg-secondary/40 transition"
+                        >
+                          <Icon className="mt-0.5 h-4 w-4 shrink-0" style={{ color }} />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs font-semibold text-foreground leading-snug">{n.title}</p>
+                            <p className="text-[10px] text-muted-foreground mt-0.5">{n.time}</p>
+                          </div>
+                          {n.unread && <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-[var(--color-teal)]" />}
+                        </button>
+                      </li>
+                    );
+                  })
+                )}
               </ul>
-              <button
-                onClick={() => setNotifs((ns) => ns.map((n) => ({ ...n, unread: false })))}
-                className="w-full border-t border-border/60 px-4 py-3 text-xs font-semibold text-[var(--color-teal)] hover:bg-secondary/40 transition"
-              >
-                Marcar todas como lidas
-              </button>
             </div>
           )}
         </div>

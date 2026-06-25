@@ -92,7 +92,7 @@ export function RadarTab() {
 
         {/* Identity radar grid */}
         <section>
-          <h2 className="mb-3 px-1 text-sm font-semibold text-foreground">Radar de identidade</h2>
+          <h2 className="mb-3 px-1 text-center text-sm font-semibold text-foreground">Radar de identidade</h2>
           <div className="grid grid-cols-2 gap-3">
             {scanning
               ? cards.map((it) => (

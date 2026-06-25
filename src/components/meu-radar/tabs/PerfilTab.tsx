@@ -1,44 +1,16 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { AppHeader } from "../Header";
-import { Check, ChevronRight, LogOut, Moon, Sun, Lock, FileText, Loader2 } from "lucide-react";
+import { Check, ChevronRight, LogOut, Moon, Sun, Lock, FileText, Loader2, Pencil, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { useTheme } from "@/hooks/use-theme";
 import { useApp } from "@/contexts/AppContext";
 import { getUser, signInWithEmail, signOut } from "@/lib/auth";
-import { isSupabaseConfigured } from "@/lib/supabase";
-import { getProfile } from "@/lib/profile";
-import { openCheckout, MP_PROTECAO_URL } from "@/lib/funnel";
+import { getProfile, saveProfile } from "@/lib/profile";
+import { openCheckout, MP_PROTECAO_URL, MP_ESSENCIAL_URL } from "@/lib/funnel";
 import { generateRelatorioPdf } from "@/lib/api/generateRelatorio.functions";
+import { getUserPlan } from "@/lib/api/account.functions";
 import { track } from "@/lib/analytics";
-
-// Real, user-entered data (CPF/e-mail from the scan, phone/address from the
-// profile card). Partially masked — it's the user's own data.
-function buildMonitored() {
-  if (typeof window === "undefined") {
-    return [
-      { label: "CPF", value: "—" },
-      { label: "E-mail", value: "—" },
-      { label: "Telefone", value: "Não informado" },
-      { label: "Endereço", value: "Não informado" },
-    ];
-  }
-  const cpf = (sessionStorage.getItem("priva_cpf") || "").replace(/\D/g, "");
-  const email = sessionStorage.getItem("priva_email") || "";
-  const p = getProfile();
-  const maskCpf = cpf.length === 11 ? `•••.${cpf.slice(3, 6)}.${cpf.slice(6, 9)}-••` : "—";
-  const maskEmail = email
-    ? `${email.slice(0, 2)}***@${email.split("@")[1] ?? ""}`
-    : "—";
-  const phone = p.extraPhone?.trim();
-  const city = p.addrCity?.trim();
-  return [
-    { label: "CPF", value: maskCpf },
-    { label: "E-mail", value: maskEmail },
-    { label: "Telefone", value: phone || "Não informado" },
-    { label: "Endereço", value: city || "Não informado" },
-  ];
-}
 
 const PLAN_LABEL: Record<string, string> = {
   essencial: "Essencial",
@@ -47,18 +19,45 @@ const PLAN_LABEL: Record<string, string> = {
 };
 
 export function PerfilTab() {
-  const [s, setS] = useState({ push: true, email: true, scan: false, bio: true });
+  const [s, setS] = useState({ push: true, email: true, scan: false });
   const { theme, toggle } = useTheme();
-  const { isPremium } = useApp();
+  const { isPremium, goToTab, requestFamilyAdd } = useApp();
   const isDark = theme === "dark";
-  const monitored = buildMonitored();
+
+  // Monitored identity — CPF/e-mail are read-only (from the scan); phone/city editable.
+  const cpfRaw = typeof window !== "undefined" ? (sessionStorage.getItem("priva_cpf") || "").replace(/\D/g, "") : "";
+  const emailRaw = typeof window !== "undefined" ? sessionStorage.getItem("priva_email") || "" : "";
+  const maskCpf = cpfRaw.length === 11 ? `•••.${cpfRaw.slice(3, 6)}.${cpfRaw.slice(6, 9)}-••` : "—";
+  const maskEmail = emailRaw ? `${emailRaw.slice(0, 2)}***@${emailRaw.split("@")[1] ?? ""}` : "—";
+  const [editing, setEditing] = useState(false);
+  const [phone, setPhone] = useState(() => getProfile().extraPhone || "");
+  const [city, setCity] = useState(() => getProfile().addrCity || "");
 
   // Auth state
   const [authedEmail, setAuthedEmail] = useState<string | null>(null);
   const [plan, setPlan] = useState("free");
   const [loginEmail, setLoginEmail] = useState("");
   const [linkSent, setLinkSent] = useState(false);
+  const [loginBusy, setLoginBusy] = useState(false);
   const [pdfBusy, setPdfBusy] = useState(false);
+
+  const goAddMember = () => {
+    goToTab("familia");
+    requestFamilyAdd();
+  };
+  // Basic (Essencial) plan can't freely edit monitored data (would enable a free
+  // scan of another person) → redirect to "adicionar membro" instead.
+  const onEditMonitored = () => {
+    if (plan === "essencial") {
+      goAddMember();
+      return;
+    }
+    if (editing) {
+      saveProfile({ extraPhone: phone.trim(), addrCity: city.trim() });
+      toast.success("Dados atualizados");
+    }
+    setEditing((v) => !v);
+  };
 
   // Generate (or refresh) the full Relatório de Exposição Digital and open it.
   const downloadRelatorio = async () => {
@@ -90,11 +89,26 @@ export function PerfilTab() {
     }
   }, []);
 
-  const sendLink = async () => {
+  // Login: if the account exists, send a magic link to enter; otherwise redirect
+  // to checkout (no account yet → must subscribe first).
+  const login = async () => {
     const email = loginEmail.trim();
-    if (!email) return;
-    const { error } = await signInWithEmail(email);
-    if (!error) setLinkSent(true);
+    if (!email || loginBusy) return;
+    setLoginBusy(true);
+    try {
+      const res = await getUserPlan({ data: { email } });
+      if (res.found) {
+        const { error } = await signInWithEmail(email);
+        if (error) toast.error("Não foi possível enviar o link de acesso.");
+        else setLinkSent(true);
+      } else {
+        toast.info("Não encontramos uma conta com esse e-mail. Vamos te levar para a assinatura.");
+        openCheckout(MP_ESSENCIAL_URL);
+      }
+    } catch {
+      toast.error("Tente novamente em instantes.");
+    }
+    setLoginBusy(false);
   };
 
   const logout = async () => {
@@ -135,11 +149,12 @@ export function PerfilTab() {
                   className="min-w-0 flex-1 rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground outline-none"
                 />
                 <button
-                  onClick={sendLink}
-                  disabled={!isSupabaseConfigured}
-                  className="shrink-0 rounded-xl bg-[var(--color-navy)] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
+                  onClick={login}
+                  disabled={loginBusy}
+                  className="flex shrink-0 items-center gap-1.5 rounded-xl bg-[var(--color-navy)] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
                 >
-                  Entrar
+                  {loginBusy && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                  Login
                 </button>
               </div>
             )}
@@ -158,41 +173,80 @@ export function PerfilTab() {
           </button>
         )}
 
-        {/* Monitored */}
+        {/* Monitored — CPF/e-mail read-only, phone/address editable */}
         <section className="rounded-2xl border border-border/60 bg-card shadow-sm">
-          <div className="px-4 py-3 border-b border-border/60">
+          <div className="flex items-center justify-between border-b border-border/60 px-4 py-3">
             <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Dados monitorados</h2>
+            <button onClick={onEditMonitored} className="flex items-center gap-1 text-[11px] font-semibold text-[var(--color-navy)]">
+              {editing ? "Concluir" : (<><Pencil className="h-3 w-3" /> Editar</>)}
+            </button>
           </div>
           <ul>
-            {monitored.map((m, i) => (
-              <li key={m.label} className={`flex items-center justify-between px-4 py-3 ${i > 0 ? "border-t border-border/60" : ""}`}>
-                <div>
-                  <p className="text-[11px] text-muted-foreground">{m.label}</p>
-                  <p className="text-sm font-medium text-foreground">{m.value}</p>
-                </div>
-                <span className="grid h-6 w-6 place-items-center rounded-full bg-[var(--color-success)]/15">
+            <li className="flex items-center justify-between px-4 py-3">
+              <div>
+                <p className="text-[11px] text-muted-foreground">CPF</p>
+                <p className="text-sm font-medium text-foreground">{maskCpf}</p>
+              </div>
+              <span className="grid h-6 w-6 place-items-center rounded-full bg-[var(--color-success)]/15">
+                <Check className="h-3.5 w-3.5 text-[var(--color-success)]" />
+              </span>
+            </li>
+            <li className="flex items-center justify-between border-t border-border/60 px-4 py-3">
+              <div>
+                <p className="text-[11px] text-muted-foreground">E-mail</p>
+                <p className="text-sm font-medium text-foreground">{maskEmail}</p>
+              </div>
+              <span className="grid h-6 w-6 place-items-center rounded-full bg-[var(--color-success)]/15">
+                <Check className="h-3.5 w-3.5 text-[var(--color-success)]" />
+              </span>
+            </li>
+            <li className="flex items-center justify-between gap-3 border-t border-border/60 px-4 py-3">
+              <div className="min-w-0 flex-1">
+                <p className="text-[11px] text-muted-foreground">Telefone</p>
+                {editing ? (
+                  <input
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    inputMode="tel"
+                    placeholder="(11) 90000-0000"
+                    className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none"
+                  />
+                ) : (
+                  <p className="text-sm font-medium text-foreground">{phone || "Não informado"}</p>
+                )}
+              </div>
+              {!editing && (
+                <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-[var(--color-success)]/15">
                   <Check className="h-3.5 w-3.5 text-[var(--color-success)]" />
                 </span>
-              </li>
-            ))}
+              )}
+            </li>
+            <li className="flex items-center justify-between gap-3 border-t border-border/60 px-4 py-3">
+              <div className="min-w-0 flex-1">
+                <p className="text-[11px] text-muted-foreground">Endereço</p>
+                {editing ? (
+                  <input
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                    placeholder="Cidade, UF"
+                    className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none"
+                  />
+                ) : (
+                  <p className="text-sm font-medium text-foreground">{city || "Não informado"}</p>
+                )}
+              </div>
+              {!editing && (
+                <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-[var(--color-success)]/15">
+                  <Check className="h-3.5 w-3.5 text-[var(--color-success)]" />
+                </span>
+              )}
+            </li>
           </ul>
-        </section>
-
-        {/* Plan */}
-        <section className="rounded-2xl border border-border/60 bg-card p-5 shadow-sm">
-          <span className="rounded-full bg-[var(--color-teal)] px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">Plano Família</span>
-          <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
-            <div>
-              <p className="text-[11px] text-muted-foreground">Renova em</p>
-              <p className="font-semibold text-foreground">15/03/2025</p>
-            </div>
-            <div>
-              <p className="text-[11px] text-muted-foreground">Membros</p>
-              <p className="font-semibold text-foreground">4 / 6</p>
-            </div>
-          </div>
-          <button className="mt-4 w-full rounded-xl bg-[var(--color-navy)] px-4 py-3 text-sm font-semibold text-white hover:opacity-90 transition">
-            Gerenciar plano
+          <button
+            onClick={goAddMember}
+            className="flex w-full items-center gap-2 border-t border-border/60 px-4 py-3 text-left text-sm font-semibold text-[var(--color-navy)] transition hover:bg-secondary/40"
+          >
+            <Plus className="h-4 w-4" /> Monitorar outra pessoa
           </button>
         </section>
 
@@ -232,7 +286,6 @@ export function PerfilTab() {
             { k: "push" as const, label: "Notificações push", paid: false },
             { k: "email" as const, label: "Alertas por e-mail", paid: false },
             { k: "scan" as const, label: "Varredura automática", paid: true },
-            { k: "bio" as const, label: "Autenticação biométrica", paid: false },
           ].map((t, i) => {
             const locked = t.paid && !isPremium;
             return (

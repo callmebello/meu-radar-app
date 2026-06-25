@@ -110,7 +110,7 @@ export function PasswordChecker() {
         ))}
 
       <p className="mt-3 text-[11px] leading-snug text-muted-foreground/70">
-        Modelo k-anonymity: apenas os 5 primeiros caracteres do hash SHA-1 são consultados na API do Have I Been Pwned.
+        Modelo k-anonymity: apenas os 5 primeiros caracteres do hash SHA-1 são consultados.
       </p>
     </section>
   );

@@ -97,6 +97,25 @@ export function ScoreTab() {
         </button>
       </section>
 
+      {/* Empty score bar — shown below the box until a query unlocks the score */}
+      {!(consulted && isPremium) && (
+        <section className="rounded-2xl border border-border/60 bg-card p-6 shadow-sm">
+          <div className="flex flex-col items-center text-center">
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Seu Score</p>
+            <p className="mt-3 text-5xl font-extrabold text-muted-foreground/40">—</p>
+            <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-muted">
+              <div className="h-full w-0 rounded-full bg-[var(--color-navy)]" />
+            </div>
+            <p className="mt-2 text-[10px] leading-relaxed text-muted-foreground">
+              0 Crítico · 300 Baixo · 600 Médio · 850 Alto · 1000 Excelente
+            </p>
+            <p className="mt-3 inline-flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground">
+              <Lock className="h-3 w-3" /> Consulte um CPF para desbloquear seu score
+            </p>
+          </div>
+        </section>
+      )}
+
       {/* Results — only after a query (premium) */}
       {consulted && isPremium && (
         <>
