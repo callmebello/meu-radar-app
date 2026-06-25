@@ -1,11 +1,10 @@
 import { useState } from "react";
-import { Shield, Users, User } from "lucide-react";
-import { useIsDark } from "@/hooks/use-is-dark";
+import { Home, Shield, Users, User } from "lucide-react";
 
 export type TabId = "radar" | "seguranca" | "familia" | "perfil";
 
-const tabs: { id: TabId; label: string; icon?: typeof Shield; logo?: boolean }[] = [
-  { id: "radar", label: "Priva", logo: true },
+const tabs: { id: TabId; label: string; icon: typeof Shield }[] = [
+  { id: "radar", label: "Início", icon: Home },
   { id: "seguranca", label: "Segurança", icon: Shield },
   { id: "familia", label: "Família", icon: Users },
   { id: "perfil", label: "Perfil", icon: User },
@@ -71,7 +70,6 @@ export function BottomNav({
 }) {
   const left = tabs.slice(0, 2);
   const right = tabs.slice(2);
-  const isDark = useIsDark();
 
   const renderTab = (t: (typeof tabs)[number]) => {
     const Icon = t.icon;
@@ -83,18 +81,7 @@ export function BottomNav({
           onClick={() => onChange(t.id)}
           className="flex w-full flex-col items-center gap-1 py-1.5"
         >
-          {t.logo ? (
-            // Outline "P" mark, theme-aware, sized to match the lucide tab icons.
-            // Opacity mirrors the active/inactive treatment of the others.
-            <img
-              src={isDark ? "/PRIVA_icon_dark_theme.png" : "/PRIVA_icon_light_theme.png"}
-              alt="Priva"
-              className="object-contain"
-              style={{ width: 26, height: 26, opacity: isActive ? 1 : 0.5 }}
-            />
-          ) : (
-            Icon && <Icon size={22} style={{ color }} strokeWidth={isActive ? 2.2 : 2} />
-          )}
+          <Icon size={22} style={{ color }} strokeWidth={isActive ? 2.2 : 2} />
           <span className="text-[11px]" style={{ color, fontWeight: isActive ? 500 : 400 }}>
             {t.label}
           </span>

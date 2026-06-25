@@ -12,7 +12,6 @@ import { ScanFunnel } from "@/components/meu-radar/ScanFunnel";
 import { ScanningOverlay } from "@/components/meu-radar/ScanningOverlay";
 import { ScanNudge } from "@/components/meu-radar/ScanNudge";
 import { ScanLanding } from "@/components/meu-radar/ScanLanding";
-import { CPFModal } from "@/components/CPFModal";
 import { AccountCreation } from "@/components/AccountCreation";
 import { isValidCPF, generateResult, getScore } from "@/lib/funnel";
 import { track } from "@/lib/analytics";
@@ -44,7 +43,6 @@ function Index() {
   const [tab, setTab] = useState<TabId>("radar");
   const [funnelOpen, setFunnelOpen] = useState(false);
   const [hasScanned, setHasScanned] = useState(false);
-  const [showCpfModal, setShowCpfModal] = useState(false);
   const { setGoToTab, isPremium, setOpenScan, scanning, setScanning, setScanResult, setExposure } = useApp();
 
   // Core scan: spins the button, slides up the scanning box, then opens the
@@ -160,16 +158,19 @@ function Index() {
       /* ignore */
     }
     track("Lead");
-    setShowCpfModal(false);
     runScan(cpf, email);
   };
 
-  // Central scan button: scan inline if CPF is known, else open the capture modal.
+  // Central scan button: scan inline if CPF is known, else show the ScanLanding
+  // capture page (the full landing form — not the old modal).
   const onScan = () => {
     const c = typeof window !== "undefined" ? sessionStorage.getItem("priva_cpf") : null;
     const e = (typeof window !== "undefined" ? sessionStorage.getItem("priva_email") : null) ?? "";
     if (c && isValidCPF(c)) runScan(c, e);
-    else setShowCpfModal(true);
+    else {
+      setTab("radar");
+      setHasScanned(false);
+    }
   };
 
   useEffect(() => {
@@ -220,7 +221,6 @@ function Index() {
       </div>
 
       <ScanFunnel open={funnelOpen} onClose={closeFunnel} onScanStart={onScanStart} />
-      {showCpfModal && !isPremium && <CPFModal onSubmit={beginScan} />}
       <AccountCreation />
       <PaywallModal />
       <Toaster position="top-center" />

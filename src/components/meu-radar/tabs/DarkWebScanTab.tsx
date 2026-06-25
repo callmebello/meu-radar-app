@@ -64,7 +64,7 @@ export function DarkWebScanTab() {
             className="mt-4 w-full rounded-xl py-3 text-sm font-bold text-white transition hover:opacity-90"
             style={{ background: "linear-gradient(135deg,#DC2626,#EF4444)" }}
           >
-            Ativar monitoramento Dark Web — R$29,90/mês
+            Ativar monitoramento Dark Web · R$29,90/mês
           </button>
           <p className="mt-2 text-center text-[11px] text-muted-foreground">Disponível no plano Proteção Total</p>
         </section>

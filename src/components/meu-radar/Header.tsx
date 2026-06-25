@@ -120,7 +120,9 @@ export function AppHeader({
             <span className="text-sm font-medium text-indigo-300">Analisando...</span>
           </>
         ) : (
-          <img src={logoSrc} alt="PRIVA" className="h-5 w-auto object-contain" />
+          <button onClick={() => goToTab("radar")} aria-label="Início" className="transition-opacity active:opacity-70">
+            <img src={logoSrc} alt="PRIVA" className="h-5 w-auto object-contain" />
+          </button>
         )}
       </div>
 
