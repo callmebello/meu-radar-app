@@ -3,7 +3,8 @@ import { AppHeader } from "../Header";
 import { Plus, X, Trash2, Gift, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { useApp } from "@/contexts/AppContext";
-import { getScore } from "@/lib/funnel";
+import { getScore, openCheckout, MP_FAMILIA_URL } from "@/lib/funnel";
+import { track } from "@/lib/analytics";
 import { getMembers, saveMembers, makeMember, type Member, type Risk } from "@/lib/family";
 
 const riskColor = (r: Risk) => (r === "Alto" ? "var(--color-danger)" : r === "Médio" ? "var(--color-warning)" : "var(--color-success)");
@@ -162,14 +163,20 @@ export function FamiliaTab() {
         )}
 
         {/* Upgrade — full family plan */}
-        <section className="rounded-2xl bg-[var(--color-navy)] p-5 text-white shadow-lg">
+        <button
+          onClick={() => {
+            track("InitiateCheckout");
+            openCheckout(MP_FAMILIA_URL);
+          }}
+          className="w-full rounded-2xl bg-[var(--color-navy)] p-5 text-left text-white shadow-lg transition active:scale-[0.99]"
+        >
           <p className="text-xs font-bold uppercase tracking-wider text-white/80">Upgrade</p>
           <h3 className="mt-1 text-lg font-bold">Plano Família — até 6 membros</h3>
           <p className="mt-1 text-sm text-white/70">R$ 49,90/mês — você usa {members.length} de 6 slots</p>
           <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/10">
             <div className="h-full rounded-full bg-white" style={{ width: `${Math.min(100, (members.length / 6) * 100)}%` }} />
           </div>
-        </section>
+        </button>
 
         {/* Referral — invite & earn a free month */}
         <button
