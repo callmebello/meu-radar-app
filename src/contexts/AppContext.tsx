@@ -73,6 +73,38 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [scanning, setScanning] = useState(false);
   const [scanResult, setScanResult] = useState<ScanResult | null>(null);
   const [exposure, setExposure] = useState<ExposureResult | null>(null);
+
+  // Persist the scan result + exposure so the dashboard keeps real data across a
+  // full reload (e.g. the Mercado Pago redirect back to ?payment=success).
+  // Hydrated post-mount to avoid SSR/client mismatch.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const s = localStorage.getItem("priva_scan_result");
+      if (s) setScanResult(JSON.parse(s));
+      const e = localStorage.getItem("priva_exposure");
+      if (e) setExposure(JSON.parse(e));
+    } catch {
+      /* ignore */
+    }
+  }, []);
+  useEffect(() => {
+    if (typeof window === "undefined" || !scanResult) return;
+    try {
+      localStorage.setItem("priva_scan_result", JSON.stringify(scanResult));
+    } catch {
+      /* ignore */
+    }
+  }, [scanResult]);
+  useEffect(() => {
+    if (typeof window === "undefined" || !exposure) return;
+    try {
+      localStorage.setItem("priva_exposure", JSON.stringify(exposure));
+    } catch {
+      /* ignore */
+    }
+  }, [exposure]);
+
   const [familyAddPending, setFamilyAddPending] = useState(false);
   const requestFamilyAdd = useCallback(() => setFamilyAddPending(true), []);
   const clearFamilyAdd = useCallback(() => setFamilyAddPending(false), []);

@@ -2,9 +2,11 @@ import { useState } from "react";
 import { AppHeader } from "../Header";
 import { AnimatedScoreGauge } from "../AnimatedScoreGauge";
 import { PaywallLock } from "../PaywallLock";
-import { ShieldCheck, Fingerprint, Mail, Phone, MapPin, X, Lock } from "lucide-react";
+import { ShieldCheck, Fingerprint, Mail, Phone, MapPin, X, Lock, FileText, Loader2, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import { useApp } from "@/contexts/AppContext";
 import { getScore, openCheckout, MP_PROTECAO_URL } from "@/lib/funnel";
+import { generateRelatorioPdf } from "@/lib/api/generateRelatorio.functions";
 import { track } from "@/lib/analytics";
 import { UpsellBanner, shouldShowUpsell } from "../UpsellBanner";
 import { IdentityCardSheet, type CardType } from "../IdentityCardSheet";
@@ -24,6 +26,30 @@ export function RadarTab() {
   const score = cpf ? getScore(cpf, breachCount) : 67;
   const [bannerVisible, setBannerVisible] = useState(true);
   const [cardSheet, setCardSheet] = useState<CardType | null>(null);
+  const [pdfBusy, setPdfBusy] = useState(false);
+
+  // Plan-aware post-payment UI: Essencial gets the report download; Proteção
+  // Total gets the removal-status card instead (no downloads).
+  const plan = typeof window !== "undefined" ? localStorage.getItem("priva_plan") || "" : "";
+  const isProtecao = plan === "protecao_total";
+  const lgpdRequestedAt = typeof window !== "undefined" ? localStorage.getItem("priva_lgpd_requested_at") : null;
+
+  const downloadRelatorio = async () => {
+    const uid = typeof window !== "undefined" ? localStorage.getItem("priva_user_id") : null;
+    if (!uid) {
+      toast.error("Faça um scan primeiro para gerar o relatório.");
+      return;
+    }
+    setPdfBusy(true);
+    try {
+      const res = await generateRelatorioPdf({ data: { userId: uid } });
+      if (res.ok && res.url) window.open(res.url, "_blank");
+      else toast.error("Não foi possível gerar o relatório agora.");
+    } catch {
+      toast.error("Não foi possível gerar o relatório agora.");
+    }
+    setPdfBusy(false);
+  };
 
   // Real free-source results (dashboard only) — degrade to safe "not found".
   const cpfEx = exposure?.cpf;
@@ -57,6 +83,33 @@ export function RadarTab() {
     <>
       <AppHeader title="" showBell />
       <div className="space-y-5 px-5 py-5">
+        {/* Essencial — download the full report (top of the dashboard) */}
+        {isPremium && !isProtecao && (
+          <button
+            onClick={downloadRelatorio}
+            disabled={pdfBusy}
+            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[var(--color-navy)] px-4 py-3.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-90 disabled:opacity-60"
+          >
+            {pdfBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
+            {pdfBusy ? "Gerando relatório..." : "Baixar relatório em PDF"}
+          </button>
+        )}
+
+        {/* Proteção Total — data-removal status (no downloads) */}
+        {isPremium && isProtecao && lgpdRequestedAt && (
+          <div className="flex items-center gap-3 rounded-2xl border border-[var(--color-warning)]/30 bg-[var(--color-warning)]/10 p-4">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[var(--color-warning)]/15">
+              <Trash2 className="h-5 w-5 text-[var(--color-warning)]" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold text-foreground">
+                Remoção solicitada em {new Date(lgpdRequestedAt).toLocaleDateString("pt-BR")}
+              </p>
+              <p className="text-[11px] text-muted-foreground">Em andamento · nossa equipe está processando seu pedido</p>
+            </div>
+          </div>
+        )}
+
         {hasChecked && bannerVisible && (
           <div className="flex items-center gap-2 rounded-xl border border-[var(--color-teal)]/30 bg-[var(--color-teal)]/8 px-3 py-2.5">
             <ShieldCheck className="h-4 w-4 shrink-0 text-[var(--color-teal)]" />

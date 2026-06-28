@@ -161,8 +161,8 @@ export function PerfilTab() {
           </div>
         )}
 
-        {/* Download full report — available once the account is unlocked */}
-        {isPremium && (
+        {/* Download full report — Essencial only (Proteção Total has no downloads) */}
+        {isPremium && plan !== "protecao_total" && (
           <button
             onClick={downloadRelatorio}
             disabled={pdfBusy}

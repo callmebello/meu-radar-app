@@ -13,7 +13,7 @@ import { ScanFunnel } from "@/components/meu-radar/ScanFunnel";
 import { ScanningOverlay } from "@/components/meu-radar/ScanningOverlay";
 import { ScanNudge } from "@/components/meu-radar/ScanNudge";
 import { ScanLanding } from "@/components/meu-radar/ScanLanding";
-import { AccountCreation } from "@/components/AccountCreation";
+import { PaymentReturn } from "@/components/PaymentReturn";
 import { isValidCPF, generateResult, getScore } from "@/lib/funnel";
 import { track } from "@/lib/analytics";
 import { saveUser } from "@/lib/api/saveUser";
@@ -260,7 +260,7 @@ function Index() {
       </div>
 
       <ScanFunnel open={funnelOpen} onClose={closeFunnel} onScanStart={onScanStart} />
-      <AccountCreation />
+      <PaymentReturn />
       <PaywallModal />
       <Toaster position="top-center" />
     </div>
