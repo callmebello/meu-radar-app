@@ -13,6 +13,8 @@ type Ctx = {
   setGoToTab: (fn: (t: TabId) => void) => void;
   openScan: () => void;
   setOpenScan: (fn: () => void) => void;
+  openCapture: (reason: CaptureReason) => void;
+  setOpenCapture: (fn: (reason: CaptureReason) => void) => void;
   scanning: boolean;
   setScanning: (v: boolean) => void;
   scanResult: ScanResult | null;
@@ -28,6 +30,10 @@ export type ScanResult = {
   breachCount: number;
   hibp?: { count: number; breaches: unknown[] } | null;
 };
+
+// "postpay" = paid but no scan on file (confirm CPF to generate the report);
+// "scan" = generic CPF capture from the Scan button.
+export type CaptureReason = "postpay" | "scan";
 
 export type ExposureSource = { title: string; link: string; snippet: string };
 export type GithubRepo = { repo: string; path: string; url: string };
@@ -69,6 +75,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [openScanFn, setOpenScanFn] = useState<{ fn: () => void }>({ fn: () => {} });
   const setOpenScan = useCallback((fn: () => void) => setOpenScanFn({ fn }), []);
   const openScan = useCallback(() => openScanFn.fn(), [openScanFn]);
+
+  const [openCaptureFn, setOpenCaptureFn] = useState<{ fn: (r: CaptureReason) => void }>({ fn: () => {} });
+  const setOpenCapture = useCallback((fn: (r: CaptureReason) => void) => setOpenCaptureFn({ fn }), []);
+  const openCapture = useCallback((r: CaptureReason) => openCaptureFn.fn(r), [openCaptureFn]);
 
   const [scanning, setScanning] = useState(false);
   const [scanResult, setScanResult] = useState<ScanResult | null>(null);
@@ -123,6 +133,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setGoToTab,
         openScan,
         setOpenScan,
+        openCapture,
+        setOpenCapture,
         scanning,
         setScanning,
         scanResult,

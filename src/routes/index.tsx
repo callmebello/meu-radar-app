@@ -7,7 +7,8 @@ import { SegurancaTab } from "@/components/meu-radar/tabs/SegurancaTab";
 import { FamiliaTab } from "@/components/meu-radar/tabs/FamiliaTab";
 import { PerfilTab } from "@/components/meu-radar/tabs/PerfilTab";
 import { Toaster } from "@/components/ui/sonner";
-import { AppProvider, useApp } from "@/contexts/AppContext";
+import { AppProvider, useApp, type CaptureReason } from "@/contexts/AppContext";
+import { CpfCaptureSheet } from "@/components/CpfCaptureSheet";
 import { PaywallModal } from "@/components/meu-radar/PaywallModal";
 import { ScanFunnel } from "@/components/meu-radar/ScanFunnel";
 import { ScanningOverlay } from "@/components/meu-radar/ScanningOverlay";
@@ -46,7 +47,9 @@ function Index() {
   const [tab, setTab] = useState<TabId>("radar");
   const [funnelOpen, setFunnelOpen] = useState(false);
   const [hasScanned, setHasScanned] = useState(false);
-  const { setGoToTab, isPremium, setIsPremium, setOpenScan, scanning, setScanning, setScanResult, setExposure } = useApp();
+  const [captureOpen, setCaptureOpen] = useState(false);
+  const [captureReason, setCaptureReason] = useState<CaptureReason>("scan");
+  const { setGoToTab, isPremium, setIsPremium, setOpenScan, setOpenCapture, scanning, setScanning, setScanResult, setExposure } = useApp();
 
   // Restore the logged-in account on load: if there's a Supabase session, sync
   // the plan/paid state and e-mail so the user stays logged in with their data.
@@ -80,7 +83,7 @@ function Index() {
   // Core scan: spins the button, slides up the scanning box, then opens the
   // result sheet. In parallel it persists the user (hashed CPF), queries HIBP for
   // the real breach count, and caches the scan — all best-effort (guarded).
-  const runScan = (cpf: string, email: string) => {
+  const runScan = (cpf: string, email: string, opts?: { silent?: boolean }) => {
     setHasScanned(true);
     setTab("radar");
     setFunnelOpen(false);
@@ -176,8 +179,12 @@ function Index() {
 
     setTimeout(() => {
       setScanning(false);
-      setFunnelOpen(true);
-      track("ViewContent");
+      // Paid users (silent) skip the sales funnel — the dashboard just updates
+      // with the fresh, persisted scan data.
+      if (!opts?.silent) {
+        setFunnelOpen(true);
+        track("ViewContent");
+      }
     }, 3500);
   };
 
@@ -193,27 +200,47 @@ function Index() {
     runScan(cpf, email);
   };
 
+  // CPF capture (post-payment "confirm CPF" fallback, or Scan-button capture for
+  // already-unlocked users). Paid users scan silently (no sales funnel).
+  const confirmCapture = (cpf: string, email: string) => {
+    setCaptureOpen(false);
+    try {
+      sessionStorage.setItem("priva_cpf", cpf);
+      if (email) sessionStorage.setItem("priva_email", email);
+    } catch {
+      /* ignore */
+    }
+    track("Lead");
+    runScan(cpf, email, { silent: isPremium });
+  };
+
   // Central scan button: scan inline if CPF is known, else show the ScanLanding
   // capture page (the full landing form — not the old modal).
   const onScan = () => {
     const c = typeof window !== "undefined" ? sessionStorage.getItem("priva_cpf") : null;
     const e = (typeof window !== "undefined" ? sessionStorage.getItem("priva_email") : null) ?? "";
-    if (c && isValidCPF(c)) runScan(c, e);
+    if (c && isValidCPF(c)) runScan(c, e, { silent: isPremium });
     else {
-      setTab("radar");
-      setHasScanned(false);
+      // No CPF on file → open the capture modal. Works even when isPremium
+      // (the old ScanLanding path was gated to !isPremium and did nothing).
+      setCaptureReason("scan");
+      setCaptureOpen(true);
     }
   };
 
   useEffect(() => {
     setGoToTab((t: TabId) => setTab(t));
     setOpenScan(() => onScan());
+    setOpenCapture((reason: CaptureReason) => {
+      setCaptureReason(reason);
+      setCaptureOpen(true);
+    });
     const storedCpf = typeof window !== "undefined" ? sessionStorage.getItem("priva_cpf") : null;
     if (storedCpf) setHasScanned(true);
     // The landing page is the entry — no auto CPF modal pop-up. The modal only
     // opens as a fallback if the user taps Scan without a stored CPF (onScan).
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [setGoToTab, setOpenScan]);
+  }, [setGoToTab, setOpenScan, setOpenCapture]);
 
   // CPF entered in the legacy funnel modal → run the inline scan from session.
   const onScanStart = () => {
@@ -261,6 +288,14 @@ function Index() {
 
       <ScanFunnel open={funnelOpen} onClose={closeFunnel} onScanStart={onScanStart} />
       <PaymentReturn />
+      {captureOpen && (
+        <CpfCaptureSheet
+          reason={captureReason}
+          defaultEmail={(typeof window !== "undefined" && sessionStorage.getItem("priva_email")) || ""}
+          onConfirm={confirmCapture}
+          onClose={captureReason === "scan" ? () => setCaptureOpen(false) : undefined}
+        />
+      )}
       <PaywallModal />
       <Toaster position="top-center" />
     </div>

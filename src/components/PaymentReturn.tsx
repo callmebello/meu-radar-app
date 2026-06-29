@@ -20,7 +20,11 @@ const MIN_ACTIVATING_MS = 2400;
  * Renders nothing when there's no payment return → normal scan flow is untouched.
  */
 export function PaymentReturn() {
-  const { setIsPremium } = useApp();
+  const { setIsPremium, openCapture } = useApp();
+  // openCapture is registered by index AFTER first render — keep a live ref so
+  // the (once-only) effect below always calls the current one, not the no-op.
+  const openCaptureRef = useRef(openCapture);
+  openCaptureRef.current = openCapture;
   const [phase, setPhase] = useState<Phase>("idle");
   const [plan, setPlan] = useState("essencial");
   const [email, setEmail] = useState("");
@@ -95,12 +99,17 @@ export function PaymentReturn() {
           // Proteção Total → LGPD authorization (skip if already authorized).
           setPhase(localStorage.getItem("priva_lgpd_authorized") === "true" ? "done" : "lgpd");
         } else {
-          // Essencial → e-mail the report once, then reveal the unlocked dashboard.
-          if (resolvedUserId && localStorage.getItem("priva_relatorio_emailed") !== "true") {
+          // Essencial. We can generate the report only when there's a persisted
+          // scan (user_id) + scan data. Otherwise (cross-origin / paid without
+          // scanning) ask for the CPF to scan + persist now.
+          const uid = localStorage.getItem("priva_user_id");
+          const canReport = Boolean(uid) && Boolean(localStorage.getItem("priva_scan_result"));
+          if (canReport && localStorage.getItem("priva_relatorio_emailed") !== "true") {
             localStorage.setItem("priva_relatorio_emailed", "true");
-            void generateRelatorioPdf({ data: { userId: resolvedUserId, deliverEmail: true } }).catch(() => {});
+            void generateRelatorioPdf({ data: { userId: uid as string, deliverEmail: true } }).catch(() => {});
           }
           setPhase("idle");
+          if (!canReport) openCaptureRef.current("postpay");
         }
       }, wait);
     })();
