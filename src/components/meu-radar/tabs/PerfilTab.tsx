@@ -21,8 +21,15 @@ const PLAN_LABEL: Record<string, string> = {
 export function PerfilTab() {
   const [s, setS] = useState({ push: true, email: true, scan: false });
   const { theme, toggle } = useTheme();
-  const { isPremium, goToTab, requestFamilyAdd } = useApp();
+  const { isPremium, goToTab, requestFamilyAdd, openScan } = useApp();
   const isDark = theme === "dark";
+
+  // A report can be generated only when a scan was persisted (user_id) and we
+  // have scan data on file. Otherwise the Perfil section shows an empty state.
+  const hasReport =
+    typeof window !== "undefined" &&
+    !!localStorage.getItem("priva_user_id") &&
+    !!localStorage.getItem("priva_scan_result");
 
   // Monitored identity — CPF/e-mail are read-only (from the scan); phone/city editable.
   const cpfRaw = typeof window !== "undefined" ? (sessionStorage.getItem("priva_cpf") || "").replace(/\D/g, "") : "";
@@ -161,16 +168,39 @@ export function PerfilTab() {
           </div>
         )}
 
-        {/* Download full report — Essencial only (Proteção Total has no downloads) */}
+        {/* Meus documentos — Essencial only (Proteção Total has a removal flow, no downloads) */}
         {isPremium && plan !== "protecao_total" && (
-          <button
-            onClick={downloadRelatorio}
-            disabled={pdfBusy}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[var(--color-navy)] px-4 py-3.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-90 disabled:opacity-60"
-          >
-            {pdfBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
-            {pdfBusy ? "Gerando relatório..." : "📄 Baixar relatório completo"}
-          </button>
+          <section className="overflow-hidden rounded-2xl border border-border/60 bg-card shadow-sm">
+            <div className="border-b border-border/60 px-4 py-3">
+              <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Meus documentos</h2>
+            </div>
+            {hasReport ? (
+              <button
+                onClick={downloadRelatorio}
+                disabled={pdfBusy}
+                className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition hover:bg-secondary/40 disabled:opacity-60"
+              >
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[var(--color-navy)]/10">
+                  {pdfBusy ? <Loader2 className="h-5 w-5 animate-spin text-[var(--color-navy)]" /> : <FileText className="h-5 w-5 text-[var(--color-navy)]" />}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-semibold text-foreground">📄 Meu relatório completo</span>
+                  <span className="block text-[11px] text-muted-foreground">{pdfBusy ? "Gerando..." : "Baixar em PDF"}</span>
+                </span>
+                <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+              </button>
+            ) : (
+              <div className="px-4 py-5 text-center">
+                <p className="text-sm text-muted-foreground">Nenhum relatório gerado ainda.</p>
+                <button
+                  onClick={openScan}
+                  className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-[var(--color-navy)] px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90"
+                >
+                  Fazer scan
+                </button>
+              </div>
+            )}
+          </section>
         )}
 
         {/* Monitored — CPF/e-mail read-only, phone/address editable */}
