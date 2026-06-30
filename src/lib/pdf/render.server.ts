@@ -9,8 +9,21 @@ import { firstSourceUrl, type StoredScanResult } from "./types";
 
 const SIGNED_TTL = 7 * 24 * 60 * 60; // 7 days
 
+// QR for the Proteção Total checkout → data URL embedded in the PDF.
+async function makeQr(text: string): Promise<string | undefined> {
+  try {
+    const QRCode = (await import("qrcode")).default;
+    return await QRCode.toDataURL(text, { margin: 1, width: 240, color: { dark: "#0B0B1A", light: "#FFFFFF" } });
+  } catch {
+    return undefined;
+  }
+}
+
 export async function renderRelatorioBuffer(props: RelatorioProps): Promise<Buffer> {
-  return renderToBuffer(buildRelatorioDocument(props));
+  const url =
+    process.env.VITE_MP_PROTECAO_URL || process.env.MP_PROTECAO_URL || "https://www.privaapp.com.br";
+  const qrDataUrl = await makeQr(url);
+  return renderToBuffer(buildRelatorioDocument({ ...props, qrDataUrl }));
 }
 
 export async function renderCartaBuffer(props: CartaLgpdProps): Promise<Buffer> {
