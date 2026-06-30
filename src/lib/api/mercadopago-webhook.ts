@@ -1,33 +1,77 @@
-import { getSupabaseAdmin } from "../supabase.server";
-
 // Mercado Pago webhook handler. Registered at POST /api/webhook/mercadopago
-// (wired in src/server.ts). On a payment / subscription event it marks the user
-// paid and records the subscription. Always returns 200 so MP stops retrying.
+// (wired in src/server.ts). MP notifications are thin ({ type, data:{ id } }), so
+// we fetch the resource from MP (GET /preapproval | /payments | /authorized_payments
+// with the token for the notification's mode) and only then flip users.is_paid.
+// Always returns 200 so MP stops retrying. The enrichment logic lives in
+// mercadopago.server.ts and is shared with the post-payment return flow.
+//
+// ENV (server-only, no VITE_ prefix):
+//   - Production (Vercel):  MP_ACCESS_TOKEN       = <Access Token de PRODUÇÃO>
+//   - Sandbox/test:         MP_ACCESS_TOKEN_TEST  = APP_USR/TEST-...
+//   Without a token the enrichment is skipped (degrades to 200, no crash).
+//
+// TODO (hardening): validate the `x-signature` header with the webhook secret
+// before trusting the notification, to prevent spoofed is_paid flips.
+import { getSupabaseAdmin } from "../supabase.server";
+import {
+  tokensForMode,
+  resolvePreapproval,
+  resolvePayment,
+  resolveAuthorizedPayment,
+  isActiveStatus,
+  markPaid,
+  type ResolvedSub,
+} from "./mercadopago.server";
+
+type MPNotification = {
+  type?: string;
+  topic?: string;
+  action?: string;
+  live_mode?: boolean;
+  data?: { id?: string };
+  id?: string | number;
+};
+
 export async function handleMercadoPagoWebhook(request: Request): Promise<Response> {
   try {
-    const body = (await request.json().catch(() => ({}))) as Record<string, any>;
+    const url = new URL(request.url);
+    const body = (await request.json().catch(() => ({}))) as MPNotification;
 
-    if (body.type === "payment" || body.type === "subscription_preapproval") {
-      const email: string | undefined = body?.data?.payer?.email || body?.payer_email;
-      const amount: number = Number(body?.transaction_amount ?? 0);
+    const type =
+      body.type || body.topic || url.searchParams.get("type") || url.searchParams.get("topic") || "";
+    const id =
+      body.data?.id ||
+      (typeof body.id !== "undefined" ? String(body.id) : "") ||
+      url.searchParams.get("data.id") ||
+      url.searchParams.get("id") ||
+      "";
 
-      if (email) {
-        const admin = getSupabaseAdmin();
-        if (admin) {
-          const plan = amount >= 29 ? "protecao_total" : "essencial";
+    if (!id) return new Response("OK", { status: 200 });
 
-          await admin
-            .from("users")
-            .update({ plan, is_paid: true, updated_at: new Date().toISOString() })
-            .eq("email", email);
+    const tokens = tokensForMode(body.live_mode);
+    if (tokens.length === 0) {
+      console.warn("MP webhook: nenhum MP_ACCESS_TOKEN(_TEST) configurado — enriquecimento pulado");
+      return new Response("OK", { status: 200 });
+    }
 
-          await admin.from("subscriptions").insert({
-            plan,
-            status: "active",
-            mp_subscription_id: body?.data?.id ?? null,
-            amount,
-          });
-        }
+    let resolved: ResolvedSub | null = null;
+    if (type.includes("authorized_payment")) {
+      resolved = await resolveAuthorizedPayment(String(id), tokens);
+    } else if (type.includes("subscription") || type.includes("preapproval")) {
+      resolved = await resolvePreapproval(String(id), tokens);
+    } else if (type.includes("payment")) {
+      resolved = await resolvePayment(String(id), tokens);
+    }
+
+    if (resolved?.email && isActiveStatus(resolved.status)) {
+      const admin = getSupabaseAdmin();
+      if (admin) {
+        await markPaid(admin, {
+          email: resolved.email,
+          plan: resolved.plan,
+          amount: resolved.amount,
+          mpId: String(id),
+        });
       }
     }
   } catch (e) {
