@@ -1,11 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { getSupabaseAdmin } from "../supabase.server";
+import type { StoredScanResult } from "../pdf/types";
 
-// Records the user's formal LGPD authorization (Proteção Total), then — best
-// effort — generates the carta-LGPD PDF and notifies the admin so the actual
-// removal request can be sent manually (Model B). The dashboard only unlocks
-// after { ok: true }.
+// Records the user's formal LGPD authorization (Proteção Total) and sends an
+// internal notification e-mail to the admin so the removal letter can be
+// generated + sent manually (Model B). The e-mail is best-effort: a failure to
+// send never blocks the user flow (the dashboard unlocks on { ok: true }).
 
 export const saveLgpdAuthorization = createServerFn({ method: "POST" })
   .inputValidator(
@@ -15,7 +16,7 @@ export const saveLgpdAuthorization = createServerFn({ method: "POST" })
       fullName: z.string().min(2),
     }),
   )
-  .handler(async ({ data }): Promise<{ ok: boolean; cartaUrl?: string; reason?: string }> => {
+  .handler(async ({ data }): Promise<{ ok: boolean; reason?: string }> => {
     const admin = getSupabaseAdmin();
     if (!admin) return { ok: false, reason: "not_configured" };
 
@@ -43,41 +44,72 @@ export const saveLgpdAuthorization = createServerFn({ method: "POST" })
       /* ignore — column is nullable */
     }
 
-    const { error: insErr } = await admin.from("lgpd_authorizations").insert({
-      user_id: userId,
-      full_name: data.fullName,
-      cpf_hash: cpfHash,
-      ip_address: ip,
-    });
+    const { data: authRow, error: insErr } = await admin
+      .from("lgpd_authorizations")
+      .insert({ user_id: userId, full_name: data.fullName, cpf_hash: cpfHash, ip_address: ip })
+      .select("authorized_at")
+      .maybeSingle();
     if (insErr) return { ok: false, reason: insErr.message };
 
-    // Generate carta + admin notification (best-effort — authorization is saved).
-    let cartaUrl: string | undefined;
+    const authorizedAt = (authRow?.authorized_at as string) || new Date().toISOString();
+
+    // Internal admin notification — best-effort, must not block the user flow.
     try {
-      const { generateCartaForUser } = await import("../pdf/render.server");
-      const res = await generateCartaForUser(admin, userId);
-      if (res) {
-        cartaUrl = res.url;
-        const { sendEmail, ADMIN_EMAIL } = await import("../email.server");
-        await sendEmail({
-          to: ADMIN_EMAIL,
-          subject: `Nova solicitação de remoção LGPD — ${res.fullName}`,
-          html: `<h3>Nova solicitação de remoção LGPD</h3>
-            <p><strong>Usuário:</strong> ${res.fullName} (${res.email || email})</p>
-            <p><strong>Fonte a remover:</strong> ${res.sourceUrl ?? "—"}</p>
-            <p><strong>Carta gerada:</strong> <a href="${cartaUrl}">${cartaUrl}</a></p>
-            <p><strong>Ação:</strong> envie esta carta ao controlador identificado, com o usuário em CC.</p>`,
-          text:
-            `Nova solicitação de remoção LGPD\n` +
-            `Usuário: ${res.fullName} (${res.email || email})\n` +
-            `Fonte a remover: ${res.sourceUrl ?? "—"}\n` +
-            `Carta gerada: ${cartaUrl}\n\n` +
-            `Ação: envie esta carta ao controlador identificado, com o usuário em CC.`,
-        });
-      }
+      const { data: scanRow } = await admin
+        .from("scans")
+        .select("result, breach_count")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      const result = ((scanRow?.result as StoredScanResult) ?? {}) as StoredScanResult;
+      const breachCount = result.hibp?.count ?? (scanRow?.breach_count as number) ?? result.breachCount ?? 0;
+      const breachNames = (result.hibp?.breaches ?? [])
+        .map((b) => b.name)
+        .filter(Boolean)
+        .slice(0, 8)
+        .join(", ");
+      const ex = result.exposure;
+      const sourceItems: string[] = [
+        ...(ex?.github?.repos ?? []).map((r) => `Repositório: ${r.repo || r.url}`),
+        ...(ex?.cpf?.sources ?? []).map((sc) => `Web (CPF): ${sc.link || sc.title}`),
+        ...(ex?.phone?.sources ?? []).map((sc) => `Web (telefone): ${sc.link || sc.title}`),
+      ];
+      const sourcesStr = sourceItems.length ? sourceItems.join("; ") : "nenhuma fonte pública direta";
+      const whenFmt = (() => {
+        const d = new Date(authorizedAt);
+        return isNaN(d.getTime()) ? authorizedAt : d.toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
+      })();
+      const scanSummary =
+        `${breachCount} vazamento(s) de e-mail` +
+        (breachNames ? ` (${breachNames})` : "") +
+        ` · fontes públicas: ${sourcesStr}`;
+
+      const { sendEmail, ADMIN_EMAIL } = await import("../email.server");
+      await sendEmail({
+        to: ADMIN_EMAIL,
+        subject: "🔔 Nova solicitação de remoção LGPD — ação necessária",
+        text:
+          `Nova solicitação de remoção LGPD\n\n` +
+          `Nome: ${data.fullName}\n` +
+          `E-mail: ${email || "—"}\n` +
+          `CPF (hash): ${cpfHash || "—"}\n` +
+          `Data da autorização: ${whenFmt}\n` +
+          `Dados encontrados no scan: ${scanSummary}\n\n` +
+          `Ação necessária: gerar carta LGPD e enviar ao controlador identificado, com o usuário em CC.`,
+        html:
+          `<h3>Nova solicitação de remoção LGPD</h3>` +
+          `<p><strong>Nome:</strong> ${data.fullName}</p>` +
+          `<p><strong>E-mail:</strong> ${email || "—"}</p>` +
+          `<p><strong>CPF (hash):</strong> <code>${cpfHash || "—"}</code></p>` +
+          `<p><strong>Data da autorização:</strong> ${whenFmt}</p>` +
+          `<p><strong>Dados encontrados no scan:</strong> ${scanSummary}</p>` +
+          `<p><strong>Ação necessária:</strong> gerar carta LGPD e enviar ao controlador identificado, com o usuário em CC.</p>`,
+      });
     } catch {
-      /* best-effort */
+      /* fire-and-forget — a failed notification never blocks the user */
     }
 
-    return { ok: true, cartaUrl };
+    return { ok: true };
   });
