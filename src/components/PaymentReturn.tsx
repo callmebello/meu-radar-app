@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState } from "react";
-import { CircleCheck, Loader2, Clock } from "lucide-react";
+import { CircleCheck, Loader2, Clock, Mail, ArrowRight } from "lucide-react";
 import { useApp } from "@/contexts/AppContext";
 import { confirmPreapproval } from "@/lib/api/confirmPayment.functions";
 import { confirmStripeSession } from "@/lib/api/stripeCheckout.functions";
 import { generateRelatorioPdf } from "@/lib/api/generateRelatorio.functions";
+import { signInWithEmail } from "@/lib/auth";
 import { LgpdAuthorization } from "@/components/LgpdAuthorization";
 import { track } from "@/lib/analytics";
 
-type Phase = "idle" | "activating" | "lgpd" | "done";
+type Phase = "idle" | "activating" | "account" | "lgpd" | "done";
 const MIN_ACTIVATING_MS = 2400;
 
 /**
@@ -31,7 +32,48 @@ export function PaymentReturn() {
   const [plan, setPlan] = useState("essencial");
   const [email, setEmail] = useState("");
   const [userId, setUserId] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [linkSent, setLinkSent] = useState(false);
   const ran = useRef(false);
+
+  // After the account step, route by plan: Proteção Total → LGPD authorization;
+  // Essencial → generate/e-mail the report (or ask for a CPF if none on file yet).
+  const finishAfterAccount = (resolvedPlan: string) => {
+    if (resolvedPlan === "protecao_total") {
+      setPhase(localStorage.getItem("priva_lgpd_authorized") === "true" ? "done" : "lgpd");
+    } else {
+      const uid = localStorage.getItem("priva_user_id");
+      const canReport = Boolean(uid) && Boolean(localStorage.getItem("priva_scan_result"));
+      if (canReport && localStorage.getItem("priva_relatorio_emailed") !== "true") {
+        localStorage.setItem("priva_relatorio_emailed", "true");
+        void generateRelatorioPdf({ data: { userId: uid as string, deliverEmail: true } }).catch(() => {});
+      }
+      setPhase("idle");
+      if (!canReport) openCaptureRef.current("postpay");
+    }
+  };
+  // Live ref so the once-only effect always calls the current closure.
+  const finishAfterAccountRef = useRef(finishAfterAccount);
+  finishAfterAccountRef.current = finishAfterAccount;
+
+  // Send the magic-link login so the buyer can access their account on any device.
+  const sendAccessLink = async () => {
+    if (!email || busy) return;
+    setBusy(true);
+    const { error } = await signInWithEmail(email);
+    setBusy(false);
+    if (!error) setLinkSent(true);
+  };
+
+  // Continue into the app; mark the account as handled so we don't prompt again.
+  const continueFromAccount = () => {
+    try {
+      localStorage.setItem("priva_has_account", "true");
+    } catch {
+      /* ignore */
+    }
+    finishAfterAccount(plan);
+  };
 
   useEffect(() => {
     if (typeof window === "undefined" || ran.current) return;
@@ -107,21 +149,14 @@ export function PaymentReturn() {
       // Keep the branded screen up for a minimum beat.
       const wait = Math.max(0, MIN_ACTIVATING_MS - (Date.now() - startedAt));
       window.setTimeout(() => {
-        if (resolvedPlan === "protecao_total") {
-          // Proteção Total → LGPD authorization (skip if already authorized).
-          setPhase(localStorage.getItem("priva_lgpd_authorized") === "true" ? "done" : "lgpd");
+        // Web launch: a purchase must leave the buyer with a real account they can
+        // log back into on any device (localStorage alone dies on another browser).
+        // Show the account step once, unless they already secured an account.
+        const hasAccount = localStorage.getItem("priva_has_account") === "true";
+        if (!hasAccount) {
+          setPhase("account");
         } else {
-          // Essencial. We can generate the report only when there's a persisted
-          // scan (user_id) + scan data. Otherwise (cross-origin / paid without
-          // scanning) ask for the CPF to scan + persist now.
-          const uid = localStorage.getItem("priva_user_id");
-          const canReport = Boolean(uid) && Boolean(localStorage.getItem("priva_scan_result"));
-          if (canReport && localStorage.getItem("priva_relatorio_emailed") !== "true") {
-            localStorage.setItem("priva_relatorio_emailed", "true");
-            void generateRelatorioPdf({ data: { userId: uid as string, deliverEmail: true } }).catch(() => {});
-          }
-          setPhase("idle");
-          if (!canReport) openCaptureRef.current("postpay");
+          finishAfterAccountRef.current(resolvedPlan);
         }
       }, wait);
     })();
@@ -129,6 +164,58 @@ export function PaymentReturn() {
   }, []);
 
   if (phase === "idle") return null;
+
+  // STEP — secure the account (web: buyer needs a login that works on any device)
+  if (phase === "account") {
+    return (
+      <div className="fixed inset-0 z-[60] overflow-y-auto" style={{ backgroundColor: "#0A0A0F" }}>
+        <div className="mx-auto flex min-h-full max-w-sm flex-col justify-center px-6 pb-10">
+          <div className="mx-auto grid h-20 w-20 place-items-center rounded-full bg-green-500/15">
+            <CircleCheck className="h-12 w-12 text-green-400" />
+          </div>
+          <h1 className="mt-5 text-center text-2xl font-extrabold text-white">Proteção ativada!</h1>
+          <p className="mt-2 text-center text-sm text-gray-400">
+            Sua conta é o seu e-mail. Enviamos um link de acesso para você entrar em qualquer aparelho.
+          </p>
+
+          <div className="mt-7 rounded-2xl p-5" style={{ backgroundColor: "#12121A", border: "1px solid rgba(255,255,255,0.05)" }}>
+            <p className="mb-1 text-xs text-gray-400">Seu e-mail de acesso</p>
+            <div className="mb-4 flex items-center gap-2 rounded-lg px-3 py-2.5" style={{ backgroundColor: "#1a1a2e" }}>
+              <Mail className="h-4 w-4 shrink-0 text-indigo-400" />
+              <span className="truncate text-sm font-medium text-white">{email || "—"}</span>
+            </div>
+
+            {linkSent ? (
+              <p className="rounded-xl bg-green-500/10 px-3 py-3 text-center text-sm text-green-400">
+                Link de acesso enviado para {email} ✓<br />
+                <span className="text-xs text-green-400/70">Confira sua caixa de entrada (e o spam).</span>
+              </p>
+            ) : (
+              <button
+                onClick={sendAccessLink}
+                disabled={busy || !email}
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 py-4 font-bold text-white transition-all active:scale-[0.99] disabled:opacity-50"
+              >
+                {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <Mail className="h-5 w-5" />}
+                {busy ? "Enviando..." : "Enviar link de acesso"}
+              </button>
+            )}
+
+            <button
+              onClick={continueFromAccount}
+              className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 py-3.5 text-sm font-semibold text-white transition-all active:scale-[0.99]"
+            >
+              Continuar para o painel <ArrowRight className="h-4 w-4" />
+            </button>
+          </div>
+
+          <p className="mt-4 text-center text-[11px] leading-snug text-gray-600">
+            Guarde o e-mail acima — é com ele que você entra na sua conta em outro celular ou computador.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   // STEP — LGPD authorization (Proteção Total only)
   if (phase === "lgpd") {
