@@ -1,17 +1,17 @@
 import { Trash2, ChevronRight } from "lucide-react";
-import { MP_PROTECAO_URL, openCheckout } from "@/lib/funnel";
+import { startCheckout } from "@/lib/checkout";
 import { track } from "@/lib/analytics";
 
 /**
  * Upsell to "Proteção Total" (R$29,90) — shown to paid Essencial users on the
- * dashboard / Segurança tab. Opens the Mercado Pago checkout.
+ * dashboard / Segurança tab. Opens the Stripe Checkout.
  */
 export function UpsellBanner({ className = "" }: { className?: string }) {
   return (
     <button
       onClick={() => {
         track("InitiateCheckout");
-        openCheckout(MP_PROTECAO_URL);
+        void startCheckout("protecao_total");
       }}
       className={`flex w-full items-center gap-3 rounded-2xl p-4 text-left transition-all active:scale-[0.99] ${className}`}
       style={{ background: "linear-gradient(135deg,#1a0a2e,#2d1264)", border: "1px solid rgba(168,85,247,0.2)" }}

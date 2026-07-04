@@ -40,8 +40,13 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
-      // Mercado Pago webhook — handled before the SSR app so MP can POST to it.
+      // Payment webhooks — handled before the SSR app so the gateways can POST.
       const { pathname } = new URL(request.url);
+      if (request.method === "POST" && pathname === "/api/webhook/stripe") {
+        const { handleStripeWebhook } = await import("./lib/api/stripe-webhook");
+        return await handleStripeWebhook(request);
+      }
+      // Mercado Pago — dormant (kept until Stripe is validated in production).
       if (request.method === "POST" && pathname === "/api/webhook/mercadopago") {
         const { handleMercadoPagoWebhook } = await import("./lib/api/mercadopago-webhook");
         return await handleMercadoPagoWebhook(request);

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { ShieldAlert, Lock, Loader2, Database, CheckCircle2 } from "lucide-react";
 import { useApp } from "@/contexts/AppContext";
 import { checkHibp, type HibpBreach } from "@/lib/api/hibp.functions";
-import { openCheckout, MP_PROTECAO_URL } from "@/lib/funnel";
+import { startCheckout } from "@/lib/checkout";
 import { track } from "@/lib/analytics";
 
 /**
@@ -59,7 +59,7 @@ export function DarkWebScanTab() {
           <button
             onClick={() => {
               track("InitiateCheckout");
-              openCheckout(MP_PROTECAO_URL);
+              void startCheckout("protecao_total");
             }}
             className="mt-4 w-full rounded-xl py-3 text-sm font-bold text-white transition hover:opacity-90"
             style={{ background: "linear-gradient(135deg,#DC2626,#EF4444)" }}

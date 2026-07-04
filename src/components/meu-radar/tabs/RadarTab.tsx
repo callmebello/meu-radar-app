@@ -4,7 +4,8 @@ import { AnimatedScoreGauge } from "../AnimatedScoreGauge";
 import { PaywallLock } from "../PaywallLock";
 import { ShieldCheck, Fingerprint, Mail, Phone, MapPin, X, Lock, Trash2 } from "lucide-react";
 import { useApp } from "@/contexts/AppContext";
-import { getScore, openCheckout, MP_PROTECAO_URL } from "@/lib/funnel";
+import { getScore } from "@/lib/funnel";
+import { startCheckout } from "@/lib/checkout";
 import { track } from "@/lib/analytics";
 import { UpsellBanner, shouldShowUpsell } from "../UpsellBanner";
 import { IdentityCardSheet, type CardType } from "../IdentityCardSheet";
@@ -140,7 +141,7 @@ export function RadarTab() {
                     key={it.label}
                     role="button"
                     tabIndex={0}
-                    onClick={() => { track("InitiateCheckout"); openCheckout(MP_PROTECAO_URL); }}
+                    onClick={() => { track("InitiateCheckout"); void startCheckout("protecao_total"); }}
                     className="cursor-pointer rounded-2xl border border-border/60 bg-card p-4 text-left shadow-sm transition-all duration-200 active:scale-[0.98]"
                   >
                     <div className="flex items-start justify-between">

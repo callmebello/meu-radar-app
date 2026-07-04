@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { AlertTriangle, CreditCard, Mail, Phone, MapPin, Lock, Check, X, ChevronDown, ChevronRight, Flame, ShieldCheck, Trash2 } from "lucide-react";
-import { formatCPF, isValidCPF, generateResult, maskedFields, riskFromBreaches, rememberCheckoutPlan, MP_ESSENCIAL_URL, MP_PROTECAO_URL } from "@/lib/funnel";
+import { formatCPF, isValidCPF, generateResult, maskedFields, riskFromBreaches } from "@/lib/funnel";
+import { startCheckout, type CheckoutPlan } from "@/lib/checkout";
 import { useApp } from "@/contexts/AppContext";
 import { track } from "@/lib/analytics";
 
@@ -123,9 +124,8 @@ export function ScanFunnel({ open, onClose, onScanStart }: { open: boolean; onCl
     onScanStart?.(); // inline scanning overlay runs on the dashboard, then result opens
   };
 
-  const checkout = (url: string) => {
+  const checkout = async (plan: CheckoutPlan) => {
     track("InitiateCheckout");
-    rememberCheckoutPlan(url); // so the post-payment flow knows which plan was bought
     // email is optional now (no inline field in the redesigned sheet)
     if (email.includes("@")) {
       try {
@@ -134,11 +134,10 @@ export function ScanFunnel({ open, onClose, onScanStart }: { open: boolean; onCl
         /* ignore */
       }
     }
-    if (url && !url.includes("placeholder")) {
-      setRedirecting(true);
-      window.open(url, "_blank");
-    } else {
-      // dev/mock (placeholder MP link): simulate activation so flow is testable
+    setRedirecting(true);
+    const started = await startCheckout(plan); // Stripe Checkout (hosted)
+    if (!started) {
+      // dev/mock (Stripe not configured): simulate activation so flow is testable
       setPhase("success");
     }
   };
@@ -316,7 +315,7 @@ export function ScanFunnel({ open, onClose, onScanStart }: { open: boolean; onCl
 
           {/* CTA: unlock full report (Essencial R$9,90) */}
           <button
-            onClick={() => checkout(MP_ESSENCIAL_URL)}
+            onClick={() => checkout("essencial")}
             disabled={redirecting}
             className="mx-5 mt-4 flex w-[calc(100%-2.5rem)] items-center gap-3 rounded-2xl px-4 py-3.5 text-left transition-all active:scale-[0.99] disabled:opacity-60"
             style={{ background: "linear-gradient(135deg,#4F46E5,#6366F1)", boxShadow: "0 0 24px rgba(79,70,229,0.4)" }}
@@ -333,7 +332,7 @@ export function ScanFunnel({ open, onClose, onScanStart }: { open: boolean; onCl
 
           {/* CTA: erase leaked data (Proteção Total R$29,90) */}
           <button
-            onClick={() => checkout(MP_PROTECAO_URL)}
+            onClick={() => checkout("protecao_total")}
             disabled={redirecting}
             className="mx-5 mt-3 flex w-[calc(100%-2.5rem)] items-center gap-3 rounded-2xl px-4 py-3.5 text-left transition-all active:scale-[0.99] disabled:opacity-60"
             style={{ background: "linear-gradient(135deg,#DC2626,#EF4444)", boxShadow: "0 0 24px rgba(220,38,38,0.4)" }}
@@ -369,7 +368,7 @@ export function ScanFunnel({ open, onClose, onScanStart }: { open: boolean; onCl
 
           {/* full report teaser card */}
           <button
-            onClick={() => checkout(MP_ESSENCIAL_URL)}
+            onClick={() => checkout("essencial")}
             disabled={redirecting}
             className="mx-5 mt-6 flex w-[calc(100%-2.5rem)] items-start justify-between rounded-2xl border p-4 text-left transition-all active:scale-[0.99] disabled:opacity-60"
             style={{ backgroundColor: "#101024", borderColor: "rgba(99,102,241,0.25)" }}
@@ -395,7 +394,7 @@ export function ScanFunnel({ open, onClose, onScanStart }: { open: boolean; onCl
 
           {/* data removal teaser card (Proteção Total) */}
           <button
-            onClick={() => checkout(MP_PROTECAO_URL)}
+            onClick={() => checkout("protecao_total")}
             disabled={redirecting}
             className="mx-5 mt-3 flex w-[calc(100%-2.5rem)] items-start justify-between rounded-2xl border p-4 text-left transition-all active:scale-[0.99] disabled:opacity-60"
             style={{ backgroundColor: "#1c1014", borderColor: "rgba(239,68,68,0.25)" }}

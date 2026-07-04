@@ -20,8 +20,12 @@ async function makeQr(text: string): Promise<string | undefined> {
 }
 
 export async function renderRelatorioBuffer(props: RelatorioProps): Promise<Buffer> {
+  // Stripe Payment Link (persistent — checkout sessions expire); MP fallback
+  // while dormant, then the site.
   const url =
-    process.env.VITE_MP_PROTECAO_URL || process.env.MP_PROTECAO_URL || "https://www.privaapp.com.br";
+    process.env.STRIPE_PAYMENT_LINK_PROTECAO ||
+    process.env.VITE_MP_PROTECAO_URL ||
+    "https://www.privaapp.com.br";
   const qrDataUrl = await makeQr(url);
   return renderToBuffer(buildRelatorioDocument({ ...props, qrDataUrl }));
 }

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { CircleCheck, Loader2, Clock } from "lucide-react";
 import { useApp } from "@/contexts/AppContext";
 import { confirmPreapproval } from "@/lib/api/confirmPayment.functions";
+import { confirmStripeSession } from "@/lib/api/stripeCheckout.functions";
 import { generateRelatorioPdf } from "@/lib/api/generateRelatorio.functions";
 import { LgpdAuthorization } from "@/components/LgpdAuthorization";
 import { track } from "@/lib/analytics";
@@ -10,9 +11,10 @@ type Phase = "idle" | "activating" | "lgpd" | "done";
 const MIN_ACTIVATING_MS = 2400;
 
 /**
- * Handles the Mercado Pago return (?payment=success[&preapproval_id=...]).
+ * Handles the payment return (?payment=success&session_id=... from Stripe, or
+ * &preapproval_id=... from the dormant Mercado Pago flow).
  *  1. Shows a branded "Ativando sua proteção..." screen (≥2.4s) while it
- *     confirms the plan via GET /preapproval/{id} (server, token-by-mode).
+ *     confirms the paid plan server-side (Stripe session / MP preapproval).
  *  2. Routes by plan:
  *     - Essencial  → unlock dashboard (PDF download lives on the dashboard).
  *     - Proteção   → LGPD authorization → "Solicitação enviada" final screen.
@@ -39,6 +41,7 @@ export function PaymentReturn() {
     if (!paidNow) return;
     ran.current = true;
 
+    const sessionId = params.get("session_id") || "";
     const preapprovalId =
       params.get("preapproval_id") || params.get("preapproval_plan_id") || params.get("id") || "";
 
@@ -46,7 +49,7 @@ export function PaymentReturn() {
     try {
       const url = new URL(window.location.href);
       [
-        "payment", "preapproval_id", "preapproval_plan_id", "id", "status",
+        "payment", "session_id", "preapproval_id", "preapproval_plan_id", "id", "status",
         "collection_status", "collection_id", "payment_id", "payment_type",
         "external_reference", "preference_id", "merchant_order_id", "site_id",
         "processing_mode", "merchant_account_id",
@@ -61,22 +64,31 @@ export function PaymentReturn() {
     const startedAt = Date.now();
 
     (async () => {
-      // Best guess from the checkout we remembered; refined by MP if reachable.
+      // Best guess from the checkout we remembered; refined by the gateway.
       let resolvedPlan = (typeof localStorage !== "undefined" && localStorage.getItem("priva_plan")) || "essencial";
       let resolvedEmail = sessionStorage.getItem("priva_email") || "";
       let resolvedUserId = localStorage.getItem("priva_user_id");
 
-      if (preapprovalId) {
-        try {
+      try {
+        if (sessionId) {
+          // Stripe Checkout return — verifies payment + flips is_paid server-side.
+          const res = await confirmStripeSession({ data: { sessionId } });
+          if (res.ok) {
+            if (res.plan) resolvedPlan = res.plan;
+            if (res.email) resolvedEmail = res.email;
+            if (res.userId) resolvedUserId = res.userId;
+          }
+        } else if (preapprovalId) {
+          // Dormant Mercado Pago return (kept until Stripe is fully validated).
           const res = await confirmPreapproval({ data: { preapprovalId } });
           if (res.ok) {
             if (res.plan) resolvedPlan = res.plan;
             if (res.email) resolvedEmail = res.email;
             if (res.userId) resolvedUserId = res.userId;
           }
-        } catch {
-          /* fall back to the remembered plan */
         }
+      } catch {
+        /* fall back to the remembered plan */
       }
 
       try {

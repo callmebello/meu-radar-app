@@ -7,7 +7,7 @@ import { useTheme } from "@/hooks/use-theme";
 import { useApp } from "@/contexts/AppContext";
 import { getUser, signInWithEmail, signOut } from "@/lib/auth";
 import { getProfile, saveProfile } from "@/lib/profile";
-import { openCheckout, MP_PROTECAO_URL, MP_ESSENCIAL_URL } from "@/lib/funnel";
+import { startCheckout } from "@/lib/checkout";
 import { generateRelatorioPdf } from "@/lib/api/generateRelatorio.functions";
 import { getUserPlan } from "@/lib/api/account.functions";
 import { track } from "@/lib/analytics";
@@ -110,7 +110,7 @@ export function PerfilTab() {
         else setLinkSent(true);
       } else {
         toast.info("Não encontramos uma conta com esse e-mail. Vamos te levar para a assinatura.");
-        openCheckout(MP_ESSENCIAL_URL);
+        void startCheckout("essencial");
       }
     } catch {
       toast.error("Tente novamente em instantes.");
@@ -328,7 +328,7 @@ export function PerfilTab() {
                   onClick={() => {
                     if (locked) {
                       track("InitiateCheckout");
-                      openCheckout(MP_PROTECAO_URL);
+                      void startCheckout("protecao_total");
                       return;
                     }
                     setS({ ...s, [t.k]: !s[t.k] });
