@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { AlertTriangle, CreditCard, Mail, Phone, MapPin, Lock, Check, X, ChevronDown, ChevronRight, Flame, ShieldCheck, Trash2 } from "lucide-react";
 import { formatCPF, isValidCPF, generateResult, maskedFields, riskFromBreaches } from "@/lib/funnel";
 import { startCheckout, type CheckoutPlan } from "@/lib/checkout";
+import { toast } from "sonner";
 import { useApp } from "@/contexts/AppContext";
 import { track } from "@/lib/analytics";
 
@@ -137,8 +138,14 @@ export function ScanFunnel({ open, onClose, onScanStart }: { open: boolean; onCl
     setRedirecting(true);
     const started = await startCheckout(plan); // Stripe Checkout (hosted)
     if (!started) {
-      // dev/mock (Stripe not configured): simulate activation so flow is testable
-      setPhase("success");
+      if (import.meta.env.DEV) {
+        // DEV ONLY: simulate activation so the flow is testable without Stripe keys.
+        setPhase("success");
+      } else {
+        // Production: never grant access for free — surface the error and let them retry.
+        setRedirecting(false);
+        toast.error("Não foi possível iniciar o pagamento. Tente novamente.");
+      }
     }
   };
 
