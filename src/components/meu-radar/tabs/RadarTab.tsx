@@ -2,10 +2,12 @@ import { useState } from "react";
 import { AppHeader } from "../Header";
 import { AnimatedScoreGauge } from "../AnimatedScoreGauge";
 import { PaywallLock } from "../PaywallLock";
-import { ShieldCheck, Fingerprint, Mail, Phone, MapPin, X, Lock, Trash2 } from "lucide-react";
+import { ShieldCheck, Fingerprint, Mail, Phone, MapPin, X, Lock, Trash2, Download, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { useApp } from "@/contexts/AppContext";
 import { getScore } from "@/lib/funnel";
 import { startCheckout } from "@/lib/checkout";
+import { generateRelatorioPdf } from "@/lib/api/generateRelatorio.functions";
 import { track } from "@/lib/analytics";
 import { UpsellBanner, shouldShowUpsell } from "../UpsellBanner";
 import { IdentityCardSheet, type CardType } from "../IdentityCardSheet";
@@ -25,6 +27,33 @@ export function RadarTab() {
   const score = cpf ? getScore(cpf, breachCount) : 67;
   const [bannerVisible, setBannerVisible] = useState(true);
   const [cardSheet, setCardSheet] = useState<CardType | null>(null);
+  const [pdfBusy, setPdfBusy] = useState(false);
+
+  // The report CTA below the score appears only for active subscribers who have
+  // a persisted scan on file (a report can only be generated from real scan data).
+  const hasReport =
+    typeof window !== "undefined" &&
+    !!localStorage.getItem("priva_user_id") &&
+    !!localStorage.getItem("priva_scan_result");
+
+  // Generate (or refresh) the full Relatório de Exposição Digital and open it.
+  // Shows a loading state while the PDF is still being generated server-side.
+  const downloadRelatorio = async () => {
+    const uid = typeof window !== "undefined" ? localStorage.getItem("priva_user_id") : null;
+    if (!uid) {
+      toast.error("Faça um scan primeiro para gerar o relatório.");
+      return;
+    }
+    setPdfBusy(true);
+    try {
+      const res = await generateRelatorioPdf({ data: { userId: uid } });
+      if (res.ok && res.url) window.open(res.url, "_blank");
+      else toast.error("Não foi possível gerar o relatório agora.");
+    } catch {
+      toast.error("Não foi possível gerar o relatório agora.");
+    }
+    setPdfBusy(false);
+  };
 
   // Proteção Total shows the removal-status card on the dashboard (no downloads).
   // The report download lives in the Perfil tab, not here.
@@ -113,6 +142,28 @@ export function RadarTab() {
             )}
           </div>
         </section>
+
+        {/* Post-subscription CTA — download the full report. Only for active
+            subscribers with a scan on file; shows a loading state while the PDF
+            is still being generated. */}
+        {isPremium && hasReport && (
+          <button
+            onClick={downloadRelatorio}
+            disabled={pdfBusy}
+            className="flex w-full items-center justify-center gap-2 rounded-2xl py-4 text-base font-bold text-white transition-all active:scale-[0.99] disabled:opacity-70"
+            style={{ background: "linear-gradient(135deg,#4F46E5,#6366F1)", boxShadow: "0 8px 28px rgba(79,70,229,0.4)" }}
+          >
+            {pdfBusy ? (
+              <>
+                <Loader2 className="h-5 w-5 animate-spin" /> Gerando relatório...
+              </>
+            ) : (
+              <>
+                <Download className="h-5 w-5" /> Baixar Relatório Completo
+              </>
+            )}
+          </button>
+        )}
 
         {shouldShowUpsell(isPremium) && <UpsellBanner />}
 
