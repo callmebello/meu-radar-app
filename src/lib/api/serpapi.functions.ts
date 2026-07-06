@@ -28,7 +28,9 @@ export const searchExposure = createServerFn({ method: "POST" })
     try {
       const url = `https://serpapi.com/search.json?q=${encodeURIComponent(`"${data.query}"`)}&api_key=${key}&num=5`;
       const res = await fetch(url);
-      const json = (await res.json()) as { organic_results?: Array<{ title?: string; link?: string; snippet?: string }> };
+      const json = (await res.json()) as {
+        organic_results?: Array<{ title?: string; link?: string; snippet?: string }>;
+      };
       const results = Array.isArray(json.organic_results) ? json.organic_results : [];
       return {
         found: results.length > 0,

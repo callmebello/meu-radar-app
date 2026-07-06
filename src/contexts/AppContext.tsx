@@ -76,8 +76,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const setOpenScan = useCallback((fn: () => void) => setOpenScanFn({ fn }), []);
   const openScan = useCallback(() => openScanFn.fn(), [openScanFn]);
 
-  const [openCaptureFn, setOpenCaptureFn] = useState<{ fn: (r: CaptureReason) => void }>({ fn: () => {} });
-  const setOpenCapture = useCallback((fn: (r: CaptureReason) => void) => setOpenCaptureFn({ fn }), []);
+  const [openCaptureFn, setOpenCaptureFn] = useState<{ fn: (r: CaptureReason) => void }>({
+    fn: () => {},
+  });
+  const setOpenCapture = useCallback(
+    (fn: (r: CaptureReason) => void) => setOpenCaptureFn({ fn }),
+    [],
+  );
   const openCapture = useCallback((r: CaptureReason) => openCaptureFn.fn(r), [openCaptureFn]);
 
   const [scanning, setScanning] = useState(false);

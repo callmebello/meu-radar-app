@@ -9,7 +9,9 @@ import { getSupabaseAdmin } from "../supabase.server";
 export const generateCartaLgpdPdf = createServerFn({ method: "POST" })
   .inputValidator(z.object({ userId: z.string() }))
   .handler(
-    async ({ data }): Promise<{ ok: boolean; url?: string; sourceUrl?: string | null; reason?: string }> => {
+    async ({
+      data,
+    }): Promise<{ ok: boolean; url?: string; sourceUrl?: string | null; reason?: string }> => {
       const admin = getSupabaseAdmin();
       if (!admin) return { ok: false, reason: "not_configured" };
 

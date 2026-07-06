@@ -25,15 +25,17 @@ export function ScoreTab() {
           </span>
         </div>
         <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-          Estamos integrando os bureaus de crédito (Serasa/Boavista) para mostrar seu score, dívidas negativadas e
-          consultas ao seu CPF em tempo real. Em breve aqui.
+          Estamos integrando os bureaus de crédito (Serasa/Boavista) para mostrar seu score, dívidas
+          negativadas e consultas ao seu CPF em tempo real. Em breve aqui.
         </p>
       </section>
 
       {/* Empty score bar — placeholder until the bureaus integration is live */}
       <section className="rounded-2xl border border-border/60 bg-card p-6 shadow-sm">
         <div className="flex flex-col items-center text-center">
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Seu Score</p>
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+            Seu Score
+          </p>
           <p className="mt-3 text-5xl font-extrabold text-muted-foreground/40">—</p>
           <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-muted">
             <div className="h-full w-0 rounded-full bg-[var(--color-navy)]" />

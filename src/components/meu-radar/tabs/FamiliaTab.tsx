@@ -7,10 +7,16 @@ import { getScore, openCheckout, MP_FAMILIA_URL } from "@/lib/funnel";
 import { track } from "@/lib/analytics";
 import { getMembers, saveMembers, makeMember, type Member, type Risk } from "@/lib/family";
 
-const riskColor = (r: Risk) => (r === "Alto" ? "var(--color-danger)" : r === "Médio" ? "var(--color-warning)" : "var(--color-success)");
+const riskColor = (r: Risk) =>
+  r === "Alto"
+    ? "var(--color-danger)"
+    : r === "Médio"
+      ? "var(--color-warning)"
+      : "var(--color-success)";
 
 // Same scale used by the home Identity Score (lower = worse).
-const riskFromScore = (score: number): Risk => (score >= 70 ? "Baixo" : score >= 45 ? "Médio" : "Alto");
+const riskFromScore = (score: number): Risk =>
+  score >= 70 ? "Baixo" : score >= 45 ? "Médio" : "Alto";
 
 export function FamiliaTab() {
   const { familyAddPending, clearFamilyAdd, scanResult } = useApp();
@@ -26,10 +32,12 @@ export function FamiliaTab() {
   const youRisk = riskFromScore(homeScore);
 
   const invite = async () => {
-    const url = typeof window !== "undefined" ? window.location.origin : "https://www.privaapp.com.br";
+    const url =
+      typeof window !== "undefined" ? window.location.origin : "https://www.privaapp.com.br";
     const text = "Proteja seus dados com a Priva. Assine pelo meu convite e eu ganho 1 mês grátis!";
     try {
-      if (typeof navigator !== "undefined" && navigator.share) await navigator.share({ title: "Priva", text, url });
+      if (typeof navigator !== "undefined" && navigator.share)
+        await navigator.share({ title: "Priva", text, url });
       else {
         await navigator.clipboard.writeText(`${text} ${url}`);
         toast.success("Link de convite copiado!");
@@ -71,7 +79,11 @@ export function FamiliaTab() {
 
   return (
     <>
-      <AppHeader title="Plano Família" subtitle={`${members.length} membros monitorados`} showBell />
+      <AppHeader
+        title="Plano Família"
+        subtitle={`${members.length} membros monitorados`}
+        showBell
+      />
       <div className="space-y-4 px-5 py-5">
         <ul className="space-y-3">
           {members.map((m) => {
@@ -80,7 +92,11 @@ export function FamiliaTab() {
               <li key={m.id} className="rounded-2xl border border-border/60 bg-card p-4 shadow-sm">
                 <div className="flex items-center gap-3">
                   <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-[var(--color-navy)] text-sm font-bold text-white">
-                    {m.name.split(" ").map((n) => n[0]).slice(0, 2).join("")}
+                    {m.name
+                      .split(" ")
+                      .map((n) => n[0])
+                      .slice(0, 2)
+                      .join("")}
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold text-foreground">{m.name}</p>
@@ -90,8 +106,13 @@ export function FamiliaTab() {
                   </div>
                   {isYou ? (
                     <div className="text-right">
-                      <p className="text-xl font-extrabold tracking-tight text-foreground">{homeScore}</p>
-                      <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: riskColor(youRisk) }}>
+                      <p className="text-xl font-extrabold tracking-tight text-foreground">
+                        {homeScore}
+                      </p>
+                      <p
+                        className="text-[10px] font-bold uppercase tracking-wider"
+                        style={{ color: riskColor(youRisk) }}
+                      >
                         Risco {youRisk}
                       </p>
                     </div>
@@ -101,7 +122,11 @@ export function FamiliaTab() {
                     </span>
                   )}
                   {!isYou && (
-                    <button onClick={() => removeMember(m.id)} aria-label="Remover membro" className="ml-1 grid h-7 w-7 shrink-0 place-items-center rounded-full text-gray-500 hover:bg-secondary/60 hover:text-red-400">
+                    <button
+                      onClick={() => removeMember(m.id)}
+                      aria-label="Remover membro"
+                      className="ml-1 grid h-7 w-7 shrink-0 place-items-center rounded-full text-gray-500 hover:bg-secondary/60 hover:text-red-400"
+                    >
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
                   )}
@@ -116,7 +141,11 @@ export function FamiliaTab() {
           <div className="rounded-2xl border border-[var(--color-navy)]/30 bg-card p-4 shadow-sm">
             <div className="mb-3 flex items-center justify-between">
               <p className="text-sm font-semibold text-foreground">Novo membro</p>
-              <button onClick={() => setAdding(false)} aria-label="Cancelar" className="grid h-7 w-7 place-items-center rounded-full text-gray-500 hover:bg-secondary/60">
+              <button
+                onClick={() => setAdding(false)}
+                aria-label="Cancelar"
+                className="grid h-7 w-7 place-items-center rounded-full text-gray-500 hover:bg-secondary/60"
+              >
                 <X className="h-4 w-4" />
               </button>
             </div>
@@ -153,7 +182,9 @@ export function FamiliaTab() {
             </span>
             <span className="min-w-0 flex-1">
               <span className="block text-sm font-semibold text-foreground">Adicionar membro</span>
-              <span className="block text-[11px] text-muted-foreground">Monitore mais uma pessoa</span>
+              <span className="block text-[11px] text-muted-foreground">
+                Monitore mais uma pessoa
+              </span>
             </span>
             <span className="shrink-0 text-right">
               <span className="block text-sm font-extrabold text-foreground">R$ 9,90</span>
@@ -172,9 +203,14 @@ export function FamiliaTab() {
         >
           <p className="text-xs font-bold uppercase tracking-wider text-white/80">Upgrade</p>
           <h3 className="mt-1 text-lg font-bold">Plano Família — até 6 membros</h3>
-          <p className="mt-1 text-sm text-white/70">R$ 49,90/mês — você usa {members.length} de 6 slots</p>
+          <p className="mt-1 text-sm text-white/70">
+            R$ 49,90/mês — você usa {members.length} de 6 slots
+          </p>
           <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/10">
-            <div className="h-full rounded-full bg-white" style={{ width: `${Math.min(100, (members.length / 6) * 100)}%` }} />
+            <div
+              className="h-full rounded-full bg-white"
+              style={{ width: `${Math.min(100, (members.length / 6) * 100)}%` }}
+            />
           </div>
         </button>
 
@@ -182,14 +218,19 @@ export function FamiliaTab() {
         <button
           onClick={invite}
           className="flex w-full items-center gap-3 rounded-2xl p-4 text-left shadow-sm transition active:scale-[0.99]"
-          style={{ background: "linear-gradient(135deg,#0f2a1a,#12643a)", border: "1px solid rgba(34,197,94,0.25)" }}
+          style={{
+            background: "linear-gradient(135deg,#0f2a1a,#12643a)",
+            border: "1px solid rgba(34,197,94,0.25)",
+          }}
         >
           <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-white/10">
             <Gift className="h-5 w-5 text-emerald-300" />
           </span>
           <span className="min-w-0 flex-1">
             <span className="block text-sm font-semibold text-white">Convide e ganhe</span>
-            <span className="block text-[11px] text-white/70">Assine e ganhe 1 mês grátis a cada amigo que assinar</span>
+            <span className="block text-[11px] text-white/70">
+              Assine e ganhe 1 mês grátis a cada amigo que assinar
+            </span>
           </span>
           <ChevronRight className="h-4 w-4 shrink-0 text-white/60" />
         </button>

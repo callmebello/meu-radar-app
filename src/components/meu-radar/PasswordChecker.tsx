@@ -45,7 +45,8 @@ export function PasswordChecker() {
         {!isPremium && <Lock className="ml-auto h-4 w-4 text-muted-foreground" />}
       </div>
       <p className="mt-2 text-xs text-muted-foreground">
-        Verificação segura: sua senha é processada apenas no seu aparelho e <strong className="text-foreground">nunca é enviada</strong> aos nossos servidores.
+        Verificação segura: sua senha é processada apenas no seu aparelho e{" "}
+        <strong className="text-foreground">nunca é enviada</strong> aos nossos servidores.
       </p>
 
       <div className="relative mt-3">
@@ -96,16 +97,25 @@ export function PasswordChecker() {
 
       {result &&
         (result.count > 0 ? (
-          <div className="mt-3 flex items-center gap-2 rounded-xl px-4 py-3" style={{ backgroundColor: "rgba(239,68,68,0.1)" }}>
+          <div
+            className="mt-3 flex items-center gap-2 rounded-xl px-4 py-3"
+            style={{ backgroundColor: "rgba(239,68,68,0.1)" }}
+          >
             <ShieldAlert className="h-4 w-4 shrink-0 text-red-400" />
             <p className="text-sm font-medium text-red-400">
-              Encontrada {result.count.toLocaleString("pt-BR")} vez(es) em vazamentos — não use esta senha.
+              Encontrada {result.count.toLocaleString("pt-BR")} vez(es) em vazamentos — não use esta
+              senha.
             </p>
           </div>
         ) : (
-          <div className="mt-3 flex items-center gap-2 rounded-xl px-4 py-3" style={{ backgroundColor: "rgba(34,197,94,0.1)" }}>
+          <div
+            className="mt-3 flex items-center gap-2 rounded-xl px-4 py-3"
+            style={{ backgroundColor: "rgba(34,197,94,0.1)" }}
+          >
             <ShieldCheck className="h-4 w-4 shrink-0 text-green-400" />
-            <p className="text-sm font-medium text-green-400">Não encontrada em vazamentos conhecidos.</p>
+            <p className="text-sm font-medium text-green-400">
+              Não encontrada em vazamentos conhecidos.
+            </p>
           </div>
         ))}
 

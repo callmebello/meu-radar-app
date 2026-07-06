@@ -20,7 +20,8 @@ function AuthCallback() {
         const user = await getUser();
         if (user?.email) {
           const plan =
-            (typeof localStorage !== "undefined" && localStorage.getItem("priva_plan")) || "essencial";
+            (typeof localStorage !== "undefined" && localStorage.getItem("priva_plan")) ||
+            "essencial";
           try {
             await markUserPaid({ data: { email: user.email, plan } });
           } catch {
@@ -45,7 +46,10 @@ function AuthCallback() {
   }, []);
 
   return (
-    <div className="flex min-h-screen items-center justify-center" style={{ backgroundColor: "#0A0A0F" }}>
+    <div
+      className="flex min-h-screen items-center justify-center"
+      style={{ backgroundColor: "#0A0A0F" }}
+    >
       <div className="flex flex-col items-center gap-4">
         <span className="h-10 w-10 animate-spin rounded-full border-2 border-indigo-500/30 border-t-indigo-400" />
         <p className="text-sm text-gray-400">Entrando na sua conta...</p>

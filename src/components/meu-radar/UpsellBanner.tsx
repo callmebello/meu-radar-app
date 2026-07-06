@@ -60,7 +60,10 @@ export function UpsellBanner({ className = "" }: { className?: string }) {
           void startCheckout("protecao_total");
         }}
         className="flex w-full items-center gap-3 rounded-2xl p-4 pr-10 text-left transition-all active:scale-[0.99]"
-        style={{ background: "linear-gradient(135deg,#1a0a2e,#2d1264)", border: "1px solid rgba(168,85,247,0.2)" }}
+        style={{
+          background: "linear-gradient(135deg,#1a0a2e,#2d1264)",
+          border: "1px solid rgba(168,85,247,0.2)",
+        }}
       >
         <Trash2 className="h-5 w-5 shrink-0 text-red-400" />
         <div className="flex-1">

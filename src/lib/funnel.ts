@@ -5,7 +5,8 @@ export function formatCPF(v: string) {
   let out = d;
   if (d.length > 3) out = d.slice(0, 3) + "." + d.slice(3);
   if (d.length > 6) out = d.slice(0, 3) + "." + d.slice(3, 6) + "." + d.slice(6);
-  if (d.length > 9) out = d.slice(0, 3) + "." + d.slice(3, 6) + "." + d.slice(6, 9) + "-" + d.slice(9);
+  if (d.length > 9)
+    out = d.slice(0, 3) + "." + d.slice(3, 6) + "." + d.slice(6, 9) + "-" + d.slice(9);
   return out;
 }
 
@@ -88,7 +89,8 @@ export function maskedFields(cpf: string, seed: number) {
 const env = (import.meta as unknown as { env?: Record<string, string> }).env ?? {};
 
 // Essencial (R$9,90) and Proteção Total (R$29,90) checkout links.
-export const MP_ESSENCIAL_URL = env.VITE_MP_ESSENCIAL_URL || "https://mpago.la/placeholder_essencial";
+export const MP_ESSENCIAL_URL =
+  env.VITE_MP_ESSENCIAL_URL || "https://mpago.la/placeholder_essencial";
 export const MP_PROTECAO_URL = env.VITE_MP_PROTECAO_URL || "https://mpago.la/placeholder_protecao";
 export const MP_SCORE_URL = env.VITE_MP_SCORE_URL || "https://mpago.la/placeholder_score";
 export const MP_FAMILIA_URL = env.VITE_MP_FAMILIA_URL || "https://mpago.la/placeholder_familia";

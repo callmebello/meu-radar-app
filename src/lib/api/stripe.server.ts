@@ -19,7 +19,9 @@ export function getStripe(): Stripe | null {
 export type PlanId = "essencial" | "protecao_total";
 
 export function priceForPlan(plan: PlanId): string | undefined {
-  return plan === "protecao_total" ? process.env.STRIPE_PRICE_PROTECAO : process.env.STRIPE_PRICE_ESSENCIAL;
+  return plan === "protecao_total"
+    ? process.env.STRIPE_PRICE_PROTECAO
+    : process.env.STRIPE_PRICE_ESSENCIAL;
 }
 
 export function planForPrice(priceId: string | undefined | null): PlanId | null {
@@ -45,7 +47,9 @@ export type ResolvedStripeSession = {
 
 // Retrieve a Checkout Session and normalize what the app needs. Works for both
 // server-created sessions and Payment Link sessions (the PDF QR).
-export async function resolveCheckoutSession(sessionId: string): Promise<ResolvedStripeSession | null> {
+export async function resolveCheckoutSession(
+  sessionId: string,
+): Promise<ResolvedStripeSession | null> {
   const stripe = getStripe();
   if (!stripe) return null;
   try {
@@ -56,7 +60,9 @@ export async function resolveCheckoutSession(sessionId: string): Promise<Resolve
     const amount = (session.amount_total ?? 0) / 100;
     const priceId = session.line_items?.data?.[0]?.price?.id;
     const plan =
-      (session.metadata?.plan as PlanId | undefined) || planForPrice(priceId) || planFromAmountBRL(amount);
+      (session.metadata?.plan as PlanId | undefined) ||
+      planForPrice(priceId) ||
+      planFromAmountBRL(amount);
     const paid = session.payment_status === "paid" || session.status === "complete";
     const sub = session.subscription;
     const subscriptionId = typeof sub === "string" ? sub : (sub?.id ?? "");

@@ -47,7 +47,8 @@ export function AccountCreation() {
         /* ignore */
       }
       setIsPremium(true);
-      if (paidNow) track("Purchase", { value: plan === "protecao_total" ? 29.9 : 9.9, currency: "BRL" });
+      if (paidNow)
+        track("Purchase", { value: plan === "protecao_total" ? 29.9 : 9.9, currency: "BRL" });
       setEmail(sessionStorage.getItem("priva_email") || "");
       setUserId(localStorage.getItem("priva_user_id"));
       setPhase(needAccount ? "account" : "lgpd");
@@ -114,7 +115,9 @@ export function AccountCreation() {
       return;
     }
     try {
-      await markUserPaid({ data: { email, plan: localStorage.getItem("priva_plan") || "essencial" } });
+      await markUserPaid({
+        data: { email, plan: localStorage.getItem("priva_plan") || "essencial" },
+      });
     } catch {
       /* best-effort */
     }
@@ -144,11 +147,19 @@ export function AccountCreation() {
           <CircleCheck className="h-12 w-12 text-green-400" />
         </div>
         <h1 className="mt-4 text-center text-2xl font-extrabold text-white">Proteção ativada!</h1>
-        <p className="mt-2 mb-8 text-center text-sm text-gray-400">Crie sua conta para acessar sempre</p>
+        <p className="mt-2 mb-8 text-center text-sm text-gray-400">
+          Crie sua conta para acessar sempre
+        </p>
 
-        <div className="rounded-2xl p-5" style={{ backgroundColor: "#12121A", border: "1px solid rgba(255,255,255,0.05)" }}>
+        <div
+          className="rounded-2xl p-5"
+          style={{ backgroundColor: "#12121A", border: "1px solid rgba(255,255,255,0.05)" }}
+        >
           <p className="mb-1 text-xs text-gray-400">Seu e-mail</p>
-          <p className="mb-4 rounded-lg px-3 py-2 text-sm font-medium text-white" style={{ backgroundColor: "#1a1a2e" }}>
+          <p
+            className="mb-4 rounded-lg px-3 py-2 text-sm font-medium text-white"
+            style={{ backgroundColor: "#1a1a2e" }}
+          >
             {email || "—"}
           </p>
 
@@ -180,7 +191,9 @@ export function AccountCreation() {
             Receber link de acesso por e-mail
           </button>
 
-          {linkSent && <p className="mt-3 text-center text-sm text-green-400">Link enviado para {email} ✓</p>}
+          {linkSent && (
+            <p className="mt-3 text-center text-sm text-green-400">Link enviado para {email} ✓</p>
+          )}
           {error && <p className="mt-3 text-center text-xs text-red-400">{error}</p>}
           {!isSupabaseConfigured && (
             <p className="mt-3 text-center text-[11px] text-gray-600">

@@ -19,10 +19,16 @@ export function WelcomeGate() {
 
   if (phase === "welcome") {
     return (
-      <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center" style={{ backgroundColor: "#0A0A0F" }}>
+      <div
+        className="fixed inset-0 z-[100] flex flex-col items-center justify-center"
+        style={{ backgroundColor: "#0A0A0F" }}
+      >
         <img src="/PRIVA_letter_only_logo.png" alt="PRIVA" className="mx-auto h-8 w-auto" />
         <p className="mt-6 text-center text-sm text-gray-400">Verificando exposição de dados...</p>
-        <div className="mx-auto mt-4 h-1 w-48 overflow-hidden rounded" style={{ backgroundColor: "#12121A" }}>
+        <div
+          className="mx-auto mt-4 h-1 w-48 overflow-hidden rounded"
+          style={{ backgroundColor: "#12121A" }}
+        >
           <div className="h-full w-full origin-left rounded bg-indigo-500 animate-[welcomebar_2s_linear_forwards]" />
         </div>
       </div>
@@ -40,10 +46,15 @@ export function WelcomeGate() {
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 px-5 backdrop-blur-md">
-      <div className="w-full max-w-sm rounded-2xl p-6" style={{ backgroundColor: "#0E0E1A", border: "1px solid rgba(99,102,241,0.2)" }}>
+      <div
+        className="w-full max-w-sm rounded-2xl p-6"
+        style={{ backgroundColor: "#0E0E1A", border: "1px solid rgba(99,102,241,0.2)" }}
+      >
         <ShieldCheck className="mx-auto mb-4 h-16 w-16 text-indigo-400" />
         <h2 className="text-center text-xl font-bold text-white">Scan Gratuito de Dados</h2>
-        <p className="mt-1 mb-5 text-center text-sm text-gray-400">Verificamos CPF, e-mail e dark web</p>
+        <p className="mt-1 mb-5 text-center text-sm text-gray-400">
+          Verificamos CPF, e-mail e dark web
+        </p>
         <input
           value={cpf}
           onChange={(e) => setCpf(formatCPF(e.target.value))}

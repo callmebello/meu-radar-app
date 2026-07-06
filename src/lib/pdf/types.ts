@@ -18,7 +18,11 @@ export type StoredScanResult = {
   email?: string;
   hibp?: { count: number; breaches: StoredBreach[] } | null;
   exposure?: {
-    github?: { found: boolean; count: number; repos: { repo: string; path: string; url: string }[] } | null;
+    github?: {
+      found: boolean;
+      count: number;
+      repos: { repo: string; path: string; url: string }[];
+    } | null;
     cpf?: { found: boolean; count: number; sources: StoredSource[] } | null;
     phone?: { found: boolean; count: number; sources: StoredSource[] } | null;
   } | null;

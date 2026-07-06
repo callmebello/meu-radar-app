@@ -98,7 +98,10 @@ export function CpfCaptureSheet({
           onClick={submit}
           disabled={!valid}
           className="mt-5 w-full rounded-2xl py-3.5 text-base font-bold text-white transition-all active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40"
-          style={{ background: "linear-gradient(135deg,#4F46E5,#6366F1)", boxShadow: "0 8px 28px rgba(79,70,229,0.4)" }}
+          style={{
+            background: "linear-gradient(135deg,#4F46E5,#6366F1)",
+            boxShadow: "0 8px 28px rgba(79,70,229,0.4)",
+          }}
         >
           {c.confirm}
         </button>

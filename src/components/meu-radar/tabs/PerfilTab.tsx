@@ -1,7 +1,18 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { AppHeader } from "../Header";
-import { Check, ChevronRight, LogOut, Moon, Sun, Lock, FileText, Loader2, Pencil, Plus } from "lucide-react";
+import {
+  Check,
+  ChevronRight,
+  LogOut,
+  Moon,
+  Sun,
+  Lock,
+  FileText,
+  Loader2,
+  Pencil,
+  Plus,
+} from "lucide-react";
 import { toast } from "sonner";
 import { useTheme } from "@/hooks/use-theme";
 import { useApp } from "@/contexts/AppContext";
@@ -32,7 +43,10 @@ export function PerfilTab() {
     !!localStorage.getItem("priva_scan_result");
 
   // Monitored identity — CPF/e-mail are read-only (from the scan); phone/city editable.
-  const cpfRaw = typeof window !== "undefined" ? (sessionStorage.getItem("priva_cpf") || "").replace(/\D/g, "") : "";
+  const cpfRaw =
+    typeof window !== "undefined"
+      ? (sessionStorage.getItem("priva_cpf") || "").replace(/\D/g, "")
+      : "";
   const emailRaw = typeof window !== "undefined" ? sessionStorage.getItem("priva_email") || "" : "";
   const maskCpf = cpfRaw.length === 11 ? `•••.${cpfRaw.slice(3, 6)}.${cpfRaw.slice(6, 9)}-••` : "—";
   const maskEmail = emailRaw ? `${emailRaw.slice(0, 2)}***@${emailRaw.split("@")[1] ?? ""}` : "—";
@@ -136,16 +150,23 @@ export function PerfilTab() {
                 {PLAN_LABEL[plan] ?? "Grátis"}
               </span>
             </div>
-            <button onClick={logout} className="flex items-center gap-1.5 text-sm font-medium text-[var(--color-danger)]">
+            <button
+              onClick={logout}
+              className="flex items-center gap-1.5 text-sm font-medium text-[var(--color-danger)]"
+            >
               Sair <LogOut className="h-4 w-4" />
             </button>
           </div>
         ) : (
           <div className="rounded-2xl border border-border/60 bg-card p-4 shadow-sm">
             <p className="text-sm font-semibold text-foreground">Já tem conta?</p>
-            <p className="mt-0.5 text-xs text-muted-foreground">Entre com seu e-mail para acessar sua proteção.</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              Entre com seu e-mail para acessar sua proteção.
+            </p>
             {linkSent ? (
-              <p className="mt-3 text-sm text-[var(--color-success)]">Link enviado para {loginEmail} ✓</p>
+              <p className="mt-3 text-sm text-[var(--color-success)]">
+                Link enviado para {loginEmail} ✓
+              </p>
             ) : (
               <div className="mt-3 flex gap-2">
                 <input
@@ -172,7 +193,9 @@ export function PerfilTab() {
         {isPremium && plan !== "protecao_total" && (
           <section className="overflow-hidden rounded-2xl border border-border/60 bg-card shadow-sm">
             <div className="border-b border-border/60 px-4 py-3">
-              <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Meus documentos</h2>
+              <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                Meus documentos
+              </h2>
             </div>
             {hasReport ? (
               <button
@@ -181,11 +204,19 @@ export function PerfilTab() {
                 className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition hover:bg-secondary/40 disabled:opacity-60"
               >
                 <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[var(--color-navy)]/10">
-                  {pdfBusy ? <Loader2 className="h-5 w-5 animate-spin text-[var(--color-navy)]" /> : <FileText className="h-5 w-5 text-[var(--color-navy)]" />}
+                  {pdfBusy ? (
+                    <Loader2 className="h-5 w-5 animate-spin text-[var(--color-navy)]" />
+                  ) : (
+                    <FileText className="h-5 w-5 text-[var(--color-navy)]" />
+                  )}
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block text-sm font-semibold text-foreground">📄 Meu relatório completo</span>
-                  <span className="block text-[11px] text-muted-foreground">{pdfBusy ? "Gerando..." : "Baixar em PDF"}</span>
+                  <span className="block text-sm font-semibold text-foreground">
+                    📄 Meu relatório completo
+                  </span>
+                  <span className="block text-[11px] text-muted-foreground">
+                    {pdfBusy ? "Gerando..." : "Baixar em PDF"}
+                  </span>
                 </span>
                 <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
               </button>
@@ -206,9 +237,20 @@ export function PerfilTab() {
         {/* Monitored — CPF/e-mail read-only, phone/address editable */}
         <section className="rounded-2xl border border-border/60 bg-card shadow-sm">
           <div className="flex items-center justify-between border-b border-border/60 px-4 py-3">
-            <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Dados monitorados</h2>
-            <button onClick={onEditMonitored} className="flex items-center gap-1 text-[11px] font-semibold text-[var(--color-navy)]">
-              {editing ? "Concluir" : (<><Pencil className="h-3 w-3" /> Editar</>)}
+            <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              Dados monitorados
+            </h2>
+            <button
+              onClick={onEditMonitored}
+              className="flex items-center gap-1 text-[11px] font-semibold text-[var(--color-navy)]"
+            >
+              {editing ? (
+                "Concluir"
+              ) : (
+                <>
+                  <Pencil className="h-3 w-3" /> Editar
+                </>
+              )}
             </button>
           </div>
           <ul>
@@ -285,11 +327,17 @@ export function PerfilTab() {
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <span className="grid h-10 w-10 place-items-center rounded-xl bg-secondary">
-                {isDark ? <Moon className="h-5 w-5 text-[var(--color-teal)]" /> : <Sun className="h-5 w-5 text-[var(--color-warning)]" />}
+                {isDark ? (
+                  <Moon className="h-5 w-5 text-[var(--color-teal)]" />
+                ) : (
+                  <Sun className="h-5 w-5 text-[var(--color-warning)]" />
+                )}
               </span>
               <div>
                 <p className="text-sm font-semibold text-foreground">Aparência</p>
-                <p className="text-[11px] text-muted-foreground">{isDark ? "Tema escuro ativado" : "Tema claro ativado"}</p>
+                <p className="text-[11px] text-muted-foreground">
+                  {isDark ? "Tema escuro ativado" : "Tema claro ativado"}
+                </p>
               </div>
             </div>
             <div className="flex rounded-full bg-muted p-1">
@@ -311,7 +359,6 @@ export function PerfilTab() {
 
         {/* Settings */}
         <section className="rounded-2xl border border-border/60 bg-card shadow-sm overflow-hidden">
-
           {[
             { k: "push" as const, label: "Notificações push", paid: false },
             { k: "email" as const, label: "Alertas por e-mail", paid: false },
@@ -319,10 +366,17 @@ export function PerfilTab() {
           ].map((t, i) => {
             const locked = t.paid && !isPremium;
             return (
-              <div key={t.k} className={`flex items-center justify-between px-4 py-3.5 ${i > 0 ? "border-t border-border/60" : ""}`}>
+              <div
+                key={t.k}
+                className={`flex items-center justify-between px-4 py-3.5 ${i > 0 ? "border-t border-border/60" : ""}`}
+              >
                 <div className="flex items-center gap-2">
                   <p className="text-sm text-foreground">{t.label}</p>
-                  {locked && <span className="rounded-full bg-secondary px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-muted-foreground">Pago</span>}
+                  {locked && (
+                    <span className="rounded-full bg-secondary px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-muted-foreground">
+                      Pago
+                    </span>
+                  )}
                 </div>
                 <button
                   onClick={() => {
@@ -340,7 +394,9 @@ export function PerfilTab() {
                       <Lock className="h-3 w-3 text-muted-foreground" />
                     </span>
                   ) : (
-                    <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition ${s[t.k] ? "left-[22px]" : "left-0.5"}`} />
+                    <span
+                      className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition ${s[t.k] ? "left-[22px]" : "left-0.5"}`}
+                    />
                   )}
                 </button>
               </div>
@@ -367,18 +423,26 @@ export function PerfilTab() {
             <ChevronRight className="h-4 w-4 text-muted-foreground" />
           </a>
           {/* Termos de Uso — internal route */}
-          <Link to="/termos" className="flex w-full items-center justify-between border-t border-border/60 px-4 py-3.5 text-left hover:bg-secondary/50 transition">
+          <Link
+            to="/termos"
+            className="flex w-full items-center justify-between border-t border-border/60 px-4 py-3.5 text-left hover:bg-secondary/50 transition"
+          >
             <p className="text-sm text-foreground">Termos de Uso</p>
             <ChevronRight className="h-4 w-4 text-muted-foreground" />
           </Link>
-          <button onClick={logout} className="flex w-full items-center justify-between border-t border-border/60 px-4 py-3.5 text-left hover:bg-secondary/50 transition">
+          <button
+            onClick={logout}
+            className="flex w-full items-center justify-between border-t border-border/60 px-4 py-3.5 text-left hover:bg-secondary/50 transition"
+          >
             <p className="text-sm font-medium text-[var(--color-danger)]">Sair</p>
             <LogOut className="h-4 w-4 text-[var(--color-danger)]" />
           </button>
         </section>
 
         {/* Legal footer */}
-        <p className="py-4 text-center text-xs text-gray-700">© 2025 Priva · LGPD · Privacidade · Termos</p>
+        <p className="py-4 text-center text-xs text-gray-700">
+          © 2025 Priva · LGPD · Privacidade · Termos
+        </p>
       </div>
     </>
   );

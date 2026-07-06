@@ -2,7 +2,18 @@ import { useState } from "react";
 import { AppHeader } from "../Header";
 import { AnimatedScoreGauge } from "../AnimatedScoreGauge";
 import { PaywallLock } from "../PaywallLock";
-import { ShieldCheck, Fingerprint, Mail, Phone, MapPin, X, Lock, Trash2, Download, Loader2 } from "lucide-react";
+import {
+  ShieldCheck,
+  Fingerprint,
+  Mail,
+  Phone,
+  MapPin,
+  X,
+  Lock,
+  Trash2,
+  Download,
+  Loader2,
+} from "lucide-react";
 import { toast } from "sonner";
 import { useApp } from "@/contexts/AppContext";
 import { getScore } from "@/lib/funnel";
@@ -13,10 +24,22 @@ import { UpsellBanner, shouldShowUpsell } from "../UpsellBanner";
 import { IdentityCardSheet, type CardType } from "../IdentityCardSheet";
 
 const levelColor = (l: string) =>
-  l === "danger" ? "var(--color-danger)" : l === "warning" ? "var(--color-warning)" : "var(--color-success)";
+  l === "danger"
+    ? "var(--color-danger)"
+    : l === "warning"
+      ? "var(--color-warning)"
+      : "var(--color-success)";
 
 type DashCard =
-  | { kind: "card"; icon: typeof Mail; label: string; type: CardType; status: string; level: string; sub?: string }
+  | {
+      kind: "card";
+      icon: typeof Mail;
+      label: string;
+      type: CardType;
+      status: string;
+      level: string;
+      sub?: string;
+    }
   | { kind: "upsell"; icon: typeof Mail; label: string; title: string; subtitle: string };
 
 export function RadarTab() {
@@ -59,33 +82,52 @@ export function RadarTab() {
   // The report download lives in the Perfil tab, not here.
   const plan = typeof window !== "undefined" ? localStorage.getItem("priva_plan") || "" : "";
   const isProtecao = plan === "protecao_total";
-  const lgpdRequestedAt = typeof window !== "undefined" ? localStorage.getItem("priva_lgpd_requested_at") : null;
+  const lgpdRequestedAt =
+    typeof window !== "undefined" ? localStorage.getItem("priva_lgpd_requested_at") : null;
 
   // Real free-source results (dashboard only) — degrade to safe "not found".
   const cpfEx = exposure?.cpf;
   const phoneEx = exposure?.phone;
   // Real occurrence count: e-mail breaches (HIBP) + public exposure (web + GitHub).
-  const occurrences = breachCount + (cpfEx?.count ?? 0) + (phoneEx?.count ?? 0) + (exposure?.github?.count ?? 0);
+  const occurrences =
+    breachCount + (cpfEx?.count ?? 0) + (phoneEx?.count ?? 0) + (exposure?.github?.count ?? 0);
   const cards: DashCard[] = [
     {
-      kind: "card", icon: Fingerprint, label: "CPF", type: "cpf",
-      status: cpfEx?.found ? `Encontrado em ${cpfEx.count} resultado(s) público(s)` : "Nenhuma exposição pública direta",
+      kind: "card",
+      icon: Fingerprint,
+      label: "CPF",
+      type: "cpf",
+      status: cpfEx?.found
+        ? `Encontrado em ${cpfEx.count} resultado(s) público(s)`
+        : "Nenhuma exposição pública direta",
       level: cpfEx?.found ? "danger" : "success",
       sub: cpfEx?.found ? undefined : "Continuamos monitorando",
     },
     {
-      kind: "card", icon: Mail, label: "E-mail", type: "email",
-      status: breachCount > 0 ? `${breachCount} vazamento(s) detectado(s)` : "Nenhum vazamento detectado",
+      kind: "card",
+      icon: Mail,
+      label: "E-mail",
+      type: "email",
+      status:
+        breachCount > 0 ? `${breachCount} vazamento(s) detectado(s)` : "Nenhum vazamento detectado",
       level: breachCount > 0 ? "danger" : "success",
     },
     {
-      kind: "card", icon: Phone, label: "Telefone", type: "telefone",
-      status: phoneEx?.found ? `Encontrado em ${phoneEx.count} resultado(s) público(s)` : "Não encontrado em buscas públicas",
+      kind: "card",
+      icon: Phone,
+      label: "Telefone",
+      type: "telefone",
+      status: phoneEx?.found
+        ? `Encontrado em ${phoneEx.count} resultado(s) público(s)`
+        : "Não encontrado em buscas públicas",
       level: phoneEx?.found ? "warning" : "success",
     },
     {
-      kind: "upsell", icon: MapPin, label: "Endereço",
-      title: "Verificação de endereço", subtitle: "Disponível no plano Proteção Total",
+      kind: "upsell",
+      icon: MapPin,
+      label: "Endereço",
+      title: "Verificação de endereço",
+      subtitle: "Disponível no plano Proteção Total",
     },
   ];
 
@@ -103,7 +145,9 @@ export function RadarTab() {
               <p className="text-sm font-semibold text-foreground">
                 Remoção solicitada em {new Date(lgpdRequestedAt).toLocaleDateString("pt-BR")}
               </p>
-              <p className="text-[11px] text-muted-foreground">Em andamento · nossa equipe está processando seu pedido</p>
+              <p className="text-[11px] text-muted-foreground">
+                Em andamento · nossa equipe está processando seu pedido
+              </p>
             </div>
           </div>
         )}
@@ -112,9 +156,13 @@ export function RadarTab() {
           <div className="flex items-center gap-2 rounded-xl border border-[var(--color-teal)]/30 bg-[var(--color-teal)]/8 px-3 py-2.5">
             <ShieldCheck className="h-4 w-4 shrink-0 text-[var(--color-teal)]" />
             <p className="flex-1 text-[11px] font-medium text-foreground">
-              CPF verificado · {occurrences} {occurrences === 1 ? "ocorrência encontrada" : "ocorrências encontradas"}
+              CPF verificado · {occurrences}{" "}
+              {occurrences === 1 ? "ocorrência encontrada" : "ocorrências encontradas"}
             </p>
-            <button onClick={() => goToTab("seguranca")} className="text-[11px] font-bold text-[var(--color-teal)]">
+            <button
+              onClick={() => goToTab("seguranca")}
+              className="text-[11px] font-bold text-[var(--color-teal)]"
+            >
               Ver detalhes →
             </button>
             <button onClick={() => setBannerVisible(false)} className="text-muted-foreground">
@@ -125,8 +173,12 @@ export function RadarTab() {
 
         {/* Score card */}
         <section className="rounded-2xl border border-border/60 bg-card p-6 shadow-[0_2px_20px_-8px_rgba(30,45,90,0.15)]">
-          <div className={`flex flex-col items-center text-center ${scanning ? "animate-pulse" : ""}`}>
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Identity Score</p>
+          <div
+            className={`flex flex-col items-center text-center ${scanning ? "animate-pulse" : ""}`}
+          >
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Identity Score
+            </p>
             {scanning ? (
               <>
                 <p className="mt-6 text-5xl font-extrabold text-muted-foreground">—</p>
@@ -151,7 +203,10 @@ export function RadarTab() {
             onClick={downloadRelatorio}
             disabled={pdfBusy}
             className="flex w-full items-center justify-center gap-2 rounded-2xl py-4 text-base font-bold text-white transition-all active:scale-[0.99] disabled:opacity-70"
-            style={{ background: "linear-gradient(135deg,#4F46E5,#6366F1)", boxShadow: "0 8px 28px rgba(79,70,229,0.4)" }}
+            style={{
+              background: "linear-gradient(135deg,#4F46E5,#6366F1)",
+              boxShadow: "0 8px 28px rgba(79,70,229,0.4)",
+            }}
           >
             {pdfBusy ? (
               <>
@@ -169,7 +224,9 @@ export function RadarTab() {
 
         {/* Identity radar grid */}
         <section>
-          <h2 className="mb-3 px-1 text-center text-sm font-semibold text-foreground">Radar de identidade</h2>
+          <h2 className="mb-3 px-1 text-center text-sm font-semibold text-foreground">
+            Radar de identidade
+          </h2>
           <div className="grid grid-cols-2 gap-3">
             {scanning
               ? cards.map((it) => (
@@ -183,60 +240,76 @@ export function RadarTab() {
                   </div>
                 ))
               : cards.map((it) => {
-              const Icon = it.icon;
+                  const Icon = it.icon;
 
-              // Endereço — genuine upsell (no free CPF↔address source), not fake data.
-              if (it.kind === "upsell") {
-                return (
-                  <div
-                    key={it.label}
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => { track("InitiateCheckout"); void startCheckout("protecao_total"); }}
-                    className="cursor-pointer rounded-2xl border border-border/60 bg-card p-4 text-left shadow-sm transition-all duration-200 active:scale-[0.98]"
-                  >
-                    <div className="flex items-start justify-between">
-                      <span className="grid h-9 w-9 place-items-center rounded-lg bg-secondary">
-                        <Icon className="h-4 w-4 text-foreground" />
-                      </span>
-                      <Lock className="h-3.5 w-3.5 text-muted-foreground" />
-                    </div>
-                    <p className="mt-3 text-sm font-semibold text-foreground">{it.label}</p>
-                    <p className="mt-0.5 text-[11px] leading-tight text-muted-foreground">{it.title}</p>
-                    <p className="text-[11px] leading-tight text-[var(--color-navy)]">{it.subtitle}</p>
-                  </div>
-                );
-              }
+                  // Endereço — genuine upsell (no free CPF↔address source), not fake data.
+                  if (it.kind === "upsell") {
+                    return (
+                      <div
+                        key={it.label}
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => {
+                          track("InitiateCheckout");
+                          void startCheckout("protecao_total");
+                        }}
+                        className="cursor-pointer rounded-2xl border border-border/60 bg-card p-4 text-left shadow-sm transition-all duration-200 active:scale-[0.98]"
+                      >
+                        <div className="flex items-start justify-between">
+                          <span className="grid h-9 w-9 place-items-center rounded-lg bg-secondary">
+                            <Icon className="h-4 w-4 text-foreground" />
+                          </span>
+                          <Lock className="h-3.5 w-3.5 text-muted-foreground" />
+                        </div>
+                        <p className="mt-3 text-sm font-semibold text-foreground">{it.label}</p>
+                        <p className="mt-0.5 text-[11px] leading-tight text-muted-foreground">
+                          {it.title}
+                        </p>
+                        <p className="text-[11px] leading-tight text-[var(--color-navy)]">
+                          {it.subtitle}
+                        </p>
+                      </div>
+                    );
+                  }
 
-              const color = levelColor(it.level);
-              return (
-                <div
-                  key={it.label}
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => setCardSheet(it.type)}
-                  className="cursor-pointer rounded-2xl border border-border/60 bg-card p-4 text-left shadow-sm transition-all duration-200 active:scale-[0.98]"
-                >
-                  <div className="flex items-start justify-between">
-                    <span className="grid h-9 w-9 place-items-center rounded-lg bg-secondary">
-                      <Icon className="h-4 w-4 text-foreground" />
-                    </span>
-                    <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: color }} />
-                  </div>
-                  <p className="mt-3 text-sm font-semibold text-foreground">{it.label}</p>
-                  {isPremium ? (
-                    <>
-                      <p className="mt-0.5 text-[11px] leading-tight text-muted-foreground">{it.status}</p>
-                      {it.sub && <p className="text-[11px] leading-tight text-muted-foreground/70">{it.sub}</p>}
-                    </>
-                  ) : (
-                    <div className="mt-1">
-                      <PaywallLock />
+                  const color = levelColor(it.level);
+                  return (
+                    <div
+                      key={it.label}
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => setCardSheet(it.type)}
+                      className="cursor-pointer rounded-2xl border border-border/60 bg-card p-4 text-left shadow-sm transition-all duration-200 active:scale-[0.98]"
+                    >
+                      <div className="flex items-start justify-between">
+                        <span className="grid h-9 w-9 place-items-center rounded-lg bg-secondary">
+                          <Icon className="h-4 w-4 text-foreground" />
+                        </span>
+                        <span
+                          className="h-2.5 w-2.5 rounded-full"
+                          style={{ backgroundColor: color }}
+                        />
+                      </div>
+                      <p className="mt-3 text-sm font-semibold text-foreground">{it.label}</p>
+                      {isPremium ? (
+                        <>
+                          <p className="mt-0.5 text-[11px] leading-tight text-muted-foreground">
+                            {it.status}
+                          </p>
+                          {it.sub && (
+                            <p className="text-[11px] leading-tight text-muted-foreground/70">
+                              {it.sub}
+                            </p>
+                          )}
+                        </>
+                      ) : (
+                        <div className="mt-1">
+                          <PaywallLock />
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-              );
-            })}
+                  );
+                })}
           </div>
         </section>
       </div>

@@ -1,6 +1,26 @@
 import { useEffect, useRef, useState } from "react";
-import { AlertTriangle, CreditCard, Mail, Phone, MapPin, Lock, Check, X, ChevronDown, ChevronRight, Flame, ShieldCheck, Trash2 } from "lucide-react";
-import { formatCPF, isValidCPF, generateResult, maskedFields, riskFromBreaches } from "@/lib/funnel";
+import {
+  AlertTriangle,
+  CreditCard,
+  Mail,
+  Phone,
+  MapPin,
+  Lock,
+  Check,
+  X,
+  ChevronDown,
+  ChevronRight,
+  Flame,
+  ShieldCheck,
+  Trash2,
+} from "lucide-react";
+import {
+  formatCPF,
+  isValidCPF,
+  generateResult,
+  maskedFields,
+  riskFromBreaches,
+} from "@/lib/funnel";
 import { startCheckout, type CheckoutPlan } from "@/lib/checkout";
 import { toast } from "sonner";
 import { useApp } from "@/contexts/AppContext";
@@ -16,10 +36,24 @@ const SCAN_STEPS = [
 
 function ScanRadar() {
   return (
-    <svg width="120" height="120" viewBox="0 0 48 48" fill="none" style={{ filter: "drop-shadow(0 0 12px #4F46E5)" }}>
+    <svg
+      width="120"
+      height="120"
+      viewBox="0 0 48 48"
+      fill="none"
+      style={{ filter: "drop-shadow(0 0 12px #4F46E5)" }}
+    >
       <circle cx="24" cy="24" r="8" stroke="#6366F1" strokeWidth="0.8" fill="none" opacity="0.7" />
       <circle cx="24" cy="24" r="16" stroke="#6366F1" strokeWidth="0.8" fill="none" opacity="0.5" />
-      <circle cx="24" cy="24" r="22" stroke="#6366F1" strokeWidth="0.8" fill="none" opacity="0.35" />
+      <circle
+        cx="24"
+        cy="24"
+        r="22"
+        stroke="#6366F1"
+        strokeWidth="0.8"
+        fill="none"
+        opacity="0.35"
+      />
       <g className="scan-sweep">
         <path d="M24 24 L24 1 A 23 23 0 0 1 40 8 Z" fill="rgba(99,102,241,0.45)" />
         <line x1="24" y1="24" x2="24" y2="1" stroke="#A5B4FC" strokeWidth="1.2" />
@@ -29,7 +63,15 @@ function ScanRadar() {
   );
 }
 
-export function ScanFunnel({ open, onClose, onScanStart }: { open: boolean; onClose: () => void; onScanStart?: () => void }) {
+export function ScanFunnel({
+  open,
+  onClose,
+  onScanStart,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onScanStart?: () => void;
+}) {
   const { setIsPremium, scanResult } = useApp();
   const [phase, setPhase] = useState<"cpf" | "scanning" | "result" | "success">("cpf");
   const [cpf, setCpf] = useState("");
@@ -53,7 +95,9 @@ export function ScanFunnel({ open, onClose, onScanStart }: { open: boolean; onCl
     setDoneSteps([]);
     setBarFull(false);
     timers.current.push(setTimeout(() => setBarFull(true), 60));
-    SCAN_STEPS.forEach((s, i) => timers.current.push(setTimeout(() => setDoneSteps((p) => [...p, i]), s.at)));
+    SCAN_STEPS.forEach((s, i) =>
+      timers.current.push(setTimeout(() => setDoneSteps((p) => [...p, i]), s.at)),
+    );
     timers.current.push(setTimeout(() => setPhase("result"), 3500));
   };
 
@@ -151,26 +195,73 @@ export function ScanFunnel({ open, onClose, onScanStart }: { open: boolean; onCl
 
   // 1 visible data point + 3 blurred — curiosity gap
   const rows = [
-    { Icon: CreditCard, label: "CPF", value: `•••.•••.•••-${mask.cpfLast2}`, badge: "ALTO", color: "#F87171", bg: "rgba(239,68,68,0.2)", blur: false },
-    { Icon: Mail, label: "E-mail", value: `${mask.first}•••••@${mask.domain}`, badge: "MÉDIO", color: "#FBBF24", bg: "rgba(245,158,11,0.2)", blur: true },
-    { Icon: Phone, label: "Telefone", value: `(11) 9••••-${mask.phoneLast4}`, badge: "BAIXO", color: "#34D399", bg: "rgba(34,197,94,0.2)", blur: true },
-    { Icon: MapPin, label: "Endereço", value: "Rua ••••••, São Paulo — SP", badge: "ALTO", color: "#F87171", bg: "rgba(239,68,68,0.2)", blur: true },
+    {
+      Icon: CreditCard,
+      label: "CPF",
+      value: `•••.•••.•••-${mask.cpfLast2}`,
+      badge: "ALTO",
+      color: "#F87171",
+      bg: "rgba(239,68,68,0.2)",
+      blur: false,
+    },
+    {
+      Icon: Mail,
+      label: "E-mail",
+      value: `${mask.first}•••••@${mask.domain}`,
+      badge: "MÉDIO",
+      color: "#FBBF24",
+      bg: "rgba(245,158,11,0.2)",
+      blur: true,
+    },
+    {
+      Icon: Phone,
+      label: "Telefone",
+      value: `(11) 9••••-${mask.phoneLast4}`,
+      badge: "BAIXO",
+      color: "#34D399",
+      bg: "rgba(34,197,94,0.2)",
+      blur: true,
+    },
+    {
+      Icon: MapPin,
+      label: "Endereço",
+      value: "Rua ••••••, São Paulo — SP",
+      badge: "ALTO",
+      color: "#F87171",
+      bg: "rgba(239,68,68,0.2)",
+      blur: true,
+    },
   ];
 
   /* ---------- PHASE: CPF — centered security modal ---------- */
   if (phase === "cpf") {
     return (
-      <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm animate-fade-in" onClick={onClose}>
+      <div
+        className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm animate-fade-in"
+        onClick={onClose}
+      >
         <div
           className="w-full max-w-sm rounded-3xl p-6 text-center animate-scale-in"
-          style={{ backgroundColor: "#0A0A0F", border: "1px solid rgba(99,102,241,0.25)", boxShadow: "0 0 50px rgba(79,70,229,0.25)" }}
+          style={{
+            backgroundColor: "#0A0A0F",
+            border: "1px solid rgba(99,102,241,0.25)",
+            boxShadow: "0 0 50px rgba(79,70,229,0.25)",
+          }}
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl" style={{ backgroundColor: "rgba(99,102,241,0.15)", border: "1px solid rgba(99,102,241,0.3)" }}>
+          <div
+            className="mx-auto grid h-14 w-14 place-items-center rounded-2xl"
+            style={{
+              backgroundColor: "rgba(99,102,241,0.15)",
+              border: "1px solid rgba(99,102,241,0.3)",
+            }}
+          >
             <ShieldCheck className="h-7 w-7 text-indigo-400" />
           </div>
           <h2 className="mt-4 text-xl font-bold text-white">Verificação de segurança</h2>
-          <p className="mt-2 text-sm text-gray-400">Digite seu CPF para verificar sua exposição digital</p>
+          <p className="mt-2 text-sm text-gray-400">
+            Digite seu CPF para verificar sua exposição digital
+          </p>
           <input
             value={cpf}
             onChange={(e) => setCpf(formatCPF(e.target.value))}
@@ -198,7 +289,10 @@ export function ScanFunnel({ open, onClose, onScanStart }: { open: boolean; onCl
   /* ---------- PHASE: scanning ---------- */
   if (phase === "scanning") {
     return (
-      <div className="fixed inset-0 z-[60] flex flex-col items-center justify-center px-6" style={{ backgroundColor: "#0A0A0F" }}>
+      <div
+        className="fixed inset-0 z-[60] flex flex-col items-center justify-center px-6"
+        style={{ backgroundColor: "#0A0A0F" }}
+      >
         <ScanRadar />
         <div className="mt-7 flex w-full max-w-xs flex-col gap-2.5">
           {SCAN_STEPS.map((s, i) => {
@@ -211,15 +305,24 @@ export function ScanFunnel({ open, onClose, onScanStart }: { open: boolean; onCl
                 ) : (
                   <span className="h-4 w-4 shrink-0" />
                 )}
-                <span style={{ color: done ? "#4ADE80" : active ? "#A5B4FC" : "#4B5563" }}>{s.t}</span>
+                <span style={{ color: done ? "#4ADE80" : active ? "#A5B4FC" : "#4B5563" }}>
+                  {s.t}
+                </span>
               </div>
             );
           })}
         </div>
-        <div className="mt-6 h-1 w-full max-w-xs overflow-hidden rounded-full" style={{ backgroundColor: "#12121A" }}>
+        <div
+          className="mt-6 h-1 w-full max-w-xs overflow-hidden rounded-full"
+          style={{ backgroundColor: "#12121A" }}
+        >
           <div
             className="h-full rounded-full"
-            style={{ width: barFull ? "100%" : "0%", backgroundColor: "#6366F1", transition: "width 3.2s linear" }}
+            style={{
+              width: barFull ? "100%" : "0%",
+              backgroundColor: "#6366F1",
+              transition: "width 3.2s linear",
+            }}
           />
         </div>
       </div>
@@ -230,7 +333,10 @@ export function ScanFunnel({ open, onClose, onScanStart }: { open: boolean; onCl
   if (phase === "success") {
     const colors = ["#4F46E5", "#6366F1", "#22C55E", "#F59E0B", "#EF4444", "#A5B4FC"];
     return (
-      <div className="fixed inset-0 z-[70] flex flex-col items-center justify-center overflow-hidden px-6 text-center" style={{ backgroundColor: "#0A0A0F" }}>
+      <div
+        className="fixed inset-0 z-[70] flex flex-col items-center justify-center overflow-hidden px-6 text-center"
+        style={{ backgroundColor: "#0A0A0F" }}
+      >
         {Array.from({ length: 44 }).map((_, i) => (
           <span
             key={i}
@@ -243,7 +349,10 @@ export function ScanFunnel({ open, onClose, onScanStart }: { open: boolean; onCl
             }}
           />
         ))}
-        <div className="grid h-20 w-20 place-items-center rounded-full" style={{ backgroundColor: "rgba(34,197,94,0.15)" }}>
+        <div
+          className="grid h-20 w-20 place-items-center rounded-full"
+          style={{ backgroundColor: "rgba(34,197,94,0.15)" }}
+        >
           <Check className="h-10 w-10 text-green-400" />
         </div>
         <h2 className="mt-4 text-2xl font-extrabold text-white">Proteção ativada!</h2>
@@ -255,15 +364,45 @@ export function ScanFunnel({ open, onClose, onScanStart }: { open: boolean; onCl
   /* ---------- PHASE: result (redesigned bottom sheet) ---------- */
   // CPF and e-mail are data the user already typed — show them (no blur).
   // Phone / address are the cross-referenced findings unlocked after payment.
-  const sessionEmail = typeof window !== "undefined" ? sessionStorage.getItem("priva_email") || "" : "";
+  const sessionEmail =
+    typeof window !== "undefined" ? sessionStorage.getItem("priva_email") || "" : "";
   const cpfNum = cpf.replace(/\D/g, "");
-  const cpfDisplay = cpfNum.length === 11 ? `•••.${cpfNum.slice(3, 6)}.${cpfNum.slice(6, 9)}-••` : "•••.•••.•••-••";
+  const cpfDisplay =
+    cpfNum.length === 11 ? `•••.${cpfNum.slice(3, 6)}.${cpfNum.slice(6, 9)}-••` : "•••.•••.•••-••";
   const emailDisplay = sessionEmail || `${mask.first}•••••@${mask.domain}`;
   const exposedRows = [
-    { Icon: CreditCard, label: "CPF", value: cpfDisplay, badge: "ALTO", tone: "alto" as const, blur: false },
-    { Icon: Mail, label: "E-mail", value: emailDisplay, badge: "MÉDIO", tone: "medio" as const, blur: false },
-    { Icon: Phone, label: "Telefone", value: "(11) 9••••-••••", badge: "BAIXO", tone: "baixo" as const, blur: true },
-    { Icon: MapPin, label: "Endereço", value: "Rua ••••••, São Paulo — SP", badge: "ALTO", tone: "alto" as const, blur: true },
+    {
+      Icon: CreditCard,
+      label: "CPF",
+      value: cpfDisplay,
+      badge: "ALTO",
+      tone: "alto" as const,
+      blur: false,
+    },
+    {
+      Icon: Mail,
+      label: "E-mail",
+      value: emailDisplay,
+      badge: "MÉDIO",
+      tone: "medio" as const,
+      blur: false,
+    },
+    {
+      Icon: Phone,
+      label: "Telefone",
+      value: "(11) 9••••-••••",
+      badge: "BAIXO",
+      tone: "baixo" as const,
+      blur: true,
+    },
+    {
+      Icon: MapPin,
+      label: "Endereço",
+      value: "Rua ••••••, São Paulo — SP",
+      badge: "ALTO",
+      tone: "alto" as const,
+      blur: true,
+    },
   ];
   const badgeTone: Record<string, string> = {
     alto: "text-red-400 bg-red-500/15",
@@ -294,7 +433,9 @@ export function ScanFunnel({ open, onClose, onScanStart }: { open: boolean; onCl
         <div className="mx-auto max-w-md pb-10">
           {/* headline */}
           <div className="mt-5 px-5 text-center">
-            <h1 className="text-2xl font-extrabold leading-tight text-white">Encontramos vazamentos</h1>
+            <h1 className="text-2xl font-extrabold leading-tight text-white">
+              Encontramos vazamentos
+            </h1>
             <h1 className="text-2xl font-extrabold leading-tight text-red-500">dos seus dados</h1>
             <p className="mt-2 text-center text-sm leading-relaxed text-gray-400">
               Seus dados foram encontrados em {count} vazamentos e estão expostos na internet.
@@ -302,15 +443,25 @@ export function ScanFunnel({ open, onClose, onScanStart }: { open: boolean; onCl
           </div>
 
           {/* summary card */}
-          <div className="mx-5 mt-5 rounded-2xl border border-white/5 p-4" style={{ backgroundColor: "#12121A" }}>
+          <div
+            className="mx-5 mt-5 rounded-2xl border border-white/5 p-4"
+            style={{ backgroundColor: "#12121A" }}
+          >
             <p className="text-center text-sm font-bold text-white">Resumo da análise</p>
             <div className="mt-3 grid grid-cols-3 text-center">
               <div>
                 <p className="text-3xl font-extrabold text-white">{count}</p>
-                <p className="mt-1 text-[11px] leading-tight text-gray-400">Vazamentos encontrados</p>
+                <p className="mt-1 text-[11px] leading-tight text-gray-400">
+                  Vazamentos encontrados
+                </p>
               </div>
               <div className="border-x border-white/5">
-                <p className="text-[1.78rem] font-extrabold leading-[2.25rem]" style={{ color: riskColor }}>{risk.label}</p>
+                <p
+                  className="text-[1.78rem] font-extrabold leading-[2.25rem]"
+                  style={{ color: riskColor }}
+                >
+                  {risk.label}
+                </p>
                 <p className="mt-1 text-[11px] leading-tight text-gray-400">Nível de risco</p>
               </div>
               <div>
@@ -325,7 +476,10 @@ export function ScanFunnel({ open, onClose, onScanStart }: { open: boolean; onCl
             onClick={() => checkout("essencial")}
             disabled={redirecting}
             className="mx-5 mt-4 flex w-[calc(100%-2.5rem)] items-center gap-3 rounded-2xl px-4 py-3.5 text-left transition-all active:scale-[0.99] disabled:opacity-60"
-            style={{ background: "linear-gradient(135deg,#4F46E5,#6366F1)", boxShadow: "0 0 24px rgba(79,70,229,0.4)" }}
+            style={{
+              background: "linear-gradient(135deg,#4F46E5,#6366F1)",
+              boxShadow: "0 0 24px rgba(79,70,229,0.4)",
+            }}
           >
             <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white/15">
               <Lock className="h-5 w-5 text-white" />
@@ -342,7 +496,10 @@ export function ScanFunnel({ open, onClose, onScanStart }: { open: boolean; onCl
             onClick={() => checkout("protecao_total")}
             disabled={redirecting}
             className="mx-5 mt-3 flex w-[calc(100%-2.5rem)] items-center gap-3 rounded-2xl px-4 py-3.5 text-left transition-all active:scale-[0.99] disabled:opacity-60"
-            style={{ background: "linear-gradient(135deg,#DC2626,#EF4444)", boxShadow: "0 0 24px rgba(220,38,38,0.4)" }}
+            style={{
+              background: "linear-gradient(135deg,#DC2626,#EF4444)",
+              boxShadow: "0 0 24px rgba(220,38,38,0.4)",
+            }}
           >
             <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white/15">
               <Trash2 className="h-5 w-5 text-white" />
@@ -355,7 +512,9 @@ export function ScanFunnel({ open, onClose, onScanStart }: { open: boolean; onCl
           </button>
 
           {redirecting && (
-            <p className="mt-3 px-5 text-center text-xs text-indigo-300">Redirecionando para pagamento seguro...</p>
+            <p className="mt-3 px-5 text-center text-xs text-indigo-300">
+              Redirecionando para pagamento seguro...
+            </p>
           )}
 
           {/* exposed data list */}
@@ -366,8 +525,16 @@ export function ScanFunnel({ open, onClose, onScanStart }: { open: boolean; onCl
                 <div key={r.label} className="flex items-center gap-3">
                   <r.Icon className="h-4 w-4 shrink-0 text-gray-500" />
                   <span className="w-20 shrink-0 text-sm text-white">{r.label}</span>
-                  <span className={`min-w-0 flex-1 truncate text-sm text-gray-300 ${r.blur ? "select-none blur-[4px]" : ""}`}>{r.value}</span>
-                  <span className={`shrink-0 rounded-md px-2 py-0.5 text-[11px] font-bold ${badgeTone[r.tone]}`}>{r.badge}</span>
+                  <span
+                    className={`min-w-0 flex-1 truncate text-sm text-gray-300 ${r.blur ? "select-none blur-[4px]" : ""}`}
+                  >
+                    {r.value}
+                  </span>
+                  <span
+                    className={`shrink-0 rounded-md px-2 py-0.5 text-[11px] font-bold ${badgeTone[r.tone]}`}
+                  >
+                    {r.badge}
+                  </span>
                 </div>
               ))}
             </div>
@@ -385,7 +552,11 @@ export function ScanFunnel({ open, onClose, onScanStart }: { open: boolean; onCl
               <span>
                 <span className="block font-bold text-white">Relatório completo</span>
                 <span className="mt-2 block space-y-1">
-                  {["Fontes dos vazamentos", "Dados e detalhes", "Recomendações personalizadas"].map((f) => (
+                  {[
+                    "Fontes dos vazamentos",
+                    "Dados e detalhes",
+                    "Recomendações personalizadas",
+                  ].map((f) => (
                     <span key={f} className="flex items-center gap-2 text-sm text-gray-300">
                       <Check className="h-4 w-4 shrink-0 text-green-400" /> {f}
                     </span>
@@ -411,7 +582,11 @@ export function ScanFunnel({ open, onClose, onScanStart }: { open: boolean; onCl
               <span>
                 <span className="block font-bold text-white">Apagar dados vazados</span>
                 <span className="mt-2 block space-y-1">
-                  {["Remoção dos dados da internet", "Solicitações LGPD automáticas", "Monitoramento contínuo"].map((f) => (
+                  {[
+                    "Remoção dos dados da internet",
+                    "Solicitações LGPD automáticas",
+                    "Monitoramento contínuo",
+                  ].map((f) => (
                     <span key={f} className="flex items-center gap-2 text-sm text-gray-300">
                       <Check className="h-4 w-4 shrink-0 text-green-400" /> {f}
                     </span>

@@ -3,7 +3,13 @@ import { useApp } from "@/contexts/AppContext";
 
 const plans = [
   { id: "personal", name: "Personal", price: "R$19", desc: "CPF + e-mail + alertas" },
-  { id: "score", name: "Score+", price: "R$29", desc: "Tudo + negativações + score", highlight: true },
+  {
+    id: "score",
+    name: "Score+",
+    price: "R$29",
+    desc: "Tudo + negativações + score",
+    highlight: true,
+  },
   { id: "family", name: "Família", price: "R$39", desc: "Até 6 CPFs monitorados" },
 ];
 

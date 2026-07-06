@@ -46,7 +46,9 @@ export function PaymentReturn() {
       const canReport = Boolean(uid) && Boolean(localStorage.getItem("priva_scan_result"));
       if (canReport && localStorage.getItem("priva_relatorio_emailed") !== "true") {
         localStorage.setItem("priva_relatorio_emailed", "true");
-        void generateRelatorioPdf({ data: { userId: uid as string, deliverEmail: true } }).catch(() => {});
+        void generateRelatorioPdf({ data: { userId: uid as string, deliverEmail: true } }).catch(
+          () => {},
+        );
       }
       setPhase("idle");
       if (!canReport) openCaptureRef.current("postpay");
@@ -91,10 +93,22 @@ export function PaymentReturn() {
     try {
       const url = new URL(window.location.href);
       [
-        "payment", "session_id", "preapproval_id", "preapproval_plan_id", "id", "status",
-        "collection_status", "collection_id", "payment_id", "payment_type",
-        "external_reference", "preference_id", "merchant_order_id", "site_id",
-        "processing_mode", "merchant_account_id",
+        "payment",
+        "session_id",
+        "preapproval_id",
+        "preapproval_plan_id",
+        "id",
+        "status",
+        "collection_status",
+        "collection_id",
+        "payment_id",
+        "payment_type",
+        "external_reference",
+        "preference_id",
+        "merchant_order_id",
+        "site_id",
+        "processing_mode",
+        "merchant_account_id",
       ].forEach((k) => url.searchParams.delete(k));
       window.history.replaceState({}, "", url.pathname + url.search + url.hash);
     } catch {
@@ -107,7 +121,8 @@ export function PaymentReturn() {
 
     (async () => {
       // Best guess from the checkout we remembered; refined by the gateway.
-      let resolvedPlan = (typeof localStorage !== "undefined" && localStorage.getItem("priva_plan")) || "essencial";
+      let resolvedPlan =
+        (typeof localStorage !== "undefined" && localStorage.getItem("priva_plan")) || "essencial";
       let resolvedEmail = sessionStorage.getItem("priva_email") || "";
       let resolvedUserId = localStorage.getItem("priva_user_id");
 
@@ -175,12 +190,19 @@ export function PaymentReturn() {
           </div>
           <h1 className="mt-5 text-center text-2xl font-extrabold text-white">Proteção ativada!</h1>
           <p className="mt-2 text-center text-sm text-gray-400">
-            Sua conta é o seu e-mail. Enviamos um link de acesso para você entrar em qualquer aparelho.
+            Sua conta é o seu e-mail. Enviamos um link de acesso para você entrar em qualquer
+            aparelho.
           </p>
 
-          <div className="mt-7 rounded-2xl p-5" style={{ backgroundColor: "#12121A", border: "1px solid rgba(255,255,255,0.05)" }}>
+          <div
+            className="mt-7 rounded-2xl p-5"
+            style={{ backgroundColor: "#12121A", border: "1px solid rgba(255,255,255,0.05)" }}
+          >
             <p className="mb-1 text-xs text-gray-400">Seu e-mail de acesso</p>
-            <div className="mb-4 flex items-center gap-2 rounded-lg px-3 py-2.5" style={{ backgroundColor: "#1a1a2e" }}>
+            <div
+              className="mb-4 flex items-center gap-2 rounded-lg px-3 py-2.5"
+              style={{ backgroundColor: "#1a1a2e" }}
+            >
               <Mail className="h-4 w-4 shrink-0 text-indigo-400" />
               <span className="truncate text-sm font-medium text-white">{email || "—"}</span>
             </div>
@@ -188,7 +210,9 @@ export function PaymentReturn() {
             {linkSent ? (
               <p className="rounded-xl bg-green-500/10 px-3 py-3 text-center text-sm text-green-400">
                 Link de acesso enviado para {email} ✓<br />
-                <span className="text-xs text-green-400/70">Confira sua caixa de entrada (e o spam).</span>
+                <span className="text-xs text-green-400/70">
+                  Confira sua caixa de entrada (e o spam).
+                </span>
               </p>
             ) : (
               <button
@@ -210,7 +234,8 @@ export function PaymentReturn() {
           </div>
 
           <p className="mt-4 text-center text-[11px] leading-snug text-gray-600">
-            Guarde o e-mail acima — é com ele que você entra na sua conta em outro celular ou computador.
+            Guarde o e-mail acima — é com ele que você entra na sua conta em outro celular ou
+            computador.
           </p>
         </div>
       </div>
@@ -245,7 +270,8 @@ export function PaymentReturn() {
           </div>
           <h1 className="mt-5 text-2xl font-extrabold text-white">Solicitação enviada</h1>
           <p className="mt-3 max-w-xs text-sm leading-relaxed text-gray-400">
-            Nossa equipe está processando seu pedido de remoção. Você será notificado quando houver atualização.
+            Nossa equipe está processando seu pedido de remoção. Você será notificado quando houver
+            atualização.
           </p>
           <button
             onClick={() => {
@@ -255,7 +281,10 @@ export function PaymentReturn() {
               else setPhase("idle");
             }}
             className="mt-8 w-full max-w-xs rounded-2xl py-4 text-base font-bold text-white transition-all active:scale-[0.99]"
-            style={{ background: "linear-gradient(135deg,#4F46E5,#6366F1)", boxShadow: "0 8px 28px rgba(79,70,229,0.4)" }}
+            style={{
+              background: "linear-gradient(135deg,#4F46E5,#6366F1)",
+              boxShadow: "0 8px 28px rgba(79,70,229,0.4)",
+            }}
           >
             Ir para o painel
           </button>
@@ -266,9 +295,18 @@ export function PaymentReturn() {
 
   // STEP — "Ativando sua proteção..." (branded)
   return (
-    <div className="fixed inset-0 z-[60] flex flex-col items-center justify-center px-6 text-center" style={{ backgroundColor: "#0A0A0F" }}>
+    <div
+      className="fixed inset-0 z-[60] flex flex-col items-center justify-center px-6 text-center"
+      style={{ backgroundColor: "#0A0A0F" }}
+    >
       <img src="/PRIVA_logo_dark_theme.png" alt="PRIVA" className="h-7 w-auto object-contain" />
-      <div className="mt-10 grid h-16 w-16 place-items-center rounded-2xl" style={{ backgroundColor: "rgba(99,102,241,0.15)", border: "1px solid rgba(99,102,241,0.3)" }}>
+      <div
+        className="mt-10 grid h-16 w-16 place-items-center rounded-2xl"
+        style={{
+          backgroundColor: "rgba(99,102,241,0.15)",
+          border: "1px solid rgba(99,102,241,0.3)",
+        }}
+      >
         <Loader2 className="h-8 w-8 animate-spin text-indigo-400" />
       </div>
       <h1 className="mt-6 text-xl font-extrabold text-white">Ativando sua proteção...</h1>

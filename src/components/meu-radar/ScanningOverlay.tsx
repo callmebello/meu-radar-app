@@ -76,16 +76,25 @@ export function ScanningOverlay({ open }: { open: boolean }) {
                 ) : (
                   <span className="h-4 w-4 shrink-0 rounded-full border border-white/15" />
                 )}
-                <span style={{ color: isDone ? "#4ADE80" : active ? "#A5B4FC" : "#5B5B6B" }}>{s}</span>
+                <span style={{ color: isDone ? "#4ADE80" : active ? "#A5B4FC" : "#5B5B6B" }}>
+                  {s}
+                </span>
               </div>
             );
           })}
         </div>
 
-        <div className="mt-4 h-1 w-full overflow-hidden rounded-full" style={{ backgroundColor: "#12121A" }}>
+        <div
+          className="mt-4 h-1 w-full overflow-hidden rounded-full"
+          style={{ backgroundColor: "#12121A" }}
+        >
           <div
             className="h-full rounded-full"
-            style={{ width: bar ? "100%" : "0%", backgroundColor: "#6366F1", transition: "width 3.4s linear" }}
+            style={{
+              width: bar ? "100%" : "0%",
+              backgroundColor: "#6366F1",
+              transition: "width 3.4s linear",
+            }}
           />
         </div>
       </div>

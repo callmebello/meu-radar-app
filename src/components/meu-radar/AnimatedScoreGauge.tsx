@@ -26,8 +26,7 @@ export function AnimatedScoreGauge({ score, max = 100, duration = 1500, showMax 
 
   const pct = Math.max(0, Math.min(1, current / max));
   const ratio = score / max;
-  const color =
-    ratio < 0.4 ? "#ef4444" : ratio <= 0.7 ? "#f59e0b" : "#22c55e";
+  const color = ratio < 0.4 ? "#ef4444" : ratio <= 0.7 ? "#f59e0b" : "#22c55e";
   const label = ratio < 0.4 ? "RISCO ALTO" : ratio <= 0.7 ? "RISCO MÉDIO" : "RISCO BAIXO";
 
   // Semicircle: cx=100, cy=100, r=80, sweep 180° → 0°
@@ -72,9 +71,7 @@ export function AnimatedScoreGauge({ score, max = 100, duration = 1500, showMax 
           <span className="text-4xl font-extrabold tracking-tight text-foreground">
             {Math.round(current)}
           </span>
-          {showMax && (
-            <span className="text-sm font-medium text-muted-foreground">/{max}</span>
-          )}
+          {showMax && <span className="text-sm font-medium text-muted-foreground">/{max}</span>}
         </div>
         <span
           className="mt-1 rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider"
