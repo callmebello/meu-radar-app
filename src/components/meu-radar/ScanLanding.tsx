@@ -42,7 +42,7 @@ export function ScanLanding({ onSubmit }: { onSubmit: (cpf: string, email: strin
         {/* headline */}
         <div>
           <h1 className="text-center text-3xl font-extrabold leading-tight text-foreground md:text-4xl">
-            Seu CPF foi <span className="text-indigo-400">vazado?</span>
+            Seu CPF foi <span className="text-indigo-600 dark:text-indigo-400">vazado?</span>
           </h1>
           <p className="mx-auto mt-2 max-w-sm text-center text-base leading-relaxed text-muted-foreground">
             Descubra e remova seus dados da internet.
@@ -97,7 +97,7 @@ export function ScanLanding({ onSubmit }: { onSubmit: (cpf: string, email: strin
           <button
             onClick={submit}
             disabled={!valid}
-            className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl py-4 text-lg font-bold text-white transition-all active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40"
+            className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl py-4 text-lg font-bold text-white transition-all active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-70"
             style={{ background: "linear-gradient(135deg,#4F46E5,#6366F1)", boxShadow: "0 8px 28px rgba(79,70,229,0.4)" }}
           >
             Fazer Scan Grátis <ArrowRight className="h-5 w-5" />
