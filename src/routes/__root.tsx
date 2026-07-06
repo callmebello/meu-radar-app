@@ -68,12 +68,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="pt-BR" className="dark" suppressHydrationWarning>
+    <html lang="pt-BR" suppressHydrationWarning>
       <head>
         <HeadContent />
         <script
           dangerouslySetInnerHTML={{
-            __html: `try{var t=localStorage.getItem('meu-radar-theme')||'dark';document.documentElement.classList.toggle('dark',t==='dark');}catch(e){}`,
+            __html: `try{var t=localStorage.getItem('meu-radar-theme')||'light';document.documentElement.classList.toggle('dark',t==='dark');}catch(e){}`,
           }}
         />
         <script

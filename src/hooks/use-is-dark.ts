@@ -4,10 +4,10 @@ import { useEffect, useState } from "react";
 // assets (logos, icons) swap instantly no matter which component toggled it.
 export function useIsDark() {
   const [isDark, setIsDark] = useState(() =>
-    // SSR always renders <html class="dark"> (dark is the default theme), so default
-    // to true on the server to avoid a first-paint flash of the light-theme (black)
-    // logo on the dark background. On the client we read the real class.
-    typeof document === "undefined" ? true : document.documentElement.classList.contains("dark"),
+    // SSR renders the light theme by default (no .dark class), so default to false
+    // on the server. On the client we read the real class (which the anti-flash
+    // script in __root sets from the stored theme before hydration).
+    typeof document !== "undefined" && document.documentElement.classList.contains("dark"),
   );
   useEffect(() => {
     const el = document.documentElement;

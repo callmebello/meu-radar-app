@@ -4,9 +4,9 @@ type Theme = "light" | "dark";
 const KEY = "meu-radar-theme";
 
 function getInitial(): Theme {
-  if (typeof window === "undefined") return "dark";
+  if (typeof window === "undefined") return "light";
   const stored = localStorage.getItem(KEY) as Theme | null;
-  return stored ?? "dark";
+  return stored ?? "light";
 }
 
 export function useTheme() {
