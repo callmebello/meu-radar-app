@@ -64,7 +64,8 @@ export const saveLgpdAuthorization = createServerFn({ method: "POST" })
         .maybeSingle();
 
       const result = ((scanRow?.result as StoredScanResult) ?? {}) as StoredScanResult;
-      const breachCount = result.hibp?.count ?? (scanRow?.breach_count as number) ?? result.breachCount ?? 0;
+      const breachCount =
+        result.hibp?.count ?? (scanRow?.breach_count as number) ?? result.breachCount ?? 0;
       const breachNames = (result.hibp?.breaches ?? [])
         .map((b) => b.name)
         .filter(Boolean)
@@ -76,10 +77,14 @@ export const saveLgpdAuthorization = createServerFn({ method: "POST" })
         ...(ex?.cpf?.sources ?? []).map((sc) => `Web (CPF): ${sc.link || sc.title}`),
         ...(ex?.phone?.sources ?? []).map((sc) => `Web (telefone): ${sc.link || sc.title}`),
       ];
-      const sourcesStr = sourceItems.length ? sourceItems.join("; ") : "nenhuma fonte pública direta";
+      const sourcesStr = sourceItems.length
+        ? sourceItems.join("; ")
+        : "nenhuma fonte pública direta";
       const whenFmt = (() => {
         const d = new Date(authorizedAt);
-        return isNaN(d.getTime()) ? authorizedAt : d.toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
+        return isNaN(d.getTime())
+          ? authorizedAt
+          : d.toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
       })();
       const scanSummary =
         `${breachCount} vazamento(s) de e-mail` +

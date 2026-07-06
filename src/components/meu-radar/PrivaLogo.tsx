@@ -19,16 +19,9 @@ export function PrivaLogo({
 }: Props) {
   const content = (
     <>
-      <img
-        src={logoUrl}
-        alt="Priva"
-        className="w-auto object-contain"
-        style={{ height: size }}
-      />
+      <img src={logoUrl} alt="Priva" className="w-auto object-contain" style={{ height: size }} />
       {showWordmark && (
-        <span className={`font-bold text-xl tracking-tight ${wordmarkClassName}`}>
-          priva
-        </span>
+        <span className={`font-bold text-xl tracking-tight ${wordmarkClassName}`}>priva</span>
       )}
     </>
   );

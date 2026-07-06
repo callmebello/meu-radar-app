@@ -18,7 +18,15 @@ function ScanIcon({ fast }: { fast: boolean }) {
       <circle cx="24" cy="24" r="22" stroke="white" strokeWidth="1.2" fill="none" opacity="0.4" />
       {/* sweep arm — STILL when idle, rotates only while scanning */}
       <g className={fast ? "radar-sweep-fast" : ""}>
-        <line x1="24" y1="24" x2="40" y2="8" stroke="white" strokeWidth="1.4" strokeLinecap="round" />
+        <line
+          x1="24"
+          y1="24"
+          x2="40"
+          y2="8"
+          stroke="white"
+          strokeWidth="1.4"
+          strokeLinecap="round"
+        />
       </g>
       <circle cx="24" cy="24" r="2" fill="white" />
     </svg>

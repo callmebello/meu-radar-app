@@ -48,7 +48,8 @@ export function ScanLanding({ onSubmit }: { onSubmit: (cpf: string, email: strin
             Descubra e remova seus dados da internet.
           </p>
           <p className="mx-auto mt-3 max-w-sm text-center text-sm leading-relaxed text-muted-foreground">
-            Analisamos CPF, e-mail, telefone e possíveis vazamentos para proteger sua identidade digital.
+            Analisamos CPF, e-mail, telefone e possíveis vazamentos para proteger sua identidade
+            digital.
           </p>
         </div>
 
@@ -78,7 +79,10 @@ export function ScanLanding({ onSubmit }: { onSubmit: (cpf: string, email: strin
           <div className="relative mt-2">
             <span
               className="animate-nudge-bounce absolute -top-2.5 right-3 z-10 rounded-full px-2 py-0.5 text-[10px] font-bold text-white shadow-lg"
-              style={{ background: "linear-gradient(135deg,#4F46E5,#6366F1)", animationDelay: "0.5s" }}
+              style={{
+                background: "linear-gradient(135deg,#4F46E5,#6366F1)",
+                animationDelay: "0.5s",
+              }}
             >
               Receba o resultado grátis
             </span>
@@ -98,7 +102,10 @@ export function ScanLanding({ onSubmit }: { onSubmit: (cpf: string, email: strin
             onClick={submit}
             disabled={!valid}
             className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl py-4 text-lg font-bold text-white transition-all active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-70"
-            style={{ background: "linear-gradient(135deg,#4F46E5,#6366F1)", boxShadow: "0 8px 28px rgba(79,70,229,0.4)" }}
+            style={{
+              background: "linear-gradient(135deg,#4F46E5,#6366F1)",
+              boxShadow: "0 8px 28px rgba(79,70,229,0.4)",
+            }}
           >
             Fazer Scan Grátis <ArrowRight className="h-5 w-5" />
           </button>
@@ -106,7 +113,12 @@ export function ScanLanding({ onSubmit }: { onSubmit: (cpf: string, email: strin
           {/* Terms / LGPD consent */}
           <p className="mt-3 text-center text-[11px] leading-snug text-muted-foreground">
             Ao continuar, você concorda com os{" "}
-            <a href="/termos" target="_blank" rel="noopener noreferrer" className="text-indigo-400 underline">
+            <a
+              href="/termos"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-indigo-400 underline"
+            >
               Termos
             </a>{" "}
             e a{" "}
@@ -155,7 +167,9 @@ export function ScanLanding({ onSubmit }: { onSubmit: (cpf: string, email: strin
               <p className="text-sm text-foreground">
                 <span className="font-bold text-indigo-400">+18.427</span> verificações realizadas
               </p>
-              <p className="text-xs text-muted-foreground">Milhares de brasileiros já verificaram seus dados.</p>
+              <p className="text-xs text-muted-foreground">
+                Milhares de brasileiros já verificaram seus dados.
+              </p>
             </div>
           </div>
         </div>

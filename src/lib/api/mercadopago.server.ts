@@ -21,8 +21,8 @@ export function tokensForMode(liveMode: boolean | undefined): string[] {
 // When mode is unknown (return flow only has an id), try both — prod first, then
 // test. The id resolves under whichever token owns it.
 export function allTokens(): string[] {
-  return [process.env.MP_ACCESS_TOKEN, process.env.MP_ACCESS_TOKEN_TEST].filter(
-    (t): t is string => Boolean(t),
+  return [process.env.MP_ACCESS_TOKEN, process.env.MP_ACCESS_TOKEN_TEST].filter((t): t is string =>
+    Boolean(t),
   );
 }
 
@@ -49,7 +49,10 @@ export function isActiveStatus(status: string): boolean {
   return ["authorized", "approved", "active", "accredited"].includes(status.toLowerCase());
 }
 
-export async function resolvePreapproval(id: string, tokens: string[]): Promise<ResolvedSub | null> {
+export async function resolvePreapproval(
+  id: string,
+  tokens: string[],
+): Promise<ResolvedSub | null> {
   const s = await mpGet<{
     payer_email?: string;
     status?: string;
@@ -57,7 +60,12 @@ export async function resolvePreapproval(id: string, tokens: string[]): Promise<
   }>(`/preapproval/${id}`, tokens);
   if (!s) return null;
   const amount = Number(s.auto_recurring?.transaction_amount ?? 0);
-  return { email: s.payer_email ?? "", amount, status: s.status ?? "", plan: planFromAmount(amount) };
+  return {
+    email: s.payer_email ?? "",
+    amount,
+    status: s.status ?? "",
+    plan: planFromAmount(amount),
+  };
 }
 
 export async function resolvePayment(id: string, tokens: string[]): Promise<ResolvedSub | null> {
@@ -68,11 +76,19 @@ export async function resolvePayment(id: string, tokens: string[]): Promise<Reso
   }>(`/v1/payments/${id}`, tokens);
   if (!p) return null;
   const amount = Number(p.transaction_amount ?? 0);
-  return { email: p.payer?.email ?? "", amount, status: p.status ?? "", plan: planFromAmount(amount) };
+  return {
+    email: p.payer?.email ?? "",
+    amount,
+    status: p.status ?? "",
+    plan: planFromAmount(amount),
+  };
 }
 
 // Recurring renewals arrive as subscription_authorized_payment.
-export async function resolveAuthorizedPayment(id: string, tokens: string[]): Promise<ResolvedSub | null> {
+export async function resolveAuthorizedPayment(
+  id: string,
+  tokens: string[],
+): Promise<ResolvedSub | null> {
   const ap = await mpGet<{
     status?: string;
     transaction_amount?: number;

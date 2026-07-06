@@ -13,7 +13,11 @@ const SIGNED_TTL = 7 * 24 * 60 * 60; // 7 days
 async function makeQr(text: string): Promise<string | undefined> {
   try {
     const QRCode = (await import("qrcode")).default;
-    return await QRCode.toDataURL(text, { margin: 1, width: 240, color: { dark: "#0B0B1A", light: "#FFFFFF" } });
+    return await QRCode.toDataURL(text, {
+      margin: 1,
+      width: 240,
+      color: { dark: "#0B0B1A", light: "#FFFFFF" },
+    });
   } catch {
     return undefined;
   }
@@ -56,7 +60,12 @@ export async function uploadAndSign(
 }
 
 export type UserRow = { id: string; email: string; plan: string };
-export type ScanRow = { result: StoredScanResult; breach_count: number; created_at: string; email: string | null };
+export type ScanRow = {
+  result: StoredScanResult;
+  breach_count: number;
+  created_at: string;
+  email: string | null;
+};
 
 export async function fetchUserAndScan(
   admin: SupabaseClient,

@@ -13,11 +13,14 @@ import type Stripe from "stripe";
 import { getSupabaseAdmin } from "../supabase.server";
 
 export async function handleStripeWebhook(request: Request): Promise<Response> {
-  const { getStripe, planForPrice, planFromAmountBRL, resolveCheckoutSession } = await import("./stripe.server");
+  const { getStripe, planForPrice, planFromAmountBRL, resolveCheckoutSession } =
+    await import("./stripe.server");
   const stripe = getStripe();
   const secret = process.env.STRIPE_WEBHOOK_SECRET;
   if (!stripe || !secret) {
-    console.warn("Stripe webhook: STRIPE_SECRET_KEY/STRIPE_WEBHOOK_SECRET ausentes — evento ignorado");
+    console.warn(
+      "Stripe webhook: STRIPE_SECRET_KEY/STRIPE_WEBHOOK_SECRET ausentes — evento ignorado",
+    );
     return new Response("OK", { status: 200 });
   }
 

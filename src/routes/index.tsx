@@ -31,9 +31,16 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Priva — Descubra se seus dados vazaram" },
-      { name: "description", content: "Verifique gratuitamente se seu CPF, e-mail e telefone foram expostos em vazamentos. Monitore sua identidade digital com a Priva." },
+      {
+        name: "description",
+        content:
+          "Verifique gratuitamente se seu CPF, e-mail e telefone foram expostos em vazamentos. Monitore sua identidade digital com a Priva.",
+      },
       { property: "og:title", content: "Priva — Proteção de Identidade Digital" },
-      { property: "og:description", content: "Descubra onde seus dados vazaram e proteja-se em segundos." },
+      {
+        property: "og:description",
+        content: "Descubra onde seus dados vazaram e proteja-se em segundos.",
+      },
     ],
   }),
   component: () => (
@@ -49,7 +56,17 @@ function Index() {
   const [hasScanned, setHasScanned] = useState(false);
   const [captureOpen, setCaptureOpen] = useState(false);
   const [captureReason, setCaptureReason] = useState<CaptureReason>("scan");
-  const { setGoToTab, isPremium, setIsPremium, setOpenScan, setOpenCapture, scanning, setScanning, setScanResult, setExposure } = useApp();
+  const {
+    setGoToTab,
+    isPremium,
+    setIsPremium,
+    setOpenScan,
+    setOpenCapture,
+    scanning,
+    setScanning,
+    setScanResult,
+    setExposure,
+  } = useApp();
 
   // Restore the logged-in account on load: if there's a Supabase session, sync
   // the plan/paid state and e-mail so the user stays logged in with their data.
@@ -109,9 +126,15 @@ function Index() {
     // once everything settles so the PDF generators have real data.
     const userP = saveUser({ data: { email, cpf } }).catch(() => null);
     const hibpP = email ? checkHibp({ data: { email } }).catch(() => null) : Promise.resolve(null);
-    const ghP = email ? searchGithubExposure({ data: { email } }).catch(() => null) : Promise.resolve(null);
-    const cpfP = cpfDigits ? searchExposure({ data: { query: cpfDigits, type: "cpf" } }).catch(() => null) : Promise.resolve(null);
-    const phoneP = phone ? searchExposure({ data: { query: phone, type: "phone" } }).catch(() => null) : Promise.resolve(null);
+    const ghP = email
+      ? searchGithubExposure({ data: { email } }).catch(() => null)
+      : Promise.resolve(null);
+    const cpfP = cpfDigits
+      ? searchExposure({ data: { query: cpfDigits, type: "cpf" } }).catch(() => null)
+      : Promise.resolve(null);
+    const phoneP = phone
+      ? searchExposure({ data: { query: phone, type: "phone" } }).catch(() => null)
+      : Promise.resolve(null);
 
     // initial result-sheet count from the mock; HIBP refines it below
     setScanResult({ breachCount, hibp: null });
@@ -291,7 +314,9 @@ function Index() {
       {captureOpen && (
         <CpfCaptureSheet
           reason={captureReason}
-          defaultEmail={(typeof window !== "undefined" && sessionStorage.getItem("priva_email")) || ""}
+          defaultEmail={
+            (typeof window !== "undefined" && sessionStorage.getItem("priva_email")) || ""
+          }
           onConfirm={confirmCapture}
           onClose={captureReason === "scan" ? () => setCaptureOpen(false) : undefined}
         />
@@ -307,23 +332,50 @@ function ScanEmptyState({ onScan }: { onScan: () => void }) {
     <>
       <AppHeader title="" showBell />
       <div className="flex flex-1 flex-col items-center justify-center px-6 text-center">
-      <button
-        onClick={onScan}
-        aria-label="Fazer scan grátis"
-        className="scan-breathe grid h-20 w-20 place-items-center rounded-full"
-        style={{ background: "radial-gradient(circle at center,#6366F1,#4F46E5)", border: "2px solid rgba(255,255,255,0.15)" }}
-      >
-        <svg width="40" height="40" viewBox="0 0 48 48" fill="none">
-          <circle cx="24" cy="24" r="8" stroke="white" strokeWidth="1.2" fill="none" />
-          <circle cx="24" cy="24" r="16" stroke="white" strokeWidth="1.2" fill="none" opacity="0.7" />
-          <circle cx="24" cy="24" r="22" stroke="white" strokeWidth="1.2" fill="none" opacity="0.4" />
-          <line x1="24" y1="24" x2="40" y2="8" stroke="white" strokeWidth="1.4" strokeLinecap="round" />
-          <circle cx="24" cy="24" r="2" fill="white" />
-        </svg>
-      </button>
-      <p className="mt-4 text-xl font-bold text-white">Fazer Scan Grátis</p>
-      <p className="mt-2 text-sm text-gray-400">Descubra se seus dados estão expostos</p>
-      <p className="mt-3 text-xs text-gray-600">✓ Grátis · ✓ 5 segundos · ✓ Sem cadastro</p>
+        <button
+          onClick={onScan}
+          aria-label="Fazer scan grátis"
+          className="scan-breathe grid h-20 w-20 place-items-center rounded-full"
+          style={{
+            background: "radial-gradient(circle at center,#6366F1,#4F46E5)",
+            border: "2px solid rgba(255,255,255,0.15)",
+          }}
+        >
+          <svg width="40" height="40" viewBox="0 0 48 48" fill="none">
+            <circle cx="24" cy="24" r="8" stroke="white" strokeWidth="1.2" fill="none" />
+            <circle
+              cx="24"
+              cy="24"
+              r="16"
+              stroke="white"
+              strokeWidth="1.2"
+              fill="none"
+              opacity="0.7"
+            />
+            <circle
+              cx="24"
+              cy="24"
+              r="22"
+              stroke="white"
+              strokeWidth="1.2"
+              fill="none"
+              opacity="0.4"
+            />
+            <line
+              x1="24"
+              y1="24"
+              x2="40"
+              y2="8"
+              stroke="white"
+              strokeWidth="1.4"
+              strokeLinecap="round"
+            />
+            <circle cx="24" cy="24" r="2" fill="white" />
+          </svg>
+        </button>
+        <p className="mt-4 text-xl font-bold text-white">Fazer Scan Grátis</p>
+        <p className="mt-2 text-sm text-gray-400">Descubra se seus dados estão expostos</p>
+        <p className="mt-3 text-xs text-gray-600">✓ Grátis · ✓ 5 segundos · ✓ Sem cadastro</p>
       </div>
     </>
   );

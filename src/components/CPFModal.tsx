@@ -32,14 +32,20 @@ export function CPFModal({ onSubmit }: { onSubmit: (cpf: string, email: string) 
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 px-5 backdrop-blur-md">
       <div
         className="w-full max-w-sm rounded-2xl p-6"
-        style={{ backgroundColor: "#0E0E1A", border: "1px solid rgba(99,102,241,0.2)", boxShadow: "0 0 60px rgba(79,70,229,0.15)" }}
+        style={{
+          backgroundColor: "#0E0E1A",
+          border: "1px solid rgba(99,102,241,0.2)",
+          boxShadow: "0 0 60px rgba(79,70,229,0.15)",
+        }}
       >
         <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-indigo-500/10">
           <ShieldCheck className="h-7 w-7 text-indigo-400" />
         </div>
 
         <h2 className="text-center text-xl font-bold text-white">Scan Gratuito de Dados</h2>
-        <p className="mb-5 mt-1 text-center text-sm text-gray-400">Verificamos CPF, e-mail e dark web</p>
+        <p className="mb-5 mt-1 text-center text-sm text-gray-400">
+          Verificamos CPF, e-mail e dark web
+        </p>
 
         {/* CPF */}
         <label className="mb-1 block text-sm font-medium text-gray-300">CPF</label>
@@ -71,7 +77,10 @@ export function CPFModal({ onSubmit }: { onSubmit: (cpf: string, email: string) 
           onClick={submit}
           disabled={!canSubmit}
           className="mt-4 w-full rounded-xl py-4 font-bold text-white transition-all active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
-          style={{ background: "linear-gradient(135deg,#4F46E5,#6366F1)", boxShadow: "0 0 20px rgba(79,70,229,0.3)" }}
+          style={{
+            background: "linear-gradient(135deg,#4F46E5,#6366F1)",
+            boxShadow: "0 0 20px rgba(79,70,229,0.3)",
+          }}
         >
           Fazer Scan Grátis →
         </button>
@@ -79,7 +88,9 @@ export function CPFModal({ onSubmit }: { onSubmit: (cpf: string, email: string) 
         {/* LGPD assurance */}
         <div className="mt-3 flex items-center gap-2">
           <Lock className="h-3.5 w-3.5 shrink-0 text-indigo-400" />
-          <span className="text-xs text-gray-500">Seus dados são protegidos e nunca compartilhados</span>
+          <span className="text-xs text-gray-500">
+            Seus dados são protegidos e nunca compartilhados
+          </span>
         </div>
 
         {/* LGPD consent */}
@@ -92,7 +103,12 @@ export function CPFModal({ onSubmit }: { onSubmit: (cpf: string, email: string) 
           />
           <span>
             Concordo com a{" "}
-            <a href="/termos" target="_blank" rel="noopener noreferrer" className="text-indigo-400 underline">
+            <a
+              href="/termos"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-indigo-400 underline"
+            >
               Política de Privacidade
             </a>
           </span>

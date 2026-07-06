@@ -90,10 +90,13 @@ export function CPFEntry() {
   useEffect(() => {
     let t: ReturnType<typeof setTimeout>;
     const tick = () => {
-      t = setTimeout(() => {
-        setSocialCount((c) => c + 1);
-        tick();
-      }, 9000 + Math.random() * 7000);
+      t = setTimeout(
+        () => {
+          setSocialCount((c) => c + 1);
+          tick();
+        },
+        9000 + Math.random() * 7000,
+      );
     };
     tick();
     return () => clearTimeout(t);
@@ -130,10 +133,7 @@ export function CPFEntry() {
   }, [phase]);
 
   return (
-    <div
-      className="min-h-screen antialiased"
-      style={{ backgroundColor: BG, color: TEXT }}
-    >
+    <div className="min-h-screen antialiased" style={{ backgroundColor: BG, color: TEXT }}>
       {/* Navbar */}
       <nav
         className="sticky top-0 z-30 backdrop-blur-md"
@@ -145,13 +145,22 @@ export function CPFEntry() {
         <div className="relative mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           {/* LEFT — links (desktop) / spacer (mobile) */}
           <div className="hidden items-center gap-8 sm:flex">
-            <a href="#como-funciona" className="text-sm text-gray-300 transition-colors duration-200 hover:text-white">
+            <a
+              href="#como-funciona"
+              className="text-sm text-gray-300 transition-colors duration-200 hover:text-white"
+            >
               Como funciona
             </a>
-            <a href="#privacidade" className="text-sm text-gray-300 transition-colors duration-200 hover:text-white">
+            <a
+              href="#privacidade"
+              className="text-sm text-gray-300 transition-colors duration-200 hover:text-white"
+            >
               Planos
             </a>
-            <a href="#privacidade" className="text-sm text-gray-300 transition-colors duration-200 hover:text-white">
+            <a
+              href="#privacidade"
+              className="text-sm text-gray-300 transition-colors duration-200 hover:text-white"
+            >
               Para empresas
             </a>
           </div>
@@ -163,12 +172,19 @@ export function CPFEntry() {
             aria-label="Priva — topo"
             className="absolute left-1/2 flex -translate-x-1/2 items-center justify-center"
           >
-            <img src="/PRIVA_letter_only_logo.png" alt="PRIVA" className="h-6 w-auto object-contain" />
+            <img
+              src="/PRIVA_letter_only_logo.png"
+              alt="PRIVA"
+              className="h-6 w-auto object-contain"
+            />
           </button>
 
           {/* RIGHT — Entrar + CTA (desktop) */}
           <div className="hidden items-center sm:flex">
-            <button onClick={focusCpf} className="mr-4 text-sm text-gray-300 transition-colors duration-200 hover:text-white">
+            <button
+              onClick={focusCpf}
+              className="mr-4 text-sm text-gray-300 transition-colors duration-200 hover:text-white"
+            >
               Entrar
             </button>
             <button
@@ -227,13 +243,19 @@ export function CPFEntry() {
             <div className="my-1 h-px" style={{ backgroundColor: BORDER }} />
 
             <button
-              onClick={() => { setMenuOpen(false); focusCpf(); }}
+              onClick={() => {
+                setMenuOpen(false);
+                focusCpf();
+              }}
               className="block w-full rounded-lg px-3 py-2.5 text-left text-sm text-gray-300 transition-colors hover:bg-white/[0.05] hover:text-white"
             >
               Entrar
             </button>
             <button
-              onClick={() => { setMenuOpen(false); focusCpf(); }}
+              onClick={() => {
+                setMenuOpen(false);
+                focusCpf();
+              }}
               className="mt-1 w-full rounded-full py-2.5 text-sm font-semibold text-white"
               style={{ backgroundColor: BLUE }}
             >
@@ -271,35 +293,35 @@ export function CPFEntry() {
 
           {/* Top row: headline (left) + Live Map (right) — always side by side */}
           <div className="flex w-full flex-row items-center justify-between gap-3 sm:gap-8">
-          <div
-            className={`flex w-[45%] flex-col items-start gap-2 text-left transition-all duration-500 ease-out sm:gap-4 md:w-[58%] ${
-              phase === "results"
-                ? "pointer-events-none max-h-0 -translate-y-3 overflow-hidden opacity-0"
-                : "max-h-[600px] translate-y-0 opacity-100"
-            }`}
-          >
-          <h1
-            className="max-w-[20ch] text-xl font-extrabold leading-[1.08] tracking-[-0.03em] sm:max-w-none sm:text-4xl md:text-5xl"
-            style={{ color: TEXT }}
-          >
-            Descubra onde seus dados pessoais estão expostos.
-          </h1>
+            <div
+              className={`flex w-[45%] flex-col items-start gap-2 text-left transition-all duration-500 ease-out sm:gap-4 md:w-[58%] ${
+                phase === "results"
+                  ? "pointer-events-none max-h-0 -translate-y-3 overflow-hidden opacity-0"
+                  : "max-h-[600px] translate-y-0 opacity-100"
+              }`}
+            >
+              <h1
+                className="max-w-[20ch] text-xl font-extrabold leading-[1.08] tracking-[-0.03em] sm:max-w-none sm:text-4xl md:text-5xl"
+                style={{ color: TEXT }}
+              >
+                Descubra onde seus dados pessoais estão expostos.
+              </h1>
 
-          <p
-            className="mt-1 max-w-xl text-sm leading-relaxed sm:mt-4 sm:text-base md:text-lg"
-            style={{ color: TEXT_MUTED }}
-          >
-            A Priva verifica sua exposição digital e ajuda você a recuperar o controle da sua privacidade.
-          </p>
-          </div>
-
-          {phase !== "results" && (
-            <div className="w-[55%] shrink-0 md:w-[40%]">
-              <LiveMap />
+              <p
+                className="mt-1 max-w-xl text-sm leading-relaxed sm:mt-4 sm:text-base md:text-lg"
+                style={{ color: TEXT_MUTED }}
+              >
+                A Priva verifica sua exposição digital e ajuda você a recuperar o controle da sua
+                privacidade.
+              </p>
             </div>
-          )}
-          </div>
 
+            {phase !== "results" && (
+              <div className="w-[55%] shrink-0 md:w-[40%]">
+                <LiveMap />
+              </div>
+            )}
+          </div>
 
           {/* CPF form — visual gravity center, neutral surface */}
           <div
@@ -350,12 +372,8 @@ export function CPFEntry() {
                 <button
                   onClick={submit}
                   disabled={cpf.length < 14 || phase === "loading"}
-                  onMouseEnter={(e) =>
-                    (e.currentTarget.style.backgroundColor = BLUE_HOVER)
-                  }
-                  onMouseLeave={(e) =>
-                    (e.currentTarget.style.backgroundColor = BLUE)
-                  }
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = BLUE_HOVER)}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = BLUE)}
                   className="group mt-4 flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold text-white transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-40 sm:mt-6 sm:rounded-full sm:py-4 sm:text-base"
                   style={{ backgroundColor: BLUE }}
                 >
@@ -365,9 +383,7 @@ export function CPFEntry() {
                       Analisando…
                     </>
                   ) : (
-                  <>
-                      Verificar gratuitamente →
-                  </>
+                    <>Verificar gratuitamente →</>
                   )}
                 </button>
 
@@ -395,15 +411,35 @@ export function CPFEntry() {
                   Milhares de brasileiros verificam seus dados todos os dias
                 </p>
               </div>
-
             ) : (
               (() => {
                 const result = generateResult(cpf);
                 const mask = maskedFields(cpf, result.seed);
                 const rows = [
-                  { Icon: CreditCard, label: "CPF", value: `•••.•••.•••-${mask.cpfLast2}`, badge: "ALTO", color: "#F87171", bg: "rgba(239,68,68,0.2)" },
-                  { Icon: Mail, label: "E-mail", value: `${mask.first}•••••@${mask.domain}`, badge: "MÉDIO", color: "#FBBF24", bg: "rgba(245,158,11,0.2)" },
-                  { Icon: Phone, label: "Telefone", value: `(11) 9••••-${mask.phoneLast4}`, badge: "BAIXO", color: "#34D399", bg: "rgba(34,197,94,0.2)" },
+                  {
+                    Icon: CreditCard,
+                    label: "CPF",
+                    value: `•••.•••.•••-${mask.cpfLast2}`,
+                    badge: "ALTO",
+                    color: "#F87171",
+                    bg: "rgba(239,68,68,0.2)",
+                  },
+                  {
+                    Icon: Mail,
+                    label: "E-mail",
+                    value: `${mask.first}•••••@${mask.domain}`,
+                    badge: "MÉDIO",
+                    color: "#FBBF24",
+                    bg: "rgba(245,158,11,0.2)",
+                  },
+                  {
+                    Icon: Phone,
+                    label: "Telefone",
+                    value: `(11) 9••••-${mask.phoneLast4}`,
+                    badge: "BAIXO",
+                    color: "#34D399",
+                    bg: "rgba(34,197,94,0.2)",
+                  },
                 ];
                 const avatars = [
                   { i: "JM", c: "#6366F1" },
@@ -419,7 +455,11 @@ export function CPFEntry() {
                     <div className="flex justify-center">
                       <span
                         className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold tracking-wider"
-                        style={{ backgroundColor: "rgba(99,102,241,0.15)", border: "1px solid #4F46E5", color: "#818CF8" }}
+                        style={{
+                          backgroundColor: "rgba(99,102,241,0.15)",
+                          border: "1px solid #4F46E5",
+                          color: "#818CF8",
+                        }}
                       >
                         <Check className="h-3.5 w-3.5" /> ANÁLISE CONCLUÍDA
                       </span>
@@ -450,16 +490,25 @@ export function CPFEntry() {
                         <div
                           key={r.label}
                           className="flex items-center gap-3 rounded-xl px-4 py-3"
-                          style={{ backgroundColor: "#12121A", border: "1px solid rgba(255,255,255,0.05)" }}
+                          style={{
+                            backgroundColor: "#12121A",
+                            border: "1px solid rgba(255,255,255,0.05)",
+                          }}
                         >
-                          <span className="grid place-items-center rounded-lg p-2" style={{ backgroundColor: "rgba(99,102,241,0.2)" }}>
+                          <span
+                            className="grid place-items-center rounded-lg p-2"
+                            style={{ backgroundColor: "rgba(99,102,241,0.2)" }}
+                          >
                             <r.Icon className="h-4 w-4" style={{ color: "#A5B4FC" }} />
                           </span>
                           <div className="min-w-0 flex-1">
                             <p className="text-sm font-medium text-white">{r.label}</p>
                             <p className="text-xs text-gray-400">{r.value}</p>
                           </div>
-                          <span className="rounded px-2 py-0.5 text-xs font-bold" style={{ color: r.color, backgroundColor: r.bg }}>
+                          <span
+                            className="rounded px-2 py-0.5 text-xs font-bold"
+                            style={{ color: r.color, backgroundColor: r.bg }}
+                          >
                             {r.badge}
                           </span>
                         </div>
@@ -486,9 +535,15 @@ export function CPFEntry() {
 
                     {/* primary CTA */}
                     <button
-                      onClick={() => { setEmailSent(false); setShowEmail(true); }}
+                      onClick={() => {
+                        setEmailSent(false);
+                        setShowEmail(true);
+                      }}
                       className="mt-3 w-full rounded-2xl py-4 text-base font-extrabold text-white transition-all duration-200 active:scale-[0.99]"
-                      style={{ background: "linear-gradient(135deg, #4F46E5 0%, #6366F1 100%)", boxShadow: "0 0 30px rgba(79,70,229,0.4)" }}
+                      style={{
+                        background: "linear-gradient(135deg, #4F46E5 0%, #6366F1 100%)",
+                        boxShadow: "0 0 30px rgba(79,70,229,0.4)",
+                      }}
                     >
                       🔒 VER ONDE MEUS DADOS VAZARAM →
                     </button>
@@ -501,9 +556,7 @@ export function CPFEntry() {
                 );
               })()
             )}
-
           </div>
-
         </div>
       </section>
 
@@ -546,11 +599,16 @@ export function CPFEntry() {
                 >
                   Enviar acesso grátis →
                 </button>
-                <p className="mt-3 text-center text-xs text-gray-500">🔒 Sem spam. Cancele quando quiser.</p>
+                <p className="mt-3 text-center text-xs text-gray-500">
+                  🔒 Sem spam. Cancele quando quiser.
+                </p>
               </>
             ) : (
               <div className="text-center">
-                <div className="mx-auto grid h-14 w-14 place-items-center rounded-full" style={{ backgroundColor: "rgba(34,197,94,0.15)" }}>
+                <div
+                  className="mx-auto grid h-14 w-14 place-items-center rounded-full"
+                  style={{ backgroundColor: "rgba(34,197,94,0.15)" }}
+                >
                   <Check className="h-7 w-7 text-green-400" />
                 </div>
                 <h3 className="mt-3 text-lg font-bold text-white">Link enviado para {email}</h3>
@@ -592,54 +650,41 @@ export function CPFEntry() {
             </h2>
           </div>
 
-          <div className="mt-14 grid gap-px overflow-hidden rounded-2xl sm:grid-cols-3" style={{ border: `1px solid ${BORDER}` }}>
+          <div
+            className="mt-14 grid gap-px overflow-hidden rounded-2xl sm:grid-cols-3"
+            style={{ border: `1px solid ${BORDER}` }}
+          >
             {[
               {
                 step: "01",
                 icon: Eye,
                 title: "Análise contínua",
-                desc:
-                  "Cruzamos seu CPF contra bilhões de registros vazados em fóruns, dark web e bases comprometidas.",
+                desc: "Cruzamos seu CPF contra bilhões de registros vazados em fóruns, dark web e bases comprometidas.",
               },
               {
                 step: "02",
                 icon: Bell,
                 title: "Alerta antecipado",
-                desc:
-                  "No momento em que seus dados aparecem em algum lugar, você é o primeiro a saber.",
+                desc: "No momento em que seus dados aparecem em algum lugar, você é o primeiro a saber.",
               },
               {
                 step: "03",
                 icon: KeyRound,
                 title: "Ação assistida",
-                desc:
-                  "Receba o passo exato para conter o risco — sem jargão, sem ruído, sem perda de tempo.",
+                desc: "Receba o passo exato para conter o risco — sem jargão, sem ruído, sem perda de tempo.",
               },
             ].map(({ step, icon: Icon, title, desc }) => (
-              <div
-                key={step}
-                className="p-7 sm:p-8"
-                style={{ backgroundColor: SURFACE }}
-              >
+              <div key={step} className="p-7 sm:p-8" style={{ backgroundColor: SURFACE }}>
                 <div className="flex items-center justify-between">
-                  <span
-                    className="text-xs font-mono tracking-wider"
-                    style={{ color: BLUE }}
-                  >
+                  <span className="text-xs font-mono tracking-wider" style={{ color: BLUE }}>
                     {step}
                   </span>
                   <Icon className="h-4 w-4" style={{ color: TEXT_MUTED }} />
                 </div>
-                <h3
-                  className="mt-8 text-lg font-semibold tracking-tight"
-                  style={{ color: TEXT }}
-                >
+                <h3 className="mt-8 text-lg font-semibold tracking-tight" style={{ color: TEXT }}>
                   {title}
                 </h3>
-                <p
-                  className="mt-2 text-sm leading-relaxed"
-                  style={{ color: TEXT_MUTED }}
-                >
+                <p className="mt-2 text-sm leading-relaxed" style={{ color: TEXT_MUTED }}>
                   {desc}
                 </p>
               </div>
@@ -670,12 +715,9 @@ export function CPFEntry() {
               <br />
               saem do seu controle.
             </h2>
-            <p
-              className="mt-6 max-w-md text-base leading-relaxed"
-              style={{ color: TEXT_MUTED }}
-            >
-              Não vendemos. Não compartilhamos. Não treinamos modelos com você.
-              A Priva existe para reduzir sua exposição — não para criar mais.
+            <p className="mt-6 max-w-md text-base leading-relaxed" style={{ color: TEXT_MUTED }}>
+              Não vendemos. Não compartilhamos. Não treinamos modelos com você. A Priva existe para
+              reduzir sua exposição — não para criar mais.
             </p>
           </div>
 
@@ -703,10 +745,7 @@ export function CPFEntry() {
       </section>
 
       {/* CLOSING CTA */}
-      <section
-        className="px-5 py-24 sm:py-32"
-        style={{ borderTop: `1px solid ${BORDER}` }}
-      >
+      <section className="px-5 py-24 sm:py-32" style={{ borderTop: `1px solid ${BORDER}` }}>
         <div className="mx-auto max-w-2xl text-center">
           <h2
             className="text-3xl font-semibold tracking-[-0.02em] sm:text-5xl"
@@ -743,10 +782,7 @@ export function CPFEntry() {
       </section>
 
       {/* FOOTER */}
-      <footer
-        className="px-5 py-10"
-        style={{ borderTop: `1px solid ${BORDER}` }}
-      >
+      <footer className="px-5 py-10" style={{ borderTop: `1px solid ${BORDER}` }}>
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 sm:flex-row">
           <div className="flex items-center gap-3">
             <PrivaLogo size={24} showWordmark={false} />
@@ -755,9 +791,15 @@ export function CPFEntry() {
             </span>
           </div>
           <div className="flex items-center gap-6 text-xs" style={{ color: TEXT_MUTED }}>
-            <a href="#" className="transition-colors hover:text-white">Privacidade</a>
-            <a href="#" className="transition-colors hover:text-white">Termos</a>
-            <a href="#" className="transition-colors hover:text-white">Contato</a>
+            <a href="#" className="transition-colors hover:text-white">
+              Privacidade
+            </a>
+            <a href="#" className="transition-colors hover:text-white">
+              Termos
+            </a>
+            <a href="#" className="transition-colors hover:text-white">
+              Contato
+            </a>
           </div>
         </div>
       </footer>

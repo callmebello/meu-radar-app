@@ -66,11 +66,19 @@ export const confirmStripeSession = createServerFn({ method: "POST" })
   .handler(
     async ({
       data,
-    }): Promise<{ ok: boolean; plan?: string; email?: string; amount?: number; userId?: string | null; reason?: string }> => {
+    }): Promise<{
+      ok: boolean;
+      plan?: string;
+      email?: string;
+      amount?: number;
+      userId?: string | null;
+      reason?: string;
+    }> => {
       const { resolveCheckoutSession } = await import("./stripe.server");
       const resolved = await resolveCheckoutSession(data.sessionId);
       if (!resolved) return { ok: false, reason: "not_found" };
-      if (!resolved.paid) return { ok: false, plan: resolved.plan, email: resolved.email, reason: "not_paid" };
+      if (!resolved.paid)
+        return { ok: false, plan: resolved.plan, email: resolved.email, reason: "not_paid" };
 
       let userId: string | null = null;
       const admin = getSupabaseAdmin();
@@ -88,6 +96,12 @@ export const confirmStripeSession = createServerFn({ method: "POST" })
         }
       }
 
-      return { ok: true, plan: resolved.plan, email: resolved.email, amount: resolved.amount, userId };
+      return {
+        ok: true,
+        plan: resolved.plan,
+        email: resolved.email,
+        amount: resolved.amount,
+        userId,
+      };
     },
   );

@@ -38,7 +38,11 @@ export async function handleMercadoPagoWebhook(request: Request): Promise<Respon
     const body = (await request.json().catch(() => ({}))) as MPNotification;
 
     const type =
-      body.type || body.topic || url.searchParams.get("type") || url.searchParams.get("topic") || "";
+      body.type ||
+      body.topic ||
+      url.searchParams.get("type") ||
+      url.searchParams.get("topic") ||
+      "";
     const id =
       body.data?.id ||
       (typeof body.id !== "undefined" ? String(body.id) : "") ||

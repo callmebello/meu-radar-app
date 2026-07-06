@@ -3,11 +3,25 @@ import { Bell, AlertCircle, CheckCircle2, Plus, UserPlus, Users, Building2 } fro
 import { useApp } from "@/contexts/AppContext";
 import { useIsDark } from "@/hooks/use-is-dark";
 
-type Notif = { id: string; icon: "alert" | "check"; title: string; time: string; unread: boolean; level: "danger" | "success" };
+type Notif = {
+  id: string;
+  icon: "alert" | "check";
+  title: string;
+  time: string;
+  unread: boolean;
+  level: "danger" | "success";
+};
 
 // Real, widely-reported Brazilian data-leak headline (Serasa megavazamento, 2021).
 const initial: Notif[] = [
-  { id: "1", icon: "alert", title: "Megavazamento expôs CPF de 223 milhões de brasileiros", time: "Notícia · proteja seus dados", unread: true, level: "danger" },
+  {
+    id: "1",
+    icon: "alert",
+    title: "Megavazamento expôs CPF de 223 milhões de brasileiros",
+    time: "Notícia · proteja seus dados",
+    unread: true,
+    level: "danger",
+  },
 ];
 
 const DISMISSED_KEY = "priva_notifs_dismissed";
@@ -54,7 +68,8 @@ export function AppHeader({
     setNotifs((ns) => ns.filter((n) => n.id !== id));
     try {
       const dismissed = JSON.parse(localStorage.getItem(DISMISSED_KEY) || "[]") as string[];
-      if (!dismissed.includes(id)) localStorage.setItem(DISMISSED_KEY, JSON.stringify([...dismissed, id]));
+      if (!dismissed.includes(id))
+        localStorage.setItem(DISMISSED_KEY, JSON.stringify([...dismissed, id]));
     } catch {
       /* ignore */
     }
@@ -96,15 +111,24 @@ export function AppHeader({
         </button>
         {addOpen && (
           <div className="absolute left-0 top-12 z-50 w-60 overflow-hidden rounded-2xl border border-border bg-card shadow-2xl animate-scale-in">
-            <button onClick={() => goFamily(true)} className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-secondary/40 transition">
+            <button
+              onClick={() => goFamily(true)}
+              className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-secondary/40 transition"
+            >
               <UserPlus className="h-4 w-4 text-[var(--color-navy)]" />
               <span className="text-sm font-medium text-foreground">Adicionar familiar</span>
             </button>
-            <button onClick={() => goFamily(true)} className="flex w-full items-center gap-3 border-t border-border/60 px-4 py-3 text-left hover:bg-secondary/40 transition">
+            <button
+              onClick={() => goFamily(true)}
+              className="flex w-full items-center gap-3 border-t border-border/60 px-4 py-3 text-left hover:bg-secondary/40 transition"
+            >
               <Users className="h-4 w-4 text-[var(--color-navy)]" />
               <span className="text-sm font-medium text-foreground">Adicionar outro membro</span>
             </button>
-            <button onClick={() => goFamily(false)} className="flex w-full items-center gap-3 border-t border-border/60 px-4 py-3 text-left hover:bg-secondary/40 transition">
+            <button
+              onClick={() => goFamily(false)}
+              className="flex w-full items-center gap-3 border-t border-border/60 px-4 py-3 text-left hover:bg-secondary/40 transition"
+            >
               <Building2 className="h-4 w-4 text-[var(--color-navy)]" />
               <span className="text-sm font-medium text-foreground">Para empresas</span>
             </button>
@@ -120,7 +144,11 @@ export function AppHeader({
             <span className="text-sm font-medium text-indigo-300">Analisando...</span>
           </>
         ) : (
-          <button onClick={() => goToTab("radar")} aria-label="Início" className="transition-opacity active:opacity-70">
+          <button
+            onClick={() => goToTab("radar")}
+            aria-label="Início"
+            className="transition-opacity active:opacity-70"
+          >
             <img src={logoSrc} alt="PRIVA" className="h-5 w-auto object-contain" />
           </button>
         )}
@@ -147,11 +175,14 @@ export function AppHeader({
               </div>
               <ul className="max-h-80 overflow-y-auto">
                 {notifs.length === 0 ? (
-                  <li className="px-4 py-6 text-center text-xs text-muted-foreground">Nenhuma notificação</li>
+                  <li className="px-4 py-6 text-center text-xs text-muted-foreground">
+                    Nenhuma notificação
+                  </li>
                 ) : (
                   notifs.map((n) => {
                     const Icon = n.icon === "alert" ? AlertCircle : CheckCircle2;
-                    const color = n.level === "danger" ? "var(--color-danger)" : "var(--color-success)";
+                    const color =
+                      n.level === "danger" ? "var(--color-danger)" : "var(--color-success)";
                     return (
                       <li key={n.id} className="border-b border-border/60 last:border-0">
                         <button
@@ -160,10 +191,14 @@ export function AppHeader({
                         >
                           <Icon className="mt-0.5 h-4 w-4 shrink-0" style={{ color }} />
                           <div className="min-w-0 flex-1">
-                            <p className="text-xs font-semibold text-foreground leading-snug">{n.title}</p>
+                            <p className="text-xs font-semibold text-foreground leading-snug">
+                              {n.title}
+                            </p>
                             <p className="text-[10px] text-muted-foreground mt-0.5">{n.time}</p>
                           </div>
-                          {n.unread && <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-[var(--color-teal)]" />}
+                          {n.unread && (
+                            <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-[var(--color-teal)]" />
+                          )}
                         </button>
                       </li>
                     );

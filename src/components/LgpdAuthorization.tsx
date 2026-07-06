@@ -50,15 +50,26 @@ export function LgpdAuthorization({
   return (
     <div className="fixed inset-0 z-[55] overflow-y-auto" style={{ backgroundColor: "#0A0A0F" }}>
       <div className="mx-auto flex min-h-full max-w-sm flex-col px-5 pb-10">
-        <div className="mx-auto mt-12 grid h-16 w-16 place-items-center rounded-2xl" style={{ backgroundColor: "rgba(99,102,241,0.15)", border: "1px solid rgba(99,102,241,0.3)" }}>
+        <div
+          className="mx-auto mt-12 grid h-16 w-16 place-items-center rounded-2xl"
+          style={{
+            backgroundColor: "rgba(99,102,241,0.15)",
+            border: "1px solid rgba(99,102,241,0.3)",
+          }}
+        >
           <ShieldCheck className="h-8 w-8 text-indigo-400" />
         </div>
-        <h1 className="mt-4 text-center text-xl font-extrabold text-white">Autorização para remoção</h1>
+        <h1 className="mt-4 text-center text-xl font-extrabold text-white">
+          Autorização para remoção
+        </h1>
         <p className="mt-2 mb-7 text-center text-sm text-gray-400">
           Para solicitarmos a remoção dos seus dados, precisamos da sua autorização formal.
         </p>
 
-        <div className="rounded-2xl p-5" style={{ backgroundColor: "#12121A", border: "1px solid rgba(255,255,255,0.05)" }}>
+        <div
+          className="rounded-2xl p-5"
+          style={{ backgroundColor: "#12121A", border: "1px solid rgba(255,255,255,0.05)" }}
+        >
           <label className="mb-1 block text-sm text-gray-300">Nome completo</label>
           <input
             value={fullName}
@@ -77,8 +88,9 @@ export function LgpdAuthorization({
               className="mt-0.5 h-5 w-5 shrink-0 accent-indigo-500"
             />
             <span className="text-[12px] leading-snug text-gray-300">
-              Autorizo a Priva a enviar, em meu nome, solicitações de remoção de dados pessoais às empresas/plataformas
-              identificadas no meu relatório, conforme o Art. 18 da Lei 13.709/2018 (LGPD).
+              Autorizo a Priva a enviar, em meu nome, solicitações de remoção de dados pessoais às
+              empresas/plataformas identificadas no meu relatório, conforme o Art. 18 da Lei
+              13.709/2018 (LGPD).
             </span>
           </label>
 
@@ -98,7 +110,8 @@ export function LgpdAuthorization({
 
           {error && <p className="mt-3 text-center text-xs text-red-400">{error}</p>}
           <p className="mt-3 text-center text-[11px] leading-snug text-gray-600">
-            Registramos esta autorização com data e hora para fins legais. Você pode revogá-la a qualquer momento.
+            Registramos esta autorização com data e hora para fins legais. Você pode revogá-la a
+            qualquer momento.
           </p>
         </div>
       </div>

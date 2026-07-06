@@ -43,18 +43,18 @@
   --radius: 0.875rem;
 
   /* Priva — LIGHT theme (default :root). Dark theme overrides under .dark */
-  --priva-bg: #F2F3F7;
-  --priva-surface: #FFFFFF;
-  --priva-surface-2: #E9EBF1;
-  --priva-border: rgba(15, 15, 30, 0.10);
+  --priva-bg: #f2f3f7;
+  --priva-surface: #ffffff;
+  --priva-surface-2: #e9ebf1;
+  --priva-border: rgba(15, 15, 30, 0.1);
   --priva-border-strong: rgba(15, 15, 30, 0.16);
-  --priva-text: #0E0E1A;
-  --priva-text-muted: #5B5B6B;
-  --priva-blue: #3B82F6;
-  --priva-blue-hover: #2F6FE0;
+  --priva-text: #0e0e1a;
+  --priva-text-muted: #5b5b6b;
+  --priva-blue: #3b82f6;
+  --priva-blue-hover: #2f6fe0;
 
-  --navy: #4F46E5;
-  --teal: #4F46E5;
+  --navy: #4f46e5;
+  --teal: #4f46e5;
   --danger: oklch(0.64 0.22 27);
   --warning: oklch(0.78 0.16 70);
   --success: oklch(0.72 0.18 150);
@@ -68,15 +68,15 @@
   --popover: var(--priva-surface);
   --popover-foreground: var(--priva-text);
   --primary: var(--priva-blue);
-  --primary-foreground: #FFFFFF;
+  --primary-foreground: #ffffff;
   --secondary: var(--priva-surface-2);
   --secondary-foreground: var(--priva-text);
   --muted: var(--priva-surface-2);
   --muted-foreground: var(--priva-text-muted);
   --accent: var(--priva-blue);
-  --accent-foreground: #FFFFFF;
+  --accent-foreground: #ffffff;
   --destructive: var(--danger);
-  --destructive-foreground: #FFFFFF;
+  --destructive-foreground: #ffffff;
   --border: var(--priva-border);
   --input: var(--priva-border);
   --ring: var(--priva-blue);
@@ -84,34 +84,57 @@
 
 .dark {
   /* Dark theme — override the priva-* primitives; semantic tokens recompute */
-  --priva-bg: #06060F;
-  --priva-surface: #0D0D17;
-  --priva-surface-2: #14141F;
+  --priva-bg: #06060f;
+  --priva-surface: #0d0d17;
+  --priva-surface-2: #14141f;
   --priva-border: rgba(255, 255, 255, 0.08);
   --priva-border-strong: rgba(255, 255, 255, 0.14);
-  --priva-text: #FDFDFD;
-  --priva-text-muted: #9B9BA7;
-  --priva-blue: #3B82F6;
-  --priva-blue-hover: #4F8FF7;
+  --priva-text: #fdfdfd;
+  --priva-text-muted: #9b9ba7;
+  --priva-blue: #3b82f6;
+  --priva-blue-hover: #4f8ff7;
 }
 
-
-
 @layer base {
-  * { border-color: var(--color-border); }
-  html, body { font-family: var(--font-sans); }
-  body { background-color: var(--color-background); color: var(--color-foreground); -webkit-font-smoothing: antialiased; }
+  * {
+    border-color: var(--color-border);
+  }
+  html,
+  body {
+    font-family: var(--font-sans);
+  }
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    -webkit-font-smoothing: antialiased;
+  }
 }
 
 @keyframes pulse-dot {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.5; transform: scale(1.4); }
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.4);
+  }
 }
-.pulse-dot { animation: pulse-dot 2s ease-in-out infinite; }
+.pulse-dot {
+  animation: pulse-dot 2s ease-in-out infinite;
+}
 
 @keyframes danger-pulse {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.18); opacity: 0.85; }
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.18);
+    opacity: 0.85;
+  }
 }
 .animate-danger-pulse {
   animation: danger-pulse 1.2s ease-in-out infinite;
@@ -119,8 +142,12 @@
 
 /* Radar sweep for the central SCAN button */
 @keyframes radar-sweep {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 .radar-sweep {
   transform-origin: center;
@@ -135,10 +162,18 @@
 
 /* One-shot pulse on the SCAN button when clicked */
 @keyframes scan-pop {
-  0%   { transform: scale(1); }
-  30%  { transform: scale(0.95); }
-  60%  { transform: scale(1.05); }
-  100% { transform: scale(1); }
+  0% {
+    transform: scale(1);
+  }
+  30% {
+    transform: scale(0.95);
+  }
+  60% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 .animate-scan-pop {
   animation: scan-pop 0.3s ease-in-out;
@@ -146,8 +181,12 @@
 
 /* Idle breathing glow on the SCAN button */
 @keyframes scan-breathe {
-  from { box-shadow: 0 0 16px rgba(79,70,229,0.4); }
-  to   { box-shadow: 0 0 28px rgba(79,70,229,0.7); }
+  from {
+    box-shadow: 0 0 16px rgba(79, 70, 229, 0.4);
+  }
+  to {
+    box-shadow: 0 0 28px rgba(79, 70, 229, 0.7);
+  }
 }
 .scan-breathe {
   animation: scan-breathe 3s ease-in-out infinite alternate;
@@ -155,8 +194,14 @@
 
 /* Scanning overlay step fade-in */
 @keyframes scan-step-in {
-  from { opacity: 0; transform: translateY(6px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 .animate-scan-step {
   animation: scan-step-in 0.35s ease-out both;
@@ -164,8 +209,12 @@
 
 /* Full-screen scan sweep (funnel) */
 @keyframes scan-sweep {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 .scan-sweep {
   transform-origin: center;
@@ -175,20 +224,33 @@
 
 /* Inline scan progress bar */
 @keyframes scanbar {
-  from { transform: scaleX(0); }
-  to   { transform: scaleX(0.95); }
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(0.95);
+  }
 }
 
 /* Welcome screen progress bar (0 → 65%) */
 @keyframes welcomebar {
-  from { transform: scaleX(0); }
-  to   { transform: scaleX(0.65); }
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(0.65);
+  }
 }
 
 /* Floating scan nudge — gentle bounce to draw the eye to the Scan button */
 @keyframes nudge-bounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
 }
 .animate-nudge-bounce {
   animation: nudge-bounce 1.8s ease-in-out infinite;
@@ -196,8 +258,12 @@
 
 /* Bottom sheet slide up */
 @keyframes sheet-up {
-  from { transform: translateY(100%); }
-  to   { transform: translateY(0); }
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
 }
 .animate-sheet-up {
   animation: sheet-up 0.4s cubic-bezier(0.22, 1, 0.36, 1);
@@ -209,8 +275,14 @@
 
 /* CSS-only confetti */
 @keyframes confetti-fall {
-  0%   { transform: translateY(-20px) rotate(0deg); opacity: 1; }
-  100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+  0% {
+    transform: translateY(-20px) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(110vh) rotate(720deg);
+    opacity: 0;
+  }
 }
 .confetti-piece {
   position: absolute;

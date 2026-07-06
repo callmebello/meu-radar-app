@@ -4,7 +4,10 @@
     {
       "name": "meu-radar",
       "runtimeExecutable": "/bin/bash",
-      "runtimeArgs": ["-c", "cd /Users/administrador/meu-radar-app && PATH=/Users/administrador/.local/node22/bin:$PATH npm run dev -- --port 3001"],
+      "runtimeArgs": [
+        "-c",
+        "cd /Users/administrador/meu-radar-app && PATH=/Users/administrador/.local/node22/bin:$PATH npm run dev -- --port 3001"
+      ],
       "port": 3001
     }
   ]

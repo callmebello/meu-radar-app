@@ -26,8 +26,14 @@ export function DarkWebTab() {
 
   const sources: { label: string; meta: string }[] = [
     ...(gh?.repos ?? []).map((r) => ({ label: r.repo || "Repositório público", meta: r.path })),
-    ...(cpfEx?.sources ?? []).map((s) => ({ label: s.title || domainOf(s.link), meta: domainOf(s.link) })),
-    ...(phoneEx?.sources ?? []).map((s) => ({ label: s.title || domainOf(s.link), meta: domainOf(s.link) })),
+    ...(cpfEx?.sources ?? []).map((s) => ({
+      label: s.title || domainOf(s.link),
+      meta: domainOf(s.link),
+    })),
+    ...(phoneEx?.sources ?? []).map((s) => ({
+      label: s.title || domainOf(s.link),
+      meta: domainOf(s.link),
+    })),
   ];
   const distinctSources = new Set(sources.map((s) => s.meta)).size;
 
@@ -62,11 +68,15 @@ export function DarkWebTab() {
 
         {/* Source list */}
         <section>
-          <h2 className="mb-3 px-1 text-sm font-semibold text-foreground">Exposição pública encontrada</h2>
+          <h2 className="mb-3 px-1 text-sm font-semibold text-foreground">
+            Exposição pública encontrada
+          </h2>
           {sources.length === 0 ? (
             <div className="flex items-center gap-3 rounded-xl border border-[var(--color-success)]/20 bg-[var(--color-success)]/5 p-4">
               <CheckCircle2 className="h-4 w-4 shrink-0 text-[var(--color-success)]" />
-              <p className="text-sm text-[var(--color-success)]">Nenhuma exposição pública encontrada. Continuamos monitorando.</p>
+              <p className="text-sm text-[var(--color-success)]">
+                Nenhuma exposição pública encontrada. Continuamos monitorando.
+              </p>
             </div>
           ) : (
             <ul className="space-y-2.5">
@@ -77,14 +87,24 @@ export function DarkWebTab() {
                       {isPremium ? (
                         <p className="truncate text-sm font-semibold text-foreground">{s.label}</p>
                       ) : (
-                        <button onClick={openPaywall} className="inline-flex max-w-full items-center gap-1.5 text-sm font-semibold text-muted-foreground transition hover:text-foreground">
+                        <button
+                          onClick={openPaywall}
+                          className="inline-flex max-w-full items-center gap-1.5 text-sm font-semibold text-muted-foreground transition hover:text-foreground"
+                        >
                           <Lock className="h-3 w-3 shrink-0" />
                           <span className="truncate blur-[4px] select-none">{s.label}</span>
                         </button>
                       )}
                       <p className="truncate text-[11px] text-muted-foreground">{s.meta}</p>
                     </div>
-                    <span className="shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide" style={{ backgroundColor: "color-mix(in oklab, var(--color-warning) 14%, transparent)", color: "var(--color-warning)" }}>
+                    <span
+                      className="shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide"
+                      style={{
+                        backgroundColor:
+                          "color-mix(in oklab, var(--color-warning) 14%, transparent)",
+                        color: "var(--color-warning)",
+                      }}
+                    >
                       Público
                     </span>
                   </div>

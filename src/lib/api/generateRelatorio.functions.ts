@@ -14,7 +14,8 @@ export const generateRelatorioPdf = createServerFn({ method: "POST" })
     const admin = getSupabaseAdmin();
     if (!admin) return { ok: false, reason: "not_configured" };
 
-    const { fetchUserAndScan, renderRelatorioBuffer, uploadAndSign } = await import("../pdf/render.server");
+    const { fetchUserAndScan, renderRelatorioBuffer, uploadAndSign } =
+      await import("../pdf/render.server");
     const { user, scan } = await fetchUserAndScan(admin, data.userId);
     if (!user) return { ok: false, reason: "user_not_found" };
 

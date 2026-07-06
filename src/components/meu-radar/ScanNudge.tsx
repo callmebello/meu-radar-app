@@ -15,7 +15,10 @@ export function ScanNudge({ show, onScan }: { show: boolean; onScan: () => void 
         <button
           onClick={onScan}
           className="flex items-center gap-2.5 rounded-2xl py-2.5 pl-2.5 pr-9 text-left shadow-xl active:scale-[0.98]"
-          style={{ background: "linear-gradient(135deg,#4F46E5,#6366F1)", boxShadow: "0 8px 28px rgba(79,70,229,0.45)" }}
+          style={{
+            background: "linear-gradient(135deg,#4F46E5,#6366F1)",
+            boxShadow: "0 8px 28px rgba(79,70,229,0.45)",
+          }}
         >
           <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/20">
             <AlertTriangle className="h-4 w-4 text-white" />

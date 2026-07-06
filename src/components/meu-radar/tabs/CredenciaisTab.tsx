@@ -22,20 +22,20 @@ const statusColor = (s: CredStatus) =>
 
 function getServiceLogo(name: string): string {
   const domains: Record<string, string> = {
-    'Gmail': 'gmail.com',
-    'Instagram': 'instagram.com',
-    'Nubank': 'nubank.com.br',
-    'iFood': 'ifood.com.br',
-    'LinkedIn': 'linkedin.com',
-    'Spotify': 'spotify.com',
-    'Facebook': 'facebook.com',
-    'Twitter': 'twitter.com',
-    'Mercado Livre': 'mercadolivre.com.br',
-    'Banco Inter': 'bancointer.com.br',
-    'Bradesco': 'bradesco.com.br',
-    'Itaú': 'itau.com.br',
-    'Magazine Luiza': 'magazineluiza.com.br',
-    'Amazon': 'amazon.com.br',
+    Gmail: "gmail.com",
+    Instagram: "instagram.com",
+    Nubank: "nubank.com.br",
+    iFood: "ifood.com.br",
+    LinkedIn: "linkedin.com",
+    Spotify: "spotify.com",
+    Facebook: "facebook.com",
+    Twitter: "twitter.com",
+    "Mercado Livre": "mercadolivre.com.br",
+    "Banco Inter": "bancointer.com.br",
+    Bradesco: "bradesco.com.br",
+    Itaú: "itau.com.br",
+    "Magazine Luiza": "magazineluiza.com.br",
+    Amazon: "amazon.com.br",
   };
   const domain = domains[name] || `${name.toLowerCase().replace(/\s+/g, "")}.com`;
   return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
@@ -102,14 +102,24 @@ export function CredenciaisTab() {
         <section className="rounded-2xl border border-border/60 bg-card p-5 shadow-sm">
           <h2 className="text-sm font-semibold text-foreground">Gerador de Senhas</h2>
           <div className="mt-3 rounded-xl p-4" style={{ backgroundColor: "#4F46E5" }}>
-            <p className="font-mono text-lg font-medium tracking-wider text-white break-all">{pwd}</p>
+            <p className="font-mono text-lg font-medium tracking-wider text-white break-all">
+              {pwd}
+            </p>
           </div>
 
           <div className="mt-4 flex items-center justify-between">
             <label className="text-xs font-medium text-muted-foreground">Tamanho</label>
             <span className="text-sm font-semibold text-foreground">{length} caracteres</span>
           </div>
-          <input type="range" min={8} max={32} value={length} onChange={(e) => setLength(+e.target.value)} className="mt-2 w-full" style={{ accentColor: "#4F46E5" }} />
+          <input
+            type="range"
+            min={8}
+            max={32}
+            value={length}
+            onChange={(e) => setLength(+e.target.value)}
+            className="mt-2 w-full"
+            style={{ accentColor: "#4F46E5" }}
+          />
 
           <div className="mt-4 space-y-2.5">
             {[
@@ -117,14 +127,19 @@ export function CredenciaisTab() {
               { l: "Números", v: numbers, s: setNumbers },
               { l: "Símbolos", v: symbols, s: setSymbols },
             ].map((t) => (
-              <label key={t.l} className="flex items-center justify-between text-sm text-foreground">
+              <label
+                key={t.l}
+                className="flex items-center justify-between text-sm text-foreground"
+              >
                 {t.l}
                 <button
                   onClick={() => t.s(!t.v)}
                   className={`relative h-6 w-11 rounded-full transition ${t.v ? "" : "bg-muted"}`}
                   style={t.v ? { backgroundColor: "#4F46E5" } : undefined}
                 >
-                  <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition ${t.v ? "left-[22px]" : "left-0.5"}`} />
+                  <span
+                    className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition ${t.v ? "left-[22px]" : "left-0.5"}`}
+                  />
                 </button>
               </label>
             ))}
@@ -139,7 +154,10 @@ export function CredenciaisTab() {
               <RefreshCw className="h-4 w-4" /> Gerar nova senha
             </button>
             <button
-              onClick={() => { navigator.clipboard?.writeText(pwd); toast.success("Senha copiada"); }}
+              onClick={() => {
+                navigator.clipboard?.writeText(pwd);
+                toast.success("Senha copiada");
+              }}
               className="flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold text-white hover:opacity-90 transition"
               style={{ backgroundColor: "#4F46E5" }}
             >
@@ -157,7 +175,11 @@ export function CredenciaisTab() {
               <li className="border-b border-border/60 p-4">
                 <div className="mb-3 flex items-center justify-between">
                   <p className="text-sm font-semibold text-foreground">Nova credencial</p>
-                  <button onClick={() => setAdding(false)} aria-label="Cancelar" className="grid h-7 w-7 place-items-center rounded-full text-muted-foreground hover:bg-secondary/60">
+                  <button
+                    onClick={() => setAdding(false)}
+                    aria-label="Cancelar"
+                    className="grid h-7 w-7 place-items-center rounded-full text-muted-foreground hover:bg-secondary/60"
+                  >
                     <X className="h-4 w-4" />
                   </button>
                 </div>
@@ -200,7 +222,9 @@ export function CredenciaisTab() {
                   <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[var(--color-navy)]/10">
                     <Plus className="h-5 w-5 text-[var(--color-navy)]" />
                   </span>
-                  <span className="text-sm font-semibold text-[var(--color-navy)]">Adicionar credencial</span>
+                  <span className="text-sm font-semibold text-[var(--color-navy)]">
+                    Adicionar credencial
+                  </span>
                 </button>
               </li>
             )}
@@ -209,7 +233,10 @@ export function CredenciaisTab() {
             {creds.map((it) => {
               const c = statusColor(it.status);
               return (
-                <li key={it.id} className="flex items-center gap-3 border-t border-border/60 px-4 py-3.5">
+                <li
+                  key={it.id}
+                  className="flex items-center gap-3 border-t border-border/60 px-4 py-3.5"
+                >
                   <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center">
                     <img
                       src={getServiceLogo(it.name)}
@@ -225,10 +252,20 @@ export function CredenciaisTab() {
                     <p className="text-sm font-semibold text-foreground">{it.name}</p>
                     <p className="text-[11px] text-muted-foreground">{it.when}</p>
                   </div>
-                  <span className="rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide" style={{ backgroundColor: `color-mix(in oklab, ${c} 14%, transparent)`, color: c }}>
+                  <span
+                    className="rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide"
+                    style={{
+                      backgroundColor: `color-mix(in oklab, ${c} 14%, transparent)`,
+                      color: c,
+                    }}
+                  >
                     {it.status}
                   </span>
-                  <button onClick={() => removeCred(it.id)} aria-label="Remover credencial" className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-secondary/60 hover:text-red-400">
+                  <button
+                    onClick={() => removeCred(it.id)}
+                    aria-label="Remover credencial"
+                    className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-secondary/60 hover:text-red-400"
+                  >
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>
                 </li>
@@ -239,7 +276,9 @@ export function CredenciaisTab() {
             {creds.length === 0 && !adding && (
               <li className="border-t border-border/60 px-4 py-6 text-center">
                 <p className="text-sm text-muted-foreground">Nenhuma credencial ainda.</p>
-                <p className="mt-1 text-[11px] text-muted-foreground">Toque em “Adicionar credencial” para começar.</p>
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  Toque em “Adicionar credencial” para começar.
+                </p>
               </li>
             )}
           </ul>

@@ -21,7 +21,8 @@ export const confirmPreapproval = createServerFn({ method: "POST" })
       userId?: string | null;
       reason?: string;
     }> => {
-      const { allTokens, resolvePreapproval, isActiveStatus, markPaid } = await import("./mercadopago.server");
+      const { allTokens, resolvePreapproval, isActiveStatus, markPaid } =
+        await import("./mercadopago.server");
 
       const tokens = allTokens();
       if (tokens.length === 0) return { ok: false, reason: "no_token" };
@@ -29,7 +30,13 @@ export const confirmPreapproval = createServerFn({ method: "POST" })
       const resolved = await resolvePreapproval(data.preapprovalId, tokens);
       if (!resolved) return { ok: false, reason: "not_found" };
       if (!isActiveStatus(resolved.status)) {
-        return { ok: false, plan: resolved.plan, email: resolved.email, status: resolved.status, reason: "not_active" };
+        return {
+          ok: false,
+          plan: resolved.plan,
+          email: resolved.email,
+          status: resolved.status,
+          reason: "not_active",
+        };
       }
 
       const admin = getSupabaseAdmin();
