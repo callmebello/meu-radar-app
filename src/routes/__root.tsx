@@ -100,6 +100,19 @@ function RootShell({ children }: { children: ReactNode }) {
             __html: `<img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=1633750161058128&ev=PageView&noscript=1"/>`,
           }}
         />
+        {/* Google Analytics 4 */}
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-HYJTLX88D3" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-HYJTLX88D3');`,
+          }}
+        />
+        {/* Microsoft Clarity */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window,document,"clarity","script","xj1u52ffsg");`,
+          }}
+        />
       </head>
       <body>{children}<Scripts /></body>
     </html>

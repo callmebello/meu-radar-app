@@ -1,28 +1,16 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import {
-  AlertTriangle,
-  ArrowLeft,
-  Check,
-  Key,
-  Lock,
-  Mail,
-  Phone,
-  Shield,
-  ShieldAlert,
-  X as XIcon,
-} from "lucide-react";
+import { ArrowLeft, Check, ChevronDown, ChevronUp, Lock, Shield, X as XIcon } from "lucide-react";
 import { getScore } from "@/lib/funnel";
 import { startCheckout, type CheckoutPlan } from "@/lib/checkout";
-import { track } from "@/lib/analytics";
+import { track, gaEvent } from "@/lib/analytics";
+import { useIsDark } from "@/hooks/use-is-dark";
 
 export const Route = createFileRoute("/relatorio")({
   head: () => ({ meta: [{ title: "Relatório de Exposição — Priva" }] }),
   component: RelatorioPage,
 });
 
-// ---- localStorage-backed scan data (AppProvider is scoped to "/", so this
-// standalone route reads the persisted scan instead of context) ----
 type RawBreach = {
   Name?: string;
   Title?: string;
@@ -44,10 +32,10 @@ function readJSON<T>(key: string): T | null {
 
 const DATA_CLASS_PT: Record<string, string> = {
   "email addresses": "E-mail",
-  "passwords": "Senha",
+  passwords: "Senha",
   "phone numbers": "Telefone",
-  "names": "Nome",
-  "usernames": "Usuário",
+  names: "Nome",
+  usernames: "Usuário",
   "physical addresses": "Endereço",
   "dates of birth": "Data de nascimento",
   "geographic locations": "Localização",
@@ -55,19 +43,64 @@ const DATA_CLASS_PT: Record<string, string> = {
   "credit cards": "Cartão de crédito",
   "government issued ids": "Documento",
 };
-function translateDC(dc: string): string {
-  return DATA_CLASS_PT[dc.toLowerCase()] || dc;
-}
-function yearOf(d?: string): string {
-  if (!d) return "";
+const translateDC = (dc: string) => DATA_CLASS_PT[dc.toLowerCase()] || dc;
+function last2Year(d?: string): string {
+  if (!d) return "24";
   const y = new Date(d).getFullYear();
-  return isNaN(y) ? "" : String(y);
+  return isNaN(y) ? "24" : String(y).slice(-2);
+}
+
+// One breach row — identical layout whether real or locked (blurred).
+function BreachCard({
+  name,
+  yearLast2,
+  types,
+  hiddenCount,
+  sevLabel,
+  sevClass,
+  locked = false,
+}: {
+  name: string;
+  yearLast2: string;
+  types: string[];
+  hiddenCount: number;
+  sevLabel: string;
+  sevClass: string;
+  locked?: boolean;
+}) {
+  return (
+    <div className="mb-3 rounded-xl border border-border bg-card p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className={`truncate font-bold text-foreground ${locked ? "select-none blur-sm" : ""}`}>{name}</p>
+          <p className="text-xs text-muted-foreground">
+            Vazamento · 20<span className="select-none blur-[3px]">{yearLast2}</span>
+          </p>
+        </div>
+        <span className={`shrink-0 rounded-md px-2 py-0.5 text-[11px] font-bold ${sevClass}`}>{sevLabel}</span>
+      </div>
+      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+        {types.map((d, i) => (
+          <span key={i} className={`flex items-center gap-1.5 ${locked ? "select-none blur-sm" : ""}`}>
+            <span className="h-1.5 w-1.5 rounded-full bg-red-500" /> {d}
+          </span>
+        ))}
+        {hiddenCount > 0 && (
+          <span className="flex items-center gap-1.5 text-muted-foreground/70">
+            <Lock className="h-3 w-3" /> +{hiddenCount} dados ocultos
+          </span>
+        )}
+      </div>
+    </div>
+  );
 }
 
 function RelatorioPage() {
   const navigate = useNavigate();
+  const isDark = useIsDark();
   const firedView = useRef(false);
   const [redirecting, setRedirecting] = useState(false);
+  const [expanded, setExpanded] = useState(false);
 
   const scan = readJSON<StoredScan>("priva_scan_result");
   const cpf = typeof window !== "undefined" ? sessionStorage.getItem("priva_cpf") || "" : "";
@@ -78,174 +111,158 @@ function RelatorioPage() {
   const displayCount = Math.max(2, breachCount);
   const score = cpf ? getScore(cpf, breachCount) : 46;
 
-  // score color/label
   const risk =
     score < 40
-      ? { color: "#F87171", label: "RISCO ALTO", bg: "bg-red-500/15 text-red-400" }
+      ? { color: "#EF4444", label: "RISCO ALTO", badge: "bg-red-500/10 text-red-600" }
       : score < 70
-        ? { color: "#FBBF24", label: "RISCO MÉDIO", bg: "bg-amber-500/15 text-amber-400" }
-        : { color: "#34D399", label: "BAIXO", bg: "bg-emerald-500/15 text-emerald-400" };
+        ? { color: "#F59E0B", label: "RISCO MÉDIO", badge: "bg-amber-500/10 text-amber-600" }
+        : { color: "#10B981", label: "BAIXO", badge: "bg-emerald-500/10 text-emerald-600" };
 
-  // password / phone signals for recommendations
-  const passwordFound = breaches.some((b) =>
-    (b.DataClasses ?? []).some((d) => /password/i.test(d)),
-  );
-  const exposure = readJSON<{ phone?: { found?: boolean; count?: number } | null }>("priva_exposure");
-  const phoneFound = Boolean(exposure?.phone?.found) || (exposure?.phone?.count ?? 0) > 0;
-
-  // year range from breach dates
-  const years = breaches.map((b) => yearOf(b.BreachDate || b.AddedDate)).filter(Boolean).sort();
+  const years = breaches.map((b) => new Date(b.BreachDate || b.AddedDate || "").getFullYear()).filter((y) => !isNaN(y)).sort();
   const yearFirst = years[0] || "—";
   const yearLast = years[years.length - 1] || "—";
 
-  // No scan on file → back to the funnel start.
   useEffect(() => {
     if (!scan && !cpf) navigate({ to: "/" });
   }, [scan, cpf, navigate]);
 
-  // Pixel: page view of the summary report.
   useEffect(() => {
     if (firedView.current) return;
     firedView.current = true;
     track("ViewContent", { content_name: "Relatorio Resumido", value: 9.9, currency: "BRL" });
-  }, []);
+    gaEvent("view_relatorio", { breach_count: displayCount, risk_level: risk.label });
+  }, [displayCount, risk.label]);
 
   const checkout = async (plan: CheckoutPlan) => {
-    track("InitiateCheckout", {
-      value: plan === "essencial" ? 9.9 : 24.9,
-      currency: "BRL",
-      content_name: plan,
-    });
+    const value = plan === "essencial" ? 9.9 : 24.9;
+    track("InitiateCheckout", { value, currency: "BRL", content_name: plan });
+    gaEvent("begin_checkout", { currency: "BRL", value, items: [{ item_name: plan }] });
     setRedirecting(true);
     await startCheckout(plan);
     setRedirecting(false);
   };
 
-  // Real breaches shown fully (authority); the rest are locked/blurred.
-  const shown = breaches.slice(0, 3);
-  const lockedCount = Math.max(0, displayCount - shown.length);
+  // Build the card list. Real breaches first (up to 3 shown when expanded),
+  // remaining slots locked/blurred. Same layout throughout.
+  const realCards = breaches.slice(0, 3).map((b, i) => {
+    const dcs = (b.DataClasses ?? []).map(translateDC);
+    return {
+      name: b.Name || b.Title || "Vazamento detectado",
+      yearLast2: last2Year(b.BreachDate || b.AddedDate),
+      types: dcs.slice(0, 2),
+      hiddenCount: Math.max(0, dcs.length - 2),
+      sevLabel: i === 0 ? "ALTO" : "MÉDIO",
+      sevClass: i === 0 ? "text-red-600 bg-red-500/10" : "text-amber-600 bg-amber-500/10",
+      locked: false,
+    };
+  });
+  // If the scan returned no real breaches, still show one collapsed (locked) card.
+  if (realCards.length === 0) {
+    realCards.push({ name: "Base de dados comprometida", yearLast2: "22", types: ["Senha"], hiddenCount: 2, sevLabel: "ALTO", sevClass: "text-red-600 bg-red-500/10", locked: true });
+  }
+  const lockedCount = Math.max(0, displayCount - realCards.length);
+  const lockedCards = Array.from({ length: Math.min(6, lockedCount) }).map(() => ({
+    name: "Exposição em base comprometida",
+    yearLast2: "••",
+    types: ["Dados sensíveis"],
+    hiddenCount: 2,
+    sevLabel: "MÉDIO",
+    sevClass: "text-amber-600 bg-amber-500/10",
+    locked: true,
+  }));
+
+  const logo = isDark ? "/PRIVA_logo_dark_theme.png" : "/PRIVA_logo_light_theme.png";
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: "#0A0A0F" }}>
+    <div className="min-h-screen bg-background">
       <div className="mx-auto max-w-md px-5 pb-16">
         {/* Header */}
-        <header className="sticky top-0 z-10 -mx-5 flex items-center justify-between px-5 py-4" style={{ backgroundColor: "#0A0A0F" }}>
-          <button onClick={() => navigate({ to: "/" })} aria-label="Voltar" className="grid h-9 w-9 place-items-center rounded-full bg-white/5 text-gray-300 hover:bg-white/10">
+        <header className="sticky top-0 z-10 -mx-5 flex items-center justify-between bg-background px-5 py-4">
+          <button onClick={() => navigate({ to: "/" })} aria-label="Voltar" className="grid h-9 w-9 place-items-center rounded-full bg-secondary text-foreground hover:opacity-80">
             <ArrowLeft className="h-5 w-5" />
           </button>
-          <img src="/PRIVA_logo_dark_theme.png" alt="PRIVA" className="h-5 w-auto object-contain" />
+          <img src={logo} alt="PRIVA" className="h-5 w-auto object-contain" />
           <span className="h-9 w-9" />
         </header>
 
         {/* SECTION 1 — Score card */}
-        <section className="mt-2 rounded-3xl border border-indigo-500/25 p-6 text-center" style={{ backgroundColor: "#12121A" }}>
-          <p className="text-xs tracking-widest text-gray-400">RELATÓRIO DE EXPOSIÇÃO DIGITAL</p>
+        <section className="mt-2 rounded-3xl border border-indigo-500/25 bg-card p-6 text-center shadow-sm">
+          <p className="text-xs tracking-widest text-muted-foreground">RELATÓRIO DE EXPOSIÇÃO DIGITAL</p>
           <p className="mt-3 text-7xl font-extrabold leading-none" style={{ color: risk.color }}>{score}</p>
-          <span className={`mt-3 inline-block rounded-full px-3 py-1 text-xs font-bold ${risk.bg}`}>{risk.label}</span>
-          <p className="mt-3 text-sm text-gray-500">Baseado em {Math.max(3, displayCount)} fontes verificadas</p>
-          <div className="mt-5 grid grid-cols-3 border-t border-white/5 pt-4 text-center">
+          <span className={`mt-3 inline-block rounded-full px-3 py-1 text-xs font-bold ${risk.badge}`}>{risk.label}</span>
+          <p className="mt-3 text-sm text-muted-foreground">Baseado em {Math.max(3, displayCount)} fontes verificadas</p>
+          <div className="mt-5 grid grid-cols-3 border-t border-border pt-4 text-center">
             <div>
-              <p className="text-2xl font-extrabold text-white">{displayCount}</p>
-              <p className="mt-1 text-[11px] text-gray-500">Vazamentos</p>
+              <p className="text-2xl font-extrabold text-foreground">{displayCount}</p>
+              <p className="mt-1 text-[11px] text-muted-foreground">Vazamentos</p>
             </div>
-            <div className="border-x border-white/5">
-              <p className="text-2xl font-extrabold text-white">{yearFirst}</p>
-              <p className="mt-1 text-[11px] text-gray-500">Primeiro registro</p>
+            <div className="border-x border-border">
+              <p className="text-2xl font-extrabold text-foreground">{yearFirst}</p>
+              <p className="mt-1 text-[11px] text-muted-foreground">Primeiro registro</p>
             </div>
             <div>
-              <p className="text-2xl font-extrabold text-white">{yearLast}</p>
-              <p className="mt-1 text-[11px] text-gray-500">Mais recente</p>
+              <p className="text-2xl font-extrabold text-foreground">{yearLast}</p>
+              <p className="mt-1 text-[11px] text-muted-foreground">Mais recente</p>
             </div>
           </div>
         </section>
 
-        {/* SECTION 2 — Exposições encontradas */}
+        {/* SECTION 2 — Exposições encontradas (accordion) */}
         <section className="mt-8">
-          <h2 className="mb-3 text-lg font-bold text-white">Exposições encontradas</h2>
+          <h2 className="mb-3 text-lg font-bold text-foreground">Exposições encontradas</h2>
 
-          {shown.map((b, i) => {
-            const name = b.Name || b.Title || "Vazamento";
-            const dcs = (b.DataClasses ?? []).map(translateDC);
-            const yr = yearOf(b.BreachDate || b.AddedDate);
-            const visible = dcs.slice(0, 2);
-            const hidden = Math.max(0, dcs.length - visible.length);
-            const sev = i === 0 ? { l: "ALTO", c: "text-red-400 bg-red-500/15" } : { l: "MÉDIO", c: "text-amber-400 bg-amber-500/15" };
-            return (
-              <div key={i} className="mb-3 rounded-xl border border-white/5 p-4" style={{ backgroundColor: "#12121A" }}>
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="truncate font-bold text-white">{name}</p>
-                    {yr && <p className="text-xs text-gray-500">Vazamento · {yr}</p>}
-                  </div>
-                  <span className={`shrink-0 rounded-md px-2 py-0.5 text-[11px] font-bold ${sev.c}`}>{sev.l}</span>
-                </div>
-                <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-300">
-                  {visible.map((d) => (
-                    <span key={d} className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-red-400" /> {d}</span>
-                  ))}
-                  {hidden > 0 && (
-                    <span className="flex items-center gap-1.5 text-gray-500"><Lock className="h-3 w-3" /> +{hidden} dados ocultos</span>
-                  )}
-                </div>
-              </div>
-            );
-          })}
+          {/* Collapsed: 1 real card. Expanded: up to 3 real + locked rest. */}
+          <BreachCard {...realCards[0]} />
 
-          {lockedCount > 0 && (
+          {expanded && (
             <>
-              <p className="mb-2 mt-4 text-sm text-gray-400">{lockedCount} outras exposições encontradas</p>
-              {Array.from({ length: Math.min(4, lockedCount) }).map((_, i) => (
-                <div key={i} className="mb-2 flex items-center gap-3 rounded-xl px-4 py-3" style={{ backgroundColor: "#12121A" }}>
-                  <Lock className="h-4 w-4 shrink-0 text-indigo-400" />
-                  <span className="min-w-0 flex-1 select-none truncate text-sm text-gray-300 blur-sm">
-                    Exposição em base de dados comprometida — dados sensíveis
-                  </span>
-                  <span className="shrink-0 text-xs text-gray-600">🔒 Desbloqueie</span>
-                </div>
+              {realCards.slice(1).map((c, i) => (
+                <BreachCard key={`r${i}`} {...c} />
+              ))}
+              {lockedCards.map((c, i) => (
+                <BreachCard key={`l${i}`} {...c} />
               ))}
             </>
           )}
+
+          {(realCards.length > 1 || lockedCards.length > 0) && (
+            <button
+              onClick={() => setExpanded((v) => !v)}
+              className="mt-1 flex w-full items-center justify-center gap-1.5 rounded-xl border border-border bg-card py-3 text-sm font-semibold text-[var(--color-navy)] transition hover:bg-secondary/40"
+            >
+              {expanded ? (
+                <>Ver menos <ChevronUp className="h-4 w-4" /></>
+              ) : (
+                <>Ver todas as {displayCount} exposições <ChevronDown className="h-4 w-4" /></>
+              )}
+            </button>
+          )}
         </section>
 
-        {/* SECTION 3 — Recomendações */}
-        <section className="mt-8">
-          <h2 className="mb-3 text-lg font-bold text-white">Recomendações importantes</h2>
-          <div className="space-y-3">
-            {passwordFound && (
-              <RecCard Icon={ShieldAlert} color="#F87171" title="Troque suas senhas imediatamente" sub="Especialmente em serviços financeiros e e-mail" />
-            )}
-            <RecCard Icon={Mail} color="#FBBF24" title="Ative verificação em duas etapas" sub="Em todos os serviços onde seu e-mail foi exposto" />
-            {phoneFound && (
-              <RecCard Icon={Phone} color="#FBBF24" title="Cuidado com ligações suspeitas" sub="Seu telefone pode estar em listas de golpistas" />
-            )}
-            <RecCard Icon={Key} color="#818CF8" title="Nunca reutilize senhas" sub="Use um gerenciador de senhas" />
-          </div>
-        </section>
-
-        {/* PAID users: no plans, just go to the full report */}
+        {/* PAID users → full report */}
         {isPaid ? (
           <button
             onClick={() => navigate({ to: "/" })}
-            className="mt-8 w-full rounded-2xl bg-indigo-600 py-4 font-bold text-white transition active:scale-[0.99]"
+            className="mt-8 w-full rounded-2xl bg-[var(--color-navy)] py-4 font-bold text-white transition active:scale-[0.99]"
           >
             Ver meu relatório completo →
           </button>
         ) : (
           <>
-            {/* SECTION 4 — divider */}
+            {/* Divider */}
             <div className="mt-10 flex items-center gap-3">
-              <span className="h-px flex-1 bg-white/10" />
-              <span className="text-xs text-gray-600">Proteja-se agora</span>
-              <span className="h-px flex-1 bg-white/10" />
+              <span className="h-px flex-1 bg-border" />
+              <span className="text-xs text-muted-foreground">Proteja-se agora</span>
+              <span className="h-px flex-1 bg-border" />
             </div>
 
-            {/* SECTION 5 — two plan columns */}
-            <p className="mb-4 mt-6 text-center text-base font-semibold text-white">O que você está perdendo</p>
+            {/* Plans */}
+            <p className="mb-4 mt-6 text-center text-base font-semibold text-foreground">O que você está perdendo</p>
             <div className="grid grid-cols-2 gap-3">
               {/* Essencial */}
-              <div className="rounded-2xl border border-indigo-500/30 p-4" style={{ backgroundColor: "#12121A" }}>
-                <p className="mb-2 text-xs font-bold text-indigo-300">Essencial</p>
-                <p className="text-2xl font-extrabold text-white">R$9,90<span className="text-sm font-normal text-gray-400">/mês</span></p>
+              <div className="rounded-2xl border border-indigo-500/30 bg-card p-4 shadow-sm">
+                <p className="mb-2 text-xs font-bold text-indigo-600">Essencial</p>
+                <p className="text-2xl font-extrabold text-foreground">R$9,90<span className="text-sm font-normal text-muted-foreground">/mês</span></p>
                 <ul className="mt-3 space-y-2">
                   {[
                     `Relatório completo (todos os ${displayCount} vazamentos)`,
@@ -253,7 +270,7 @@ function RelatorioPage() {
                     "Monitoramento contínuo",
                     "Alertas em tempo real",
                   ].map((f) => (
-                    <li key={f} className="flex gap-2 text-xs text-gray-300"><Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-green-400" /> {f}</li>
+                    <li key={f} className="flex gap-2 text-xs text-muted-foreground"><Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-500" /> {f}</li>
                   ))}
                 </ul>
                 <button onClick={() => checkout("essencial")} disabled={redirecting} className="mt-4 w-full rounded-xl bg-indigo-600 py-3 text-sm font-bold text-white transition active:scale-[0.99] disabled:opacity-60">
@@ -262,19 +279,18 @@ function RelatorioPage() {
               </div>
 
               {/* Proteção Total */}
-              <div className="relative rounded-2xl border-2 border-purple-500/50 p-4" style={{ background: "linear-gradient(135deg,#1a0a2e,#2d1264)" }}>
+              <div className="relative rounded-2xl border-2 border-purple-500/50 bg-card p-4 shadow-sm">
                 <span className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-purple-600 px-3 py-1 text-[10px] font-bold text-white">MAIS COMPLETO</span>
-                <p className="mb-2 text-xs font-bold text-purple-300">Proteção Total</p>
-                <p className="text-2xl font-extrabold text-white">R$24,90<span className="text-sm font-normal text-gray-400">/mês</span></p>
+                <p className="mb-2 text-xs font-bold text-purple-600">Proteção Total</p>
+                <p className="text-2xl font-extrabold text-foreground">R$24,90<span className="text-sm font-normal text-muted-foreground">/mês</span></p>
                 <ul className="mt-3 space-y-2">
                   {[
                     "Tudo do Essencial",
                     "Solicitação de remoção via LGPD",
                     "Advogados parceiros cuidam do processo",
                     "Acompanhamento por e-mail",
-                    "Tempo estimado de remoção",
                   ].map((f) => (
-                    <li key={f} className="flex gap-2 text-xs text-gray-300"><Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-purple-400" /> {f}</li>
+                    <li key={f} className="flex gap-2 text-xs text-muted-foreground"><Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-purple-500" /> {f}</li>
                   ))}
                 </ul>
                 <button
@@ -283,43 +299,29 @@ function RelatorioPage() {
                   className="mt-4 w-full rounded-xl py-3 text-sm font-bold text-white transition active:scale-[0.99] disabled:opacity-60"
                   style={{ background: "linear-gradient(135deg,#7C3AED,#4F46E5)", boxShadow: "0 0 16px rgba(124,58,237,0.3)" }}
                 >
-                  Remover meus dados →
+                  Remover dados →
                 </button>
               </div>
             </div>
 
-            {redirecting && <p className="mt-3 text-center text-xs text-indigo-300">Redirecionando para pagamento seguro...</p>}
+            {redirecting && <p className="mt-3 text-center text-xs text-indigo-500">Redirecionando para pagamento seguro...</p>}
 
-            {/* SECTION 6 — social proof + trust */}
+            {/* Social proof + trust */}
             <div className="mt-6 flex items-center justify-center gap-2">
               <div className="flex -space-x-2">
                 {["12", "32", "45"].map((n) => (
-                  <img key={n} src={`https://i.pravatar.cc/48?img=${n}`} alt="" className="h-6 w-6 rounded-full border-2" style={{ borderColor: "#0A0A0F" }} />
+                  <img key={n} src={`https://i.pravatar.cc/48?img=${n}`} alt="" className="h-6 w-6 rounded-full border-2 border-background" />
                 ))}
               </div>
-              <span className="text-xs text-indigo-400">+{87 + (displayCount % 40)} pessoas protegidas hoje</span>
+              <span className="text-xs text-indigo-600">+{87 + (displayCount % 40)} pessoas protegidas hoje</span>
             </div>
-            <div className="mt-3 flex items-center justify-center gap-4 text-[10px] text-gray-600">
+            <div className="mt-3 flex items-center justify-center gap-4 text-[10px] text-muted-foreground">
               <span className="flex items-center gap-1"><Shield className="h-3 w-3" /> LGPD</span>
               <span className="flex items-center gap-1"><Lock className="h-3 w-3" /> Seguro</span>
               <span className="flex items-center gap-1"><XIcon className="h-3 w-3" /> Cancele quando quiser</span>
             </div>
           </>
         )}
-      </div>
-    </div>
-  );
-}
-
-function RecCard({ Icon, color, title, sub }: { Icon: typeof Mail; color: string; title: string; sub: string }) {
-  return (
-    <div className="flex gap-3 rounded-xl border border-white/5 p-4" style={{ backgroundColor: "#12121A" }}>
-      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg" style={{ backgroundColor: `${color}22` }}>
-        <Icon className="h-5 w-5" style={{ color }} />
-      </span>
-      <div>
-        <p className="text-sm font-semibold text-white">{title}</p>
-        <p className="mt-0.5 text-xs text-gray-400">{sub}</p>
       </div>
     </div>
   );
