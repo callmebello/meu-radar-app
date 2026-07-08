@@ -110,28 +110,23 @@ function ExpoRow({ e, delayMs, divider }: { e: Expo; delayMs?: number; divider: 
     >
       <SourceLogo domain={e.domain} initial={(e.name[0] || "•").toUpperCase()} locked={e.locked && !e.name.trim()} />
       <div className="min-w-0 flex-1">
-        {e.locked ? (
-          <>
-            <p className="select-none truncate text-sm font-bold text-foreground blur-[5px]">{e.name || "Vazamento oculto"}</p>
-            <p className="mt-0.5 text-xs text-muted-foreground">Dados ocultos</p>
-          </>
-        ) : (
-          <>
-            <p className="truncate text-sm font-bold text-foreground">{e.name}</p>
-            <p className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
-              {e.types.slice(0, 3).map((t) => {
-                const Icon = TYPE_ICON[t];
-                return (
-                  <span key={t} className="flex items-center gap-1">
-                    {Icon ? <Icon className="h-3 w-3" /> : <span className="h-1 w-1 rounded-full bg-red-500" />}
-                    {t}
-                  </span>
-                );
-              })}
-              {e.year && <span className="text-muted-foreground/70">· {e.year}</span>}
-            </p>
-          </>
-        )}
+        {/* Locked rows keep the EXACT real layout (icons + typed data + year),
+            just blurred — reads as authentic hidden content, not empty rows. */}
+        <p className={`truncate text-sm font-bold text-foreground ${e.locked ? "select-none blur-[5px]" : ""}`}>
+          {e.name || "Vazamento de dados"}
+        </p>
+        <p className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
+          {e.types.slice(0, 3).map((t) => {
+            const Icon = TYPE_ICON[t];
+            return (
+              <span key={t} className={`flex items-center gap-1 ${e.locked ? "select-none blur-[4px]" : ""}`}>
+                {Icon ? <Icon className="h-3 w-3" /> : <span className="h-1 w-1 rounded-full bg-red-500" />}
+                {t}
+              </span>
+            );
+          })}
+          {e.year && <span className={`text-muted-foreground/70 ${e.locked ? "select-none blur-[4px]" : ""}`}>· {e.year}</span>}
+        </p>
       </div>
       <span className={`shrink-0 rounded-md px-2 py-0.5 text-[11px] font-bold ${e.sevClass}`}>{e.sevLabel}</span>
     </div>
@@ -204,19 +199,31 @@ function RelatorioPage() {
   if (revealed.length === 0) {
     revealed.push({ name: "Base de dados comprometida", year: "", types: ["Senha", "E-mail"], sevLabel: "ALTO", sevClass: "text-red-600 bg-red-500/10", locked: false });
   }
-  const lockedReal: Expo[] = breaches.slice(2).map((b) => ({
-    name: b.Name || b.Title || "",
-    year: "",
-    types: [],
+  // Locked rows carry realistic (blurred) mock content — same icons/labels as
+  // the real rows — so the hidden list reads as authentic, not as empty stubs.
+  const MOCK_LOCKED: { types: string[]; year: string }[] = [
+    { types: ["E-mail", "Senha"], year: "2021" },
+    { types: ["E-mail", "Telefone"], year: "2019" },
+    { types: ["Senha", "Nome"], year: "2022" },
+    { types: ["E-mail", "Senha", "Nome"], year: "2020" },
+    { types: ["E-mail", "Senha"], year: "2023" },
+    { types: ["Telefone", "Nome"], year: "2018" },
+  ];
+  const lockedReal: Expo[] = breaches.slice(2).map((b, i) => ({
+    name: b.Name || b.Title || "Vazamento de dados",
+    year: yearOf(b.BreachDate || b.AddedDate) || MOCK_LOCKED[i % MOCK_LOCKED.length].year,
+    types: (b.DataClasses ?? []).map(translateDC).slice(0, 3).length
+      ? (b.DataClasses ?? []).map(translateDC)
+      : MOCK_LOCKED[i % MOCK_LOCKED.length].types,
     sevLabel: "OCULTO",
     sevClass: "text-muted-foreground bg-secondary",
     locked: true,
   }));
   const fillerCount = Math.max(0, Math.min(6, displayCount - revealed.length - lockedReal.length));
-  const lockedFiller: Expo[] = Array.from({ length: fillerCount }).map(() => ({
+  const lockedFiller: Expo[] = Array.from({ length: fillerCount }).map((_, i) => ({
     name: "",
-    year: "",
-    types: [],
+    year: MOCK_LOCKED[i % MOCK_LOCKED.length].year,
+    types: MOCK_LOCKED[i % MOCK_LOCKED.length].types,
     sevLabel: "OCULTO",
     sevClass: "text-muted-foreground bg-secondary",
     locked: true,
