@@ -228,7 +228,9 @@ function RelatorioPage() {
     sevClass: "text-muted-foreground bg-secondary",
     locked: true,
   }));
-  const lockedRows = [...lockedReal, ...lockedFiller];
+  // Cap the teaser list — with heavy HIBP hits (100+ breaches) we still show at
+  // most 6 locked rows; the real total lives in the score card / plan copy.
+  const lockedRows = [...lockedReal, ...lockedFiller].slice(0, 6);
 
   const logo = isDark ? "/PRIVA_logo_dark_theme.png" : "/PRIVA_logo_light_theme.png";
 
@@ -256,8 +258,9 @@ function RelatorioPage() {
               <p className="mt-2 text-sm leading-snug text-muted-foreground">{risk.phrase}</p>
             </div>
           </div>
+          {/* Sources ≠ breaches: CPF, e-mail, telefone, web pública e repositórios. */}
           <p className="mt-4 flex items-center justify-center gap-1.5 text-sm text-muted-foreground">
-            <ShieldCheck className="h-4 w-4 text-emerald-500" /> Analisamos {Math.max(3, displayCount)} fontes verificadas
+            <ShieldCheck className="h-4 w-4 text-emerald-500" /> Analisamos 5 fontes verificadas
           </p>
           {/* Lead-facing summary: leaks · risk level (red) · exposed data */}
           <div className="mt-5 grid grid-cols-3 border-t border-border pt-4 text-center">

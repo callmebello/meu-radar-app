@@ -150,14 +150,6 @@ export function ScanFunnel({ open, onClose, onScanStart }: { open: boolean; onCl
     }
   };
 
-  // 1 visible data point + 3 blurred — curiosity gap
-  const rows = [
-    { Icon: CreditCard, label: "CPF", value: `•••.•••.•••-${mask.cpfLast2}`, badge: "ALTO", color: "#F87171", bg: "rgba(239,68,68,0.2)", blur: false },
-    { Icon: Mail, label: "E-mail", value: `${mask.first}•••••@${mask.domain}`, badge: "MÉDIO", color: "#FBBF24", bg: "rgba(245,158,11,0.2)", blur: true },
-    { Icon: Phone, label: "Telefone", value: `(11) 9••••-${mask.phoneLast4}`, badge: "BAIXO", color: "#34D399", bg: "rgba(34,197,94,0.2)", blur: true },
-    { Icon: MapPin, label: "Endereço", value: "Rua ••••••, São Paulo — SP", badge: "ALTO", color: "#F87171", bg: "rgba(239,68,68,0.2)", blur: true },
-  ];
-
   /* ---------- PHASE: CPF — centered security modal ---------- */
   if (phase === "cpf") {
     return (
