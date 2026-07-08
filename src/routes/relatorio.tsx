@@ -1,10 +1,11 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, Check, ChevronDown, ChevronUp, Lock, Shield, X as XIcon } from "lucide-react";
+import { ArrowLeft, Check, Lock, Shield, X as XIcon } from "lucide-react";
 import { getScore } from "@/lib/funnel";
 import { startCheckout, type CheckoutPlan } from "@/lib/checkout";
 import { track, gaEvent } from "@/lib/analytics";
 import { useIsDark } from "@/hooks/use-is-dark";
+import { AnimatedScoreGauge } from "@/components/meu-radar/AnimatedScoreGauge";
 
 export const Route = createFileRoute("/relatorio")({
   head: () => ({ meta: [{ title: "Relatório de Exposição — Priva" }] }),
@@ -44,53 +45,39 @@ const DATA_CLASS_PT: Record<string, string> = {
   "government issued ids": "Documento",
 };
 const translateDC = (dc: string) => DATA_CLASS_PT[dc.toLowerCase()] || dc;
-function last2Year(d?: string): string {
-  if (!d) return "24";
-  const y = new Date(d).getFullYear();
-  return isNaN(y) ? "24" : String(y).slice(-2);
-}
 
-// One breach row — identical layout whether real or locked (blurred).
+// One breach row — ultra-compact: source name · data types · risk badge.
+// Identical layout whether real or locked (blurred); optional staggered reveal.
 function BreachCard({
   name,
-  yearLast2,
   types,
   hiddenCount,
   sevLabel,
   sevClass,
   locked = false,
+  delayMs,
 }: {
   name: string;
-  yearLast2: string;
   types: string[];
   hiddenCount: number;
   sevLabel: string;
   sevClass: string;
   locked?: boolean;
+  delayMs?: number;
 }) {
   return (
-    <div className="mb-3 rounded-xl border border-border bg-card p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className={`truncate font-bold text-foreground ${locked ? "select-none blur-sm" : ""}`}>{name}</p>
-          <p className="text-xs text-muted-foreground">
-            Vazamento · 20<span className="select-none blur-[3px]">{yearLast2}</span>
-          </p>
-        </div>
-        <span className={`shrink-0 rounded-md px-2 py-0.5 text-[11px] font-bold ${sevClass}`}>{sevLabel}</span>
+    <div
+      className={`mb-2.5 flex items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3 ${delayMs !== undefined ? "animate-fade-in" : ""}`}
+      style={delayMs !== undefined ? { animationDelay: `${delayMs}ms`, animationDuration: "180ms", animationFillMode: "backwards" } : undefined}
+    >
+      <div className="min-w-0">
+        <p className={`truncate text-sm font-bold text-foreground ${locked ? "select-none blur-sm" : ""}`}>{name}</p>
+        <p className={`mt-0.5 truncate text-xs text-muted-foreground ${locked ? "select-none blur-sm" : ""}`}>
+          {types.join(" • ")}
+          {hiddenCount > 0 && <span className="text-muted-foreground/70"> • +{hiddenCount}</span>}
+        </p>
       </div>
-      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
-        {types.map((d, i) => (
-          <span key={i} className={`flex items-center gap-1.5 ${locked ? "select-none blur-sm" : ""}`}>
-            <span className="h-1.5 w-1.5 rounded-full bg-red-500" /> {d}
-          </span>
-        ))}
-        {hiddenCount > 0 && (
-          <span className="flex items-center gap-1.5 text-muted-foreground/70">
-            <Lock className="h-3 w-3" /> +{hiddenCount} dados ocultos
-          </span>
-        )}
-      </div>
+      <span className={`shrink-0 rounded-md px-2 py-0.5 text-[11px] font-bold ${sevClass}`}>{sevLabel}</span>
     </div>
   );
 }
@@ -140,13 +127,12 @@ function RelatorioPage() {
     setRedirecting(false);
   };
 
-  // Build the card list. Real breaches first (up to 3 shown when expanded),
-  // remaining slots locked/blurred. Same layout throughout.
-  const realCards = breaches.slice(0, 3).map((b, i) => {
+  // Build the card list. 2 real breaches when opened (authority), everything
+  // else locked/blurred — the curiosity comes from the volume of locked cards.
+  const realCards = breaches.slice(0, 2).map((b, i) => {
     const dcs = (b.DataClasses ?? []).map(translateDC);
     return {
       name: b.Name || b.Title || "Vazamento detectado",
-      yearLast2: last2Year(b.BreachDate || b.AddedDate),
       types: dcs.slice(0, 2),
       hiddenCount: Math.max(0, dcs.length - 2),
       sevLabel: i === 0 ? "ALTO" : "MÉDIO",
@@ -156,14 +142,13 @@ function RelatorioPage() {
   });
   // If the scan returned no real breaches, still show one collapsed (locked) card.
   if (realCards.length === 0) {
-    realCards.push({ name: "Base de dados comprometida", yearLast2: "22", types: ["Senha"], hiddenCount: 2, sevLabel: "ALTO", sevClass: "text-red-600 bg-red-500/10", locked: true });
+    realCards.push({ name: "Base de dados comprometida", types: ["Senha"], hiddenCount: 2, sevLabel: "ALTO", sevClass: "text-red-600 bg-red-500/10", locked: true });
   }
   const lockedCount = Math.max(0, displayCount - realCards.length);
   const lockedCards = Array.from({ length: Math.min(6, lockedCount) }).map(() => ({
-    name: "Exposição em base comprometida",
-    yearLast2: "••",
-    types: ["Dados sensíveis"],
-    hiddenCount: 2,
+    name: "••••••••••••",
+    types: ["••••• • •••••"],
+    hiddenCount: 0,
     sevLabel: "MÉDIO",
     sevClass: "text-amber-600 bg-amber-500/10",
     locked: true,
@@ -183,12 +168,13 @@ function RelatorioPage() {
           <span className="h-9 w-9" />
         </header>
 
-        {/* SECTION 1 — Score card */}
+        {/* SECTION 1 — Score card (radial gauge: instant risk read, no prose) */}
         <section className="mt-2 rounded-3xl border border-indigo-500/25 bg-card p-6 text-center shadow-sm">
           <p className="text-xs tracking-widest text-muted-foreground">RELATÓRIO DE EXPOSIÇÃO DIGITAL</p>
-          <p className="mt-3 text-7xl font-extrabold leading-none" style={{ color: risk.color }}>{score}</p>
-          <span className={`mt-3 inline-block rounded-full px-3 py-1 text-xs font-bold ${risk.badge}`}>{risk.label}</span>
-          <p className="mt-3 text-sm text-muted-foreground">Baseado em {Math.max(3, displayCount)} fontes verificadas</p>
+          <div className="mt-4 flex justify-center">
+            <AnimatedScoreGauge score={score} max={100} showMax />
+          </div>
+          <p className="mt-3 text-sm text-muted-foreground">Analisamos {Math.max(3, displayCount)} fontes verificadas</p>
           <div className="mt-5 grid grid-cols-3 border-t border-border pt-4 text-center">
             <div>
               <p className="text-2xl font-extrabold text-foreground">{displayCount}</p>
@@ -205,34 +191,31 @@ function RelatorioPage() {
           </div>
         </section>
 
-        {/* SECTION 2 — Exposições encontradas (accordion) */}
+        {/* SECTION 2 — Exposições encontradas. Closed: 1 real card + "Abrir
+            relatório". Open (one-way): 2 real + locked/blurred rest, revealed
+            one by one (~180ms stagger). Curiosity = volume of locked cards. */}
         <section className="mt-8">
           <h2 className="mb-3 text-lg font-bold text-foreground">Exposições encontradas</h2>
 
-          {/* Collapsed: 1 real card. Expanded: up to 3 real + locked rest. */}
           <BreachCard {...realCards[0]} />
 
           {expanded && (
             <>
               {realCards.slice(1).map((c, i) => (
-                <BreachCard key={`r${i}`} {...c} />
+                <BreachCard key={`r${i}`} {...c} delayMs={i * 150} />
               ))}
               {lockedCards.map((c, i) => (
-                <BreachCard key={`l${i}`} {...c} />
+                <BreachCard key={`l${i}`} {...c} delayMs={(realCards.length - 1 + i) * 150} />
               ))}
             </>
           )}
 
-          {(realCards.length > 1 || lockedCards.length > 0) && (
+          {!expanded && (realCards.length > 1 || lockedCards.length > 0) && (
             <button
-              onClick={() => setExpanded((v) => !v)}
+              onClick={() => setExpanded(true)}
               className="mt-1 flex w-full items-center justify-center gap-1.5 rounded-xl border border-border bg-card py-3 text-sm font-semibold text-[var(--color-navy)] transition hover:bg-secondary/40"
             >
-              {expanded ? (
-                <>Ver menos <ChevronUp className="h-4 w-4" /></>
-              ) : (
-                <>Ver todas as {displayCount} exposições <ChevronDown className="h-4 w-4" /></>
-              )}
+              Abrir relatório →
             </button>
           )}
         </section>
@@ -258,13 +241,13 @@ function RelatorioPage() {
             <p className="mb-4 mt-6 text-center text-base font-semibold text-foreground">O que você está perdendo</p>
             <div className="grid grid-cols-2 gap-3">
               {/* Essencial */}
-              <div className="rounded-2xl border border-indigo-500/30 bg-card p-4 shadow-sm">
+              <div className="self-center rounded-2xl border border-indigo-500/30 bg-card p-4 shadow-sm">
                 <p className="mb-2 text-xs font-bold text-indigo-600">Essencial</p>
                 <p className="text-2xl font-extrabold text-foreground">R$9,90<span className="text-sm font-normal text-muted-foreground">/mês</span></p>
                 <ul className="mt-3 space-y-2">
                   {[
                     `Relatório completo (todos os ${displayCount} vazamentos)`,
-                    "Dados completos de cada exposição",
+                    "Detalhes completos dos vazamentos",
                     "Monitoramento contínuo",
                     "Alertas em tempo real",
                   ].map((f) => (
@@ -276,9 +259,9 @@ function RelatorioPage() {
                 </button>
               </div>
 
-              {/* Proteção Total */}
-              <div className="relative rounded-2xl border-2 border-purple-500/50 bg-card p-4 shadow-sm">
-                <span className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-purple-600 px-3 py-1 text-[10px] font-bold text-white">MAIS COMPLETO</span>
+              {/* Proteção Total — visually dominant (~10% larger via scale) */}
+              <div className="relative z-10 scale-[1.05] rounded-2xl border-2 border-purple-500/50 bg-card p-4 shadow-lg">
+                <span className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-purple-600 px-3 py-1 text-[10px] font-bold text-white">MAIS ESCOLHIDO</span>
                 <p className="mb-2 text-xs font-bold text-purple-600">Proteção Total</p>
                 <p className="text-2xl font-extrabold text-foreground">R$24,90<span className="text-sm font-normal text-muted-foreground">/mês</span></p>
                 <ul className="mt-3 space-y-2">
@@ -297,7 +280,7 @@ function RelatorioPage() {
                   className="mt-4 w-full rounded-xl py-3 text-sm font-bold text-white transition active:scale-[0.99] disabled:opacity-60"
                   style={{ background: "linear-gradient(135deg,#7C3AED,#4F46E5)", boxShadow: "0 0 16px rgba(124,58,237,0.3)" }}
                 >
-                  Remover dados →
+                  Ativar proteção →
                 </button>
               </div>
             </div>
