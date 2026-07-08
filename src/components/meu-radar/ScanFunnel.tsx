@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { AlertTriangle, CreditCard, Mail, Phone, MapPin, Lock, Check, X, ChevronDown, ChevronRight, Flame, ShieldCheck, Trash2 } from "lucide-react";
-import { formatCPF, isValidCPF, generateResult, maskedFields, riskFromBreaches } from "@/lib/funnel";
+import { useNavigate } from "@tanstack/react-router";
+import { AlertTriangle, CreditCard, Mail, Phone, Lock, Check, X, ChevronRight, ShieldCheck } from "lucide-react";
+import { formatCPF, isValidCPF, generateResult, maskedFields } from "@/lib/funnel";
 import { startCheckout, type CheckoutPlan } from "@/lib/checkout";
 import { toast } from "sonner";
 import { useApp } from "@/contexts/AppContext";
@@ -30,6 +31,7 @@ function ScanRadar() {
 }
 
 export function ScanFunnel({ open, onClose, onScanStart }: { open: boolean; onClose: () => void; onScanStart?: () => void }) {
+  const navigate = useNavigate();
   const { setIsPremium, scanResult } = useApp();
   const [phase, setPhase] = useState<"cpf" | "scanning" | "result" | "success">("cpf");
   const [cpf, setCpf] = useState("");
@@ -252,37 +254,26 @@ export function ScanFunnel({ open, onClose, onScanStart }: { open: boolean; onCl
     );
   }
 
-  /* ---------- PHASE: result (redesigned bottom sheet) ---------- */
-  // CPF and e-mail are data the user already typed — show them (no blur).
-  // Phone / address are the cross-referenced findings unlocked after payment.
-  const sessionEmail = typeof window !== "undefined" ? sessionStorage.getItem("priva_email") || "" : "";
-  const cpfNum = cpf.replace(/\D/g, "");
-  const cpfDisplay = cpfNum.length === 11 ? `•••.${cpfNum.slice(3, 6)}.${cpfNum.slice(6, 9)}-••` : "•••.•••.•••-••";
-  const emailDisplay = sessionEmail || `${mask.first}•••••@${mask.domain}`;
-  const exposedRows = [
-    { Icon: CreditCard, label: "CPF", value: cpfDisplay, badge: "ALTO", tone: "alto" as const, blur: false },
-    { Icon: Mail, label: "E-mail", value: emailDisplay, badge: "MÉDIO", tone: "medio" as const, blur: false },
-    { Icon: Phone, label: "Telefone", value: "(11) 9••••-••••", badge: "BAIXO", tone: "baixo" as const, blur: true },
-    { Icon: MapPin, label: "Endereço", value: "Rua ••••••, São Paulo — SP", badge: "ALTO", tone: "alto" as const, blur: true },
-  ];
-  const badgeTone: Record<string, string> = {
-    alto: "text-red-400 bg-red-500/15",
-    medio: "text-amber-400 bg-amber-500/15",
-    baixo: "text-emerald-400 bg-emerald-500/15",
+  /* ---------- PHASE: result — TEASER only (checkout lives on /relatorio) ---------- */
+  const goToRelatorio = () => {
+    track("ViewContent", { value: 9.9, currency: "BRL" });
+    onClose();
+    navigate({ to: "/relatorio" });
   };
-  const dadosExpostos = 4 + displayBreaches;
-  const risk = riskFromBreaches(displayBreaches);
-  const riskColor = risk.tone === "red" ? "#F87171" : risk.tone === "amber" ? "#FBBF24" : "#34D399";
+
+  const previewRows = [
+    { Icon: CreditCard, label: "CPF", value: `***.***.***-${mask.cpfLast2}`, badge: "ALTO", tone: "text-red-400 bg-red-500/15" },
+    { Icon: Mail, label: "E-mail", value: `${mask.first}•••@${mask.domain}`, badge: "MÉDIO", tone: "text-amber-400 bg-amber-500/15" },
+    { Icon: Phone, label: "Telefone", value: `(11) 9••••-${mask.phoneLast4}`, badge: "BAIXO", tone: "text-emerald-400 bg-emerald-500/15" },
+  ];
 
   return (
     <div className="fixed inset-0 z-[60] flex flex-col justify-end bg-black/60 backdrop-blur-sm">
       <div
-        className="animate-sheet-up-slow relative h-[90vh] overflow-y-auto rounded-t-3xl"
+        className="animate-sheet-up-slow relative max-h-[92vh] overflow-y-auto rounded-t-3xl"
         style={{ backgroundColor: "#0A0A0F", boxShadow: "0 -8px 40px rgba(0,0,0,0.6)" }}
       >
-        {/* drag handle */}
         <div className="mx-auto mt-3 h-1 w-10 rounded-full bg-gray-700" />
-        {/* close */}
         <button
           onClick={onClose}
           aria-label="Fechar"
@@ -291,138 +282,43 @@ export function ScanFunnel({ open, onClose, onScanStart }: { open: boolean; onCl
           <X className="h-4 w-4 text-gray-400" />
         </button>
 
-        <div className="mx-auto max-w-md pb-10">
-          {/* headline */}
-          <div className="mt-5 px-5 text-center">
-            <h1 className="text-2xl font-extrabold leading-tight text-white">Encontramos vazamentos</h1>
-            <h1 className="text-2xl font-extrabold leading-tight text-red-500">dos seus dados</h1>
-            <p className="mt-2 text-center text-sm leading-relaxed text-gray-400">
-              Seus dados foram encontrados em {count} vazamentos e estão expostos na internet.
+        <div className="mx-auto max-w-md px-5 pb-8">
+          {/* badge */}
+          <div className="mt-5 flex justify-center">
+            <span className="rounded-full bg-emerald-500/15 px-3 py-1 text-[11px] font-bold tracking-wide text-emerald-400">✓ ANÁLISE CONCLUÍDA</span>
+          </div>
+
+          {/* hero */}
+          <div className="mt-5 text-center">
+            <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-red-500/15">
+              <AlertTriangle className="h-7 w-7 animate-pulse text-red-500" />
+            </div>
+            <p className="mt-4 text-sm text-gray-400">Seus dados foram encontrados em</p>
+            <p className="text-4xl font-extrabold text-red-500">{count} vazamentos</p>
+            <p className="mx-auto mt-2 max-w-xs text-sm leading-relaxed text-gray-400">
+              Encontramos informações do seu CPF, e-mail e telefone.
             </p>
           </div>
 
-          {/* summary card */}
-          <div className="mx-5 mt-5 rounded-2xl border border-white/5 p-4" style={{ backgroundColor: "#12121A" }}>
-            <p className="text-center text-sm font-bold text-white">Resumo da análise</p>
-            <div className="mt-3 grid grid-cols-3 text-center">
-              <div>
-                <p className="text-3xl font-extrabold text-white">{count}</p>
-                <p className="mt-1 text-[11px] leading-tight text-gray-400">Vazamentos encontrados</p>
+          {/* preview rows — partial data */}
+          <div className="mt-6 space-y-3">
+            {previewRows.map((r) => (
+              <div key={r.label} className="flex items-center gap-3 rounded-xl border border-white/5 px-4 py-3" style={{ backgroundColor: "#12121A" }}>
+                <r.Icon className="h-4 w-4 shrink-0 text-gray-500" />
+                <span className="w-16 shrink-0 text-sm text-white">{r.label}</span>
+                <span className="min-w-0 flex-1 truncate font-mono text-sm text-gray-300">{r.value}</span>
+                <span className={`shrink-0 rounded-md px-2 py-0.5 text-[11px] font-bold ${r.tone}`}>{r.badge}</span>
               </div>
-              <div className="border-x border-white/5">
-                <p className="text-[1.78rem] font-extrabold leading-[2.25rem]" style={{ color: riskColor }}>{risk.label}</p>
-                <p className="mt-1 text-[11px] leading-tight text-gray-400">Nível de risco</p>
-              </div>
-              <div>
-                <p className="text-3xl font-extrabold text-white">{dadosExpostos}</p>
-                <p className="mt-1 text-[11px] leading-tight text-gray-400">Dados expostos</p>
-              </div>
-            </div>
+            ))}
           </div>
 
-          {/* CTA: unlock full report (Essencial R$9,90) */}
+          {/* single CTA → full report page */}
           <button
-            onClick={() => checkout("essencial")}
-            disabled={redirecting}
-            className="mx-5 mt-4 flex w-[calc(100%-2.5rem)] items-center gap-3 rounded-2xl px-4 py-3.5 text-left transition-all active:scale-[0.99] disabled:opacity-60"
-            style={{ background: "linear-gradient(135deg,#4F46E5,#6366F1)", boxShadow: "0 0 24px rgba(79,70,229,0.4)" }}
+            onClick={goToRelatorio}
+            className="mt-6 w-full rounded-2xl py-4 font-bold text-white transition-all active:scale-[0.99]"
+            style={{ background: "linear-gradient(135deg,#4F46E5,#6366F1)", boxShadow: "0 8px 28px rgba(79,70,229,0.4)" }}
           >
-            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white/15">
-              <Lock className="h-5 w-5 text-white" />
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block truncate font-bold text-white">Desbloquear Relatório</span>
-              <span className="block text-xs text-white/70">Veja relatório completo</span>
-            </span>
-            <ChevronRight className="h-5 w-5 shrink-0 text-white/80" />
-          </button>
-
-          {/* CTA: erase leaked data (Proteção Total R$29,90) */}
-          <button
-            onClick={() => checkout("protecao_total")}
-            disabled={redirecting}
-            className="mx-5 mt-3 flex w-[calc(100%-2.5rem)] items-center gap-3 rounded-2xl px-4 py-3.5 text-left transition-all active:scale-[0.99] disabled:opacity-60"
-            style={{ background: "linear-gradient(135deg,#DC2626,#EF4444)", boxShadow: "0 0 24px rgba(220,38,38,0.4)" }}
-          >
-            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white/15">
-              <Trash2 className="h-5 w-5 text-white" />
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block font-bold text-white">Apagar dados vazados</span>
-              <span className="block text-xs text-white/70">Remova seus dados da internet</span>
-            </span>
-            <ChevronRight className="h-5 w-5 shrink-0 text-white/80" />
-          </button>
-
-          {redirecting && (
-            <p className="mt-3 px-5 text-center text-xs text-indigo-300">Redirecionando para pagamento seguro...</p>
-          )}
-
-          {/* exposed data list */}
-          <div className="mt-6 px-5">
-            <p className="text-sm font-bold text-white">Dados expostos:</p>
-            <div className="mt-3 space-y-3.5">
-              {exposedRows.map((r) => (
-                <div key={r.label} className="flex items-center gap-3">
-                  <r.Icon className="h-4 w-4 shrink-0 text-gray-500" />
-                  <span className="w-20 shrink-0 text-sm text-white">{r.label}</span>
-                  <span className={`min-w-0 flex-1 truncate text-sm text-gray-300 ${r.blur ? "select-none blur-[4px]" : ""}`}>{r.value}</span>
-                  <span className={`shrink-0 rounded-md px-2 py-0.5 text-[11px] font-bold ${badgeTone[r.tone]}`}>{r.badge}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* full report teaser card */}
-          <button
-            onClick={() => checkout("essencial")}
-            disabled={redirecting}
-            className="mx-5 mt-6 flex w-[calc(100%-2.5rem)] items-start justify-between rounded-2xl border p-4 text-left transition-all active:scale-[0.99] disabled:opacity-60"
-            style={{ backgroundColor: "#101024", borderColor: "rgba(99,102,241,0.25)" }}
-          >
-            <span className="flex gap-3">
-              <Lock className="mt-0.5 h-5 w-5 shrink-0 text-gray-400" />
-              <span>
-                <span className="block font-bold text-white">Relatório completo</span>
-                <span className="mt-2 block space-y-1">
-                  {["Fontes dos vazamentos", "Dados e detalhes", "Recomendações personalizadas"].map((f) => (
-                    <span key={f} className="flex items-center gap-2 text-sm text-gray-300">
-                      <Check className="h-4 w-4 shrink-0 text-green-400" /> {f}
-                    </span>
-                  ))}
-                </span>
-              </span>
-            </span>
-            <span className="shrink-0 text-right">
-              <span className="block text-xl font-extrabold text-indigo-300">R$9,90</span>
-              <span className="block text-xs text-gray-400">/mês</span>
-            </span>
-          </button>
-
-          {/* data removal teaser card (Proteção Total) */}
-          <button
-            onClick={() => checkout("protecao_total")}
-            disabled={redirecting}
-            className="mx-5 mt-3 flex w-[calc(100%-2.5rem)] items-start justify-between rounded-2xl border p-4 text-left transition-all active:scale-[0.99] disabled:opacity-60"
-            style={{ backgroundColor: "#1c1014", borderColor: "rgba(239,68,68,0.25)" }}
-          >
-            <span className="flex gap-3">
-              <Trash2 className="mt-0.5 h-5 w-5 shrink-0 text-gray-400" />
-              <span>
-                <span className="block font-bold text-white">Apagar dados vazados</span>
-                <span className="mt-2 block space-y-1">
-                  {["Remoção dos dados da internet", "Solicitações LGPD automáticas", "Monitoramento contínuo"].map((f) => (
-                    <span key={f} className="flex items-center gap-2 text-sm text-gray-300">
-                      <Check className="h-4 w-4 shrink-0 text-green-400" /> {f}
-                    </span>
-                  ))}
-                </span>
-              </span>
-            </span>
-            <span className="shrink-0 text-right">
-              <span className="block text-xl font-extrabold text-red-400">R$29,90</span>
-              <span className="block text-xs text-gray-400">/mês</span>
-            </span>
+            Ver meu relatório resumido →
           </button>
         </div>
       </div>

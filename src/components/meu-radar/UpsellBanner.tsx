@@ -9,7 +9,7 @@ const ENTERED_KEY = "priva_entered_at";
 const DISMISSED_KEY = "priva_upsell_dismissed";
 
 /**
- * Upsell to "Proteção Total" (R$29,90) — shown to paid Essencial users on the
+ * Upsell to "Proteção Total" (R$24,90) — shown to paid Essencial users on the
  * dashboard / Segurança tab. Opens the Stripe Checkout.
  *
  * Reveal rules (non-intrusive):
@@ -65,7 +65,7 @@ export function UpsellBanner({ className = "" }: { className?: string }) {
         <Trash2 className="h-5 w-5 shrink-0 text-red-400" />
         <div className="flex-1">
           <p className="text-sm font-semibold text-white">Remova seus dados da internet</p>
-          <p className="mt-0.5 text-xs text-gray-400">Solicite exclusão via LGPD por R$29,90/mês</p>
+          <p className="mt-0.5 text-xs text-gray-400">Solicite exclusão via LGPD por R$24,90/mês</p>
         </div>
         <ChevronRight className="h-4 w-4 shrink-0 text-gray-600" />
       </button>

@@ -70,7 +70,7 @@ function ScanAction({ onScan }: { onScan: () => void }) {
   );
 }
 
-function DeleteCTA({ title, sub, price = "R$29,90/mês", dimmed = false }: { title: string; sub: string; price?: string; dimmed?: boolean }) {
+function DeleteCTA({ title, sub, price = "R$24,90/mês", dimmed = false }: { title: string; sub: string; price?: string; dimmed?: boolean }) {
   return (
     <button
       onClick={() => void startCheckout("protecao_total")}

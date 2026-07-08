@@ -252,10 +252,10 @@ function UpsellCard({ qrDataUrl }: { qrDataUrl?: string }) {
       <View style={s.upsellLeft}>
         <Text style={s.upsellTitle}>Remova seus dados da internet</Text>
         <Text style={s.upsellText}>
-          Quer sair dos vazamentos? Com o plano Proteção Total (R$29,90/mês) solicitamos a remoção dos seus dados via
+          Quer sair dos vazamentos? Com o plano Proteção Total (R$24,90/mês) solicitamos a remoção dos seus dados via
           LGPD e monitoramos sua exposição continuamente.
         </Text>
-        <Text style={s.upsellBtn}>Assinar Proteção Total · R$29,90/mês</Text>
+        <Text style={s.upsellBtn}>Assinar Proteção Total · R$24,90/mês</Text>
       </View>
       {qrDataUrl ? (
         <View style={s.qrBox}>
