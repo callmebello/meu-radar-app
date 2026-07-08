@@ -58,7 +58,6 @@ export function DarkWebScanTab() {
           </ul>
           <button
             onClick={() => {
-              track("InitiateCheckout");
               void startCheckout("protecao_total");
             }}
             className="mt-4 w-full rounded-xl py-3 text-sm font-bold text-white transition hover:opacity-90"

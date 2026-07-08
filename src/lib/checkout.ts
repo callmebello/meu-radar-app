@@ -1,12 +1,22 @@
 import { createCheckoutSession } from "@/lib/api/stripeCheckout.functions";
+import { track, gaEvent } from "@/lib/analytics";
 
 export type CheckoutPlan = "essencial" | "protecao_total";
+
+export const PLAN_PRICE: Record<CheckoutPlan, number> = { essencial: 9.9, protecao_total: 24.9 };
 
 // Starts a Stripe Checkout for the given plan: remembers the plan (so the
 // ?payment=success return knows what was bought even before the API confirms),
 // creates the session server-side and redirects. Returns false when checkout
 // couldn't start (e.g. Stripe not configured in dev) so callers can fall back.
+//
+// Conversion tracking is centralized HERE so every entry point fires exactly one
+// InitiateCheckout (Pixel) + begin_checkout (GA4) with consistent data.
 export async function startCheckout(plan: CheckoutPlan): Promise<boolean> {
+  const value = PLAN_PRICE[plan];
+  track("InitiateCheckout", { value, currency: "BRL", content_name: plan });
+  gaEvent("begin_checkout", { currency: "BRL", value, items: [{ item_name: plan }] });
+
   let email = "";
   try {
     localStorage.setItem("priva_plan", plan);

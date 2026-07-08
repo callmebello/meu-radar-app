@@ -134,9 +134,7 @@ function RelatorioPage() {
   }, [displayCount, risk.label]);
 
   const checkout = async (plan: CheckoutPlan) => {
-    const value = plan === "essencial" ? 9.9 : 24.9;
-    track("InitiateCheckout", { value, currency: "BRL", content_name: plan });
-    gaEvent("begin_checkout", { currency: "BRL", value, items: [{ item_name: plan }] });
+    // InitiateCheckout (Pixel) + begin_checkout (GA4) fire inside startCheckout.
     setRedirecting(true);
     await startCheckout(plan);
     setRedirecting(false);

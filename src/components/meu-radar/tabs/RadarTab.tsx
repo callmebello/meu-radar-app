@@ -192,7 +192,7 @@ export function RadarTab() {
                     key={it.label}
                     role="button"
                     tabIndex={0}
-                    onClick={() => { track("InitiateCheckout"); void startCheckout("protecao_total"); }}
+                    onClick={() => { void startCheckout("protecao_total"); }}
                     className="cursor-pointer rounded-2xl border border-border/60 bg-card p-4 text-left shadow-sm transition-all duration-200 active:scale-[0.98]"
                   >
                     <div className="flex items-start justify-between">

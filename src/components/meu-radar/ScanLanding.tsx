@@ -2,6 +2,8 @@ import { useState } from "react";
 import { AppHeader } from "./Header";
 import { ShieldCheck, CircleCheck, Zap, IdCard, Mail, ArrowRight } from "lucide-react";
 import { formatCPF, isValidCPF, isValidEmail } from "@/lib/funnel";
+import { suggestEmailFix } from "@/lib/emailSuggest";
+import { EmailTypoHint } from "@/components/EmailTypoHint";
 
 const FEATURES = [
   { Icon: CircleCheck, title: "100% gratuito" },
@@ -23,6 +25,7 @@ const AVATARS = [
 export function ScanLanding({ onSubmit }: { onSubmit: (cpf: string, email: string) => void }) {
   const [cpf, setCpf] = useState("");
   const [email, setEmail] = useState("");
+  const [emailFix, setEmailFix] = useState<string | null>(null);
 
   const valid = isValidCPF(cpf) && isValidEmail(email);
   const submit = () => {
@@ -85,13 +88,17 @@ export function ScanLanding({ onSubmit }: { onSubmit: (cpf: string, email: strin
             <input
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => { setEmail(e.target.value); setEmailFix(null); }}
+              onBlur={() => setEmailFix(suggestEmailFix(email))}
               onKeyDown={(e) => e.key === "Enter" && submit()}
               placeholder="seu@email.com"
               className={inputClass}
             />
             <Mail className="pointer-events-none absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
           </div>
+          {emailFix && (
+            <EmailTypoHint suggestion={emailFix} onAccept={() => { setEmail(emailFix); setEmailFix(null); }} />
+          )}
 
           {/* CTA */}
           <button

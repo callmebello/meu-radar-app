@@ -6,7 +6,7 @@ import { confirmStripeSession } from "@/lib/api/stripeCheckout.functions";
 import { generateRelatorioPdf } from "@/lib/api/generateRelatorio.functions";
 import { signInWithEmail } from "@/lib/auth";
 import { LgpdAuthorization } from "@/components/LgpdAuthorization";
-import { track } from "@/lib/analytics";
+import { track, gaEvent } from "@/lib/analytics";
 
 type Phase = "idle" | "activating" | "account" | "lgpd" | "done";
 const MIN_ACTIVATING_MS = 2400;
@@ -102,7 +102,6 @@ export function PaymentReturn() {
     }
 
     setPhase("activating");
-    track("Purchase");
     const startedAt = Date.now();
 
     (async () => {
@@ -110,6 +109,7 @@ export function PaymentReturn() {
       let resolvedPlan = (typeof localStorage !== "undefined" && localStorage.getItem("priva_plan")) || "essencial";
       let resolvedEmail = sessionStorage.getItem("priva_email") || "";
       let resolvedUserId = localStorage.getItem("priva_user_id");
+      let resolvedAmount: number | undefined;
 
       try {
         if (sessionId) {
@@ -119,6 +119,7 @@ export function PaymentReturn() {
             if (res.plan) resolvedPlan = res.plan;
             if (res.email) resolvedEmail = res.email;
             if (res.userId) resolvedUserId = res.userId;
+            if (typeof res.amount === "number") resolvedAmount = res.amount;
           }
         } else if (preapprovalId) {
           // Dormant Mercado Pago return (kept until Stripe is fully validated).
@@ -127,11 +128,23 @@ export function PaymentReturn() {
             if (res.plan) resolvedPlan = res.plan;
             if (res.email) resolvedEmail = res.email;
             if (res.userId) resolvedUserId = res.userId;
+            if (typeof res.amount === "number") resolvedAmount = res.amount;
           }
         }
       } catch {
         /* fall back to the remembered plan */
       }
+
+      // Conversion tracking — fire ONCE with real data, mirrored on Pixel + GA4.
+      const purchaseValue = resolvedAmount ?? (resolvedPlan === "protecao_total" ? 24.9 : 9.9);
+      const txId = sessionId || preapprovalId || undefined;
+      track("Purchase", { value: purchaseValue, currency: "BRL", content_name: resolvedPlan });
+      gaEvent("purchase", {
+        transaction_id: txId,
+        value: purchaseValue,
+        currency: "BRL",
+        items: [{ item_name: resolvedPlan }],
+      });
 
       try {
         localStorage.setItem("priva_is_paid", "true");

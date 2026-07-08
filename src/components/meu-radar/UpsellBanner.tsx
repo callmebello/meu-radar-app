@@ -56,7 +56,6 @@ export function UpsellBanner({ className = "" }: { className?: string }) {
     <div className={`animate-fade-in relative ${className}`}>
       <button
         onClick={() => {
-          track("InitiateCheckout");
           void startCheckout("protecao_total");
         }}
         className="flex w-full items-center gap-3 rounded-2xl p-4 pr-10 text-left transition-all active:scale-[0.99]"

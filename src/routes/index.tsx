@@ -183,7 +183,8 @@ function Index() {
       // with the fresh, persisted scan data.
       if (!opts?.silent) {
         setFunnelOpen(true);
-        track("ViewContent");
+        // ViewContent fires once on the /relatorio page (the real sales content),
+        // not when the teaser sheet opens — avoids duplicate ViewContent.
       }
     }, 3500);
   };

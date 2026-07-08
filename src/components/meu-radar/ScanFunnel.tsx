@@ -128,7 +128,6 @@ export function ScanFunnel({ open, onClose, onScanStart }: { open: boolean; onCl
   };
 
   const checkout = async (plan: CheckoutPlan) => {
-    track("InitiateCheckout");
     // email is optional now (no inline field in the redesigned sheet)
     if (email.includes("@")) {
       try {
@@ -256,7 +255,7 @@ export function ScanFunnel({ open, onClose, onScanStart }: { open: boolean; onCl
 
   /* ---------- PHASE: result — TEASER only (checkout lives on /relatorio) ---------- */
   const goToRelatorio = () => {
-    track("ViewContent", { value: 9.9, currency: "BRL" });
+    // ViewContent fires once, on the /relatorio page mount (not here).
     onClose();
     navigate({ to: "/relatorio" });
   };

@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { ShieldCheck, IdCard, Mail, X } from "lucide-react";
 import { formatCPF, isValidCPF, isValidEmail } from "@/lib/funnel";
+import { suggestEmailFix } from "@/lib/emailSuggest";
+import { EmailTypoHint } from "@/components/EmailTypoHint";
 import type { CaptureReason } from "@/contexts/AppContext";
 
 const COPY: Record<CaptureReason, { title: string; subtitle: string; confirm: string }> = {
@@ -34,6 +36,7 @@ export function CpfCaptureSheet({
 }) {
   const [cpf, setCpf] = useState("");
   const [email, setEmail] = useState(defaultEmail);
+  const [emailFix, setEmailFix] = useState<string | null>(null);
   const needEmail = !isValidEmail(defaultEmail);
   const valid = isValidCPF(cpf) && (!needEmail || isValidEmail(email));
   const c = COPY[reason];
@@ -84,13 +87,17 @@ export function CpfCaptureSheet({
               <input
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => { setEmail(e.target.value); setEmailFix(null); }}
+                onBlur={() => setEmailFix(suggestEmailFix(email))}
                 onKeyDown={(e) => e.key === "Enter" && submit()}
                 placeholder="seu@email.com"
                 className={inputClass}
               />
               <Mail className="pointer-events-none absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
             </div>
+            {emailFix && (
+              <EmailTypoHint suggestion={emailFix} onAccept={() => { setEmail(emailFix); setEmailFix(null); }} />
+            )}
           </>
         )}
 

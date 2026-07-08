@@ -8,6 +8,8 @@ import { useApp } from "@/contexts/AppContext";
 import { getUser, signInWithEmail, signOut } from "@/lib/auth";
 import { getProfile, saveProfile } from "@/lib/profile";
 import { startCheckout } from "@/lib/checkout";
+import { suggestEmailFix } from "@/lib/emailSuggest";
+import { EmailTypoHint } from "@/components/EmailTypoHint";
 import { generateRelatorioPdf } from "@/lib/api/generateRelatorio.functions";
 import { getUserPlan } from "@/lib/api/account.functions";
 import { track } from "@/lib/analytics";
@@ -44,6 +46,7 @@ export function PerfilTab() {
   const [authedEmail, setAuthedEmail] = useState<string | null>(null);
   const [plan, setPlan] = useState("free");
   const [loginEmail, setLoginEmail] = useState("");
+  const [emailFix, setEmailFix] = useState<string | null>(null);
   const [linkSent, setLinkSent] = useState(false);
   const [loginBusy, setLoginBusy] = useState(false);
   const [pdfBusy, setPdfBusy] = useState(false);
@@ -147,23 +150,29 @@ export function PerfilTab() {
             {linkSent ? (
               <p className="mt-3 text-sm text-[var(--color-success)]">Link enviado para {loginEmail} ✓</p>
             ) : (
-              <div className="mt-3 flex gap-2">
-                <input
-                  type="email"
-                  value={loginEmail}
-                  onChange={(e) => setLoginEmail(e.target.value)}
-                  placeholder="seu@email.com"
-                  className="min-w-0 flex-1 rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground outline-none"
-                />
-                <button
-                  onClick={login}
-                  disabled={loginBusy}
-                  className="flex shrink-0 items-center gap-1.5 rounded-xl bg-[var(--color-navy)] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
-                >
-                  {loginBusy && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                  Login
-                </button>
-              </div>
+              <>
+                <div className="mt-3 flex gap-2">
+                  <input
+                    type="email"
+                    value={loginEmail}
+                    onChange={(e) => { setLoginEmail(e.target.value); setEmailFix(null); }}
+                    onBlur={() => setEmailFix(suggestEmailFix(loginEmail))}
+                    placeholder="seu@email.com"
+                    className="min-w-0 flex-1 rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground outline-none"
+                  />
+                  <button
+                    onClick={login}
+                    disabled={loginBusy}
+                    className="flex shrink-0 items-center gap-1.5 rounded-xl bg-[var(--color-navy)] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
+                  >
+                    {loginBusy && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                    Login
+                  </button>
+                </div>
+                {emailFix && (
+                  <EmailTypoHint suggestion={emailFix} onAccept={() => { setLoginEmail(emailFix); setEmailFix(null); }} />
+                )}
+              </>
             )}
           </div>
         )}
@@ -327,7 +336,6 @@ export function PerfilTab() {
                 <button
                   onClick={() => {
                     if (locked) {
-                      track("InitiateCheckout");
                       void startCheckout("protecao_total");
                       return;
                     }
