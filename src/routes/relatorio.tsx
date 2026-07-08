@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, Check, Lock, Shield, X as XIcon } from "lucide-react";
+import { ArrowLeft, Check, KeyRound, Lock, Mail, Phone, Shield, ShieldCheck, User } from "lucide-react";
 import { getScore } from "@/lib/funnel";
 import { startCheckout, type CheckoutPlan } from "@/lib/checkout";
 import { track, gaEvent } from "@/lib/analytics";
@@ -15,6 +15,7 @@ export const Route = createFileRoute("/relatorio")({
 type RawBreach = {
   Name?: string;
   Title?: string;
+  Domain?: string;
   BreachDate?: string;
   AddedDate?: string;
   DataClasses?: string[];
@@ -38,46 +39,101 @@ const DATA_CLASS_PT: Record<string, string> = {
   names: "Nome",
   usernames: "Usuário",
   "physical addresses": "Endereço",
-  "dates of birth": "Data de nascimento",
+  "dates of birth": "Nascimento",
   "geographic locations": "Localização",
   "ip addresses": "IP",
-  "credit cards": "Cartão de crédito",
+  "credit cards": "Cartão",
   "government issued ids": "Documento",
 };
 const translateDC = (dc: string) => DATA_CLASS_PT[dc.toLowerCase()] || dc;
 
-// One breach row — ultra-compact: source name · data types · risk badge.
-// Identical layout whether real or locked (blurred); optional staggered reveal.
-function BreachCard({
-  name,
-  types,
-  hiddenCount,
-  sevLabel,
-  sevClass,
-  locked = false,
-  delayMs,
-}: {
+const TYPE_ICON: Record<string, typeof Mail> = {
+  "E-mail": Mail,
+  Senha: KeyRound,
+  Telefone: Phone,
+  Nome: User,
+};
+
+function yearOf(d?: string): string {
+  if (!d) return "";
+  const y = new Date(d).getFullYear();
+  return isNaN(y) ? "" : String(y);
+}
+
+// Breach-source logo: favicon by domain (Google s2), falling back to a
+// contact-style circle with the source's initial when there's no favicon.
+function SourceLogo({ domain, initial, locked = false }: { domain?: string; initial: string; locked?: boolean }) {
+  const [failed, setFailed] = useState(false);
+  if (locked) {
+    return (
+      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-secondary">
+        <Lock className="h-4 w-4 text-muted-foreground" />
+      </span>
+    );
+  }
+  if (domain && !failed) {
+    return (
+      <span className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-xl bg-secondary">
+        <img
+          src={`https://www.google.com/s2/favicons?domain=${domain}&sz=64`}
+          alt=""
+          className="h-6 w-6 object-contain"
+          onError={() => setFailed(true)}
+        />
+      </span>
+    );
+  }
+  return (
+    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-indigo-500/10 text-sm font-bold text-indigo-600">
+      {initial}
+    </span>
+  );
+}
+
+type Expo = {
   name: string;
+  domain?: string;
+  year: string;
   types: string[];
-  hiddenCount: number;
   sevLabel: string;
   sevClass: string;
-  locked?: boolean;
-  delayMs?: number;
-}) {
+  locked: boolean;
+};
+
+// One exposure row (mockup style): logo · name + typed data icons · badge.
+// Locked rows keep the same layout with initial avatar + blurred name.
+function ExpoRow({ e, delayMs, divider }: { e: Expo; delayMs?: number; divider: boolean }) {
   return (
     <div
-      className={`mb-2.5 flex items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3 ${delayMs !== undefined ? "animate-fade-in" : ""}`}
+      className={`flex items-center gap-3 px-4 py-3.5 ${divider ? "border-t border-border" : ""} ${delayMs !== undefined ? "animate-fade-in" : ""}`}
       style={delayMs !== undefined ? { animationDelay: `${delayMs}ms`, animationDuration: "180ms", animationFillMode: "backwards" } : undefined}
     >
-      <div className="min-w-0">
-        <p className={`truncate text-sm font-bold text-foreground ${locked ? "select-none blur-sm" : ""}`}>{name}</p>
-        <p className={`mt-0.5 truncate text-xs text-muted-foreground ${locked ? "select-none blur-sm" : ""}`}>
-          {types.join(" • ")}
-          {hiddenCount > 0 && <span className="text-muted-foreground/70"> • +{hiddenCount}</span>}
-        </p>
+      <SourceLogo domain={e.domain} initial={(e.name[0] || "•").toUpperCase()} locked={e.locked && !e.name.trim()} />
+      <div className="min-w-0 flex-1">
+        {e.locked ? (
+          <>
+            <p className="select-none truncate text-sm font-bold text-foreground blur-[5px]">{e.name || "Vazamento oculto"}</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">Dados ocultos</p>
+          </>
+        ) : (
+          <>
+            <p className="truncate text-sm font-bold text-foreground">{e.name}</p>
+            <p className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
+              {e.types.slice(0, 3).map((t) => {
+                const Icon = TYPE_ICON[t];
+                return (
+                  <span key={t} className="flex items-center gap-1">
+                    {Icon ? <Icon className="h-3 w-3" /> : <span className="h-1 w-1 rounded-full bg-red-500" />}
+                    {t}
+                  </span>
+                );
+              })}
+              {e.year && <span className="text-muted-foreground/70">· {e.year}</span>}
+            </p>
+          </>
+        )}
       </div>
-      <span className={`shrink-0 rounded-md px-2 py-0.5 text-[11px] font-bold ${sevClass}`}>{sevLabel}</span>
+      <span className={`shrink-0 rounded-md px-2 py-0.5 text-[11px] font-bold ${e.sevClass}`}>{e.sevLabel}</span>
     </div>
   );
 }
@@ -86,6 +142,7 @@ function RelatorioPage() {
   const navigate = useNavigate();
   const isDark = useIsDark();
   const firedView = useRef(false);
+  const plansRef = useRef<HTMLDivElement | null>(null);
   const [redirecting, setRedirecting] = useState(false);
   const [expanded, setExpanded] = useState(false);
 
@@ -100,14 +157,16 @@ function RelatorioPage() {
 
   const risk =
     score < 40
-      ? { color: "#EF4444", label: "RISCO ALTO", badge: "bg-red-500/10 text-red-600" }
+      ? { color: "#EF4444", label: "RISCO ALTO", short: "ALTO", phrase: "Sua identidade digital está em risco.", badge: "bg-red-500/10 text-red-600" }
       : score < 70
-        ? { color: "#F59E0B", label: "RISCO MÉDIO", badge: "bg-amber-500/10 text-amber-600" }
-        : { color: "#10B981", label: "BAIXO", badge: "bg-emerald-500/10 text-emerald-600" };
+        ? { color: "#F59E0B", label: "RISCO MÉDIO", short: "MÉDIO", phrase: "Sua identidade digital precisa de atenção.", badge: "bg-amber-500/10 text-amber-600" }
+        : { color: "#10B981", label: "RISCO BAIXO", short: "BAIXO", phrase: "Sua identidade digital está protegida.", badge: "bg-emerald-500/10 text-emerald-600" };
 
-  const years = breaches.map((b) => new Date(b.BreachDate || b.AddedDate || "").getFullYear()).filter((y) => !isNaN(y)).sort();
-  const yearFirst = years[0] || "—";
-  const yearLast = years[years.length - 1] || "—";
+  // Exposed-data count: real sum of leaked data types, floored like the funnel.
+  const dataExposed = Math.max(
+    breaches.reduce((a, b) => a + (b.DataClasses?.length ?? 0), 0),
+    4 + displayCount,
+  );
 
   useEffect(() => {
     if (!scan && !cpf) navigate({ to: "/" });
@@ -127,32 +186,42 @@ function RelatorioPage() {
     setRedirecting(false);
   };
 
-  // Build the card list. 2 real breaches when opened (authority), everything
-  // else locked/blurred — the curiosity comes from the volume of locked cards.
-  const realCards = breaches.slice(0, 2).map((b, i) => {
-    const dcs = (b.DataClasses ?? []).map(translateDC);
-    return {
-      name: b.Name || b.Title || "Vazamento detectado",
-      types: dcs.slice(0, 2),
-      hiddenCount: Math.max(0, dcs.length - 2),
-      sevLabel: i === 0 ? "ALTO" : "MÉDIO",
-      sevClass: i === 0 ? "text-red-600 bg-red-500/10" : "text-amber-600 bg-amber-500/10",
-      locked: false,
-    };
+  // Real exposures: 2 fully revealed max. Everything else appears as locked
+  // rows — real names blurred (initial visible on the avatar) when we have
+  // them, anonymous lock rows as filler. Curiosity comes from the volume.
+  const guessDomain = (b: RawBreach) =>
+    b.Domain || `${(b.Name || "").toLowerCase().replace(/[^a-z0-9]/g, "")}.com`;
+  const toExpo = (b: RawBreach, i: number): Expo => ({
+    name: b.Name || b.Title || "Vazamento detectado",
+    domain: guessDomain(b),
+    year: yearOf(b.BreachDate || b.AddedDate),
+    types: (b.DataClasses ?? []).map(translateDC),
+    sevLabel: i === 0 ? "ALTO" : "MÉDIO",
+    sevClass: i === 0 ? "text-red-600 bg-red-500/10" : "text-amber-600 bg-amber-500/10",
+    locked: false,
   });
-  // If the scan returned no real breaches, still show one collapsed (locked) card.
-  if (realCards.length === 0) {
-    realCards.push({ name: "Base de dados comprometida", types: ["Senha"], hiddenCount: 2, sevLabel: "ALTO", sevClass: "text-red-600 bg-red-500/10", locked: true });
+  const revealed: Expo[] = breaches.slice(0, 2).map(toExpo);
+  if (revealed.length === 0) {
+    revealed.push({ name: "Base de dados comprometida", year: "", types: ["Senha", "E-mail"], sevLabel: "ALTO", sevClass: "text-red-600 bg-red-500/10", locked: false });
   }
-  const lockedCount = Math.max(0, displayCount - realCards.length);
-  const lockedCards = Array.from({ length: Math.min(6, lockedCount) }).map(() => ({
-    name: "••••••••••••",
-    types: ["••••• • •••••"],
-    hiddenCount: 0,
-    sevLabel: "MÉDIO",
-    sevClass: "text-amber-600 bg-amber-500/10",
+  const lockedReal: Expo[] = breaches.slice(2).map((b) => ({
+    name: b.Name || b.Title || "",
+    year: "",
+    types: [],
+    sevLabel: "OCULTO",
+    sevClass: "text-muted-foreground bg-secondary",
     locked: true,
   }));
+  const fillerCount = Math.max(0, Math.min(6, displayCount - revealed.length - lockedReal.length));
+  const lockedFiller: Expo[] = Array.from({ length: fillerCount }).map(() => ({
+    name: "",
+    year: "",
+    types: [],
+    sevLabel: "OCULTO",
+    sevClass: "text-muted-foreground bg-secondary",
+    locked: true,
+  }));
+  const lockedRows = [...lockedReal, ...lockedFiller];
 
   const logo = isDark ? "/PRIVA_logo_dark_theme.png" : "/PRIVA_logo_light_theme.png";
 
@@ -168,56 +237,75 @@ function RelatorioPage() {
           <span className="h-9 w-9" />
         </header>
 
-        {/* SECTION 1 — Score card (radial gauge: instant risk read, no prose) */}
-        <section className="mt-2 rounded-3xl border border-indigo-500/25 bg-card p-6 text-center shadow-sm">
-          <p className="text-xs tracking-widest text-muted-foreground">RELATÓRIO DE EXPOSIÇÃO DIGITAL</p>
-          <div className="mt-4 flex justify-center">
-            <AnimatedScoreGauge score={score} max={100} showMax />
+        {/* SECTION 1 — Score card (speedometer + risk phrase, mockup layout) */}
+        <section className="mt-2 rounded-3xl border border-indigo-500/25 bg-card p-6 shadow-sm">
+          <p className="text-center text-xs tracking-widest text-muted-foreground">RELATÓRIO DE EXPOSIÇÃO DIGITAL</p>
+          <div className="mt-4 flex items-center gap-3">
+            <div className="w-[52%] shrink-0">
+              <AnimatedScoreGauge score={score} max={100} showMax gradient showLabel={false} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <span className={`inline-block rounded-full px-3 py-1 text-xs font-bold ${risk.badge}`}>{risk.label}</span>
+              <p className="mt-2 text-sm leading-snug text-muted-foreground">{risk.phrase}</p>
+            </div>
           </div>
-          <p className="mt-3 text-sm text-muted-foreground">Analisamos {Math.max(3, displayCount)} fontes verificadas</p>
+          <p className="mt-4 flex items-center justify-center gap-1.5 text-sm text-muted-foreground">
+            <ShieldCheck className="h-4 w-4 text-emerald-500" /> Analisamos {Math.max(3, displayCount)} fontes verificadas
+          </p>
+          {/* Lead-facing summary: leaks · risk level (red) · exposed data */}
           <div className="mt-5 grid grid-cols-3 border-t border-border pt-4 text-center">
             <div>
               <p className="text-2xl font-extrabold text-foreground">{displayCount}</p>
-              <p className="mt-1 text-[11px] text-muted-foreground">Vazamentos</p>
+              <p className="mt-1 text-[11px] leading-tight text-muted-foreground">Vazamentos encontrados</p>
             </div>
             <div className="border-x border-border">
-              <p className="text-2xl font-extrabold text-foreground">{yearFirst}</p>
-              <p className="mt-1 text-[11px] text-muted-foreground">Primeiro registro</p>
+              <p className="text-2xl font-extrabold" style={{ color: risk.color }}>{risk.short}</p>
+              <p className="mt-1 text-[11px] leading-tight text-muted-foreground">Nível de risco</p>
             </div>
             <div>
-              <p className="text-2xl font-extrabold text-foreground">{yearLast}</p>
-              <p className="mt-1 text-[11px] text-muted-foreground">Mais recente</p>
+              <p className="text-2xl font-extrabold text-foreground">{dataExposed}</p>
+              <p className="mt-1 text-[11px] leading-tight text-muted-foreground">Dados expostos</p>
             </div>
           </div>
         </section>
 
-        {/* SECTION 2 — Exposições encontradas. Closed: 1 real card + "Abrir
-            relatório". Open (one-way): 2 real + locked/blurred rest, revealed
-            one by one (~180ms stagger). Curiosity = volume of locked cards. */}
+        {/* SECTION 2 — Exposições. Closed: 1 full row + "Abrir relatório".
+            Open: 2 full rows + locked/blurred rest + plan link. */}
         <section className="mt-8">
           <h2 className="mb-3 text-lg font-bold text-foreground">Exposições encontradas</h2>
 
-          <BreachCard {...realCards[0]} />
+          <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+            <ExpoRow e={revealed[0]} divider={false} />
 
-          {expanded && (
-            <>
-              {realCards.slice(1).map((c, i) => (
-                <BreachCard key={`r${i}`} {...c} delayMs={i * 150} />
-              ))}
-              {lockedCards.map((c, i) => (
-                <BreachCard key={`l${i}`} {...c} delayMs={(realCards.length - 1 + i) * 150} />
-              ))}
-            </>
-          )}
+            {expanded && (
+              <>
+                {revealed.slice(1).map((e, i) => (
+                  <ExpoRow key={`r${i}`} e={e} divider delayMs={i * 150} />
+                ))}
+                {lockedRows.map((e, i) => (
+                  <ExpoRow key={`l${i}`} e={e} divider delayMs={(revealed.length - 1 + i) * 150} />
+                ))}
+              </>
+            )}
 
-          {!expanded && (realCards.length > 1 || lockedCards.length > 0) && (
-            <button
-              onClick={() => setExpanded(true)}
-              className="mt-1 flex w-full items-center justify-center gap-1.5 rounded-xl border border-border bg-card py-3 text-sm font-semibold text-[var(--color-navy)] transition hover:bg-secondary/40"
-            >
-              Abrir relatório →
-            </button>
-          )}
+            {!expanded && (revealed.length > 1 || lockedRows.length > 0) && (
+              <button
+                onClick={() => setExpanded(true)}
+                className="w-full border-t border-border py-3.5 text-sm font-semibold text-indigo-600 transition hover:bg-secondary/40"
+              >
+                Abrir relatório →
+              </button>
+            )}
+
+            {expanded && !isPaid && (
+              <button
+                onClick={() => plansRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })}
+                className="flex w-full items-center justify-center gap-1.5 border-t border-border py-3.5 text-sm font-semibold text-indigo-600 transition hover:bg-secondary/40"
+              >
+                Ver tudo no plano completo <Lock className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
         </section>
 
         {/* PAID users → full report */}
@@ -239,7 +327,7 @@ function RelatorioPage() {
 
             {/* Plans */}
             <p className="mb-4 mt-6 text-center text-base font-semibold text-foreground">O que você está perdendo</p>
-            <div className="grid grid-cols-2 gap-3">
+            <div ref={plansRef} className="grid grid-cols-2 gap-3">
               {/* Essencial */}
               <div className="self-center rounded-2xl border border-indigo-500/30 bg-card p-4 shadow-sm">
                 <p className="mb-2 text-xs font-bold text-indigo-600">Essencial</p>
@@ -287,19 +375,11 @@ function RelatorioPage() {
 
             {redirecting && <p className="mt-3 text-center text-xs text-indigo-500">Redirecionando para pagamento seguro...</p>}
 
-            {/* Social proof + trust */}
-            <div className="mt-6 flex items-center justify-center gap-2">
-              <div className="flex -space-x-2">
-                {["12", "32", "45"].map((n) => (
-                  <img key={n} src={`https://i.pravatar.cc/48?img=${n}`} alt="" className="h-6 w-6 rounded-full border-2 border-background" />
-                ))}
-              </div>
-              <span className="text-xs text-indigo-600">+{87 + (displayCount % 40)} pessoas protegidas hoje</span>
-            </div>
-            <div className="mt-3 flex items-center justify-center gap-4 text-[10px] text-muted-foreground">
-              <span className="flex items-center gap-1"><Shield className="h-3 w-3" /> LGPD</span>
-              <span className="flex items-center gap-1"><Lock className="h-3 w-3" /> Seguro</span>
-              <span className="flex items-center gap-1"><XIcon className="h-3 w-3" /> Cancele quando quiser</span>
+            {/* Trust row */}
+            <div className="mt-8 flex items-center justify-center gap-4 text-[11px] text-muted-foreground">
+              <span className="flex items-center gap-1"><ShieldCheck className="h-3.5 w-3.5" /> Seus dados protegidos</span>
+              <span className="flex items-center gap-1"><Lock className="h-3.5 w-3.5" /> Pagamento seguro</span>
+              <span className="flex items-center gap-1"><Shield className="h-3.5 w-3.5" /> Cancele quando quiser</span>
             </div>
           </>
         )}

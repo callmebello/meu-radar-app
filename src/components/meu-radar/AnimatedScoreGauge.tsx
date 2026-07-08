@@ -5,11 +5,15 @@ interface Props {
   max?: number;
   duration?: number;
   showMax?: boolean;
+  /** Speedometer look: green→red gradient arc + needle (used on /relatorio). */
+  gradient?: boolean;
+  /** Hide the built-in risk pill (when the label is rendered elsewhere). */
+  showLabel?: boolean;
 }
 
 const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
 
-export function AnimatedScoreGauge({ score, max = 100, duration = 1500, showMax = false }: Props) {
+export function AnimatedScoreGauge({ score, max = 100, duration = 1500, showMax = false, gradient = false, showLabel = true }: Props) {
   const [current, setCurrent] = useState(0);
 
   useEffect(() => {
@@ -45,6 +49,15 @@ export function AnimatedScoreGauge({ score, max = 100, duration = 1500, showMax 
   return (
     <div className="relative flex flex-col items-center">
       <svg viewBox="0 0 200 130" className="w-full max-w-[240px]">
+        {gradient && (
+          <defs>
+            <linearGradient id="gauge-risk-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#22c55e" />
+              <stop offset="45%" stopColor="#f59e0b" />
+              <stop offset="80%" stopColor="#ef4444" />
+            </linearGradient>
+          </defs>
+        )}
         {/* background arc */}
         <path
           d={`M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`}
@@ -54,16 +67,30 @@ export function AnimatedScoreGauge({ score, max = 100, duration = 1500, showMax 
           strokeWidth="12"
           strokeLinecap="round"
         />
-        {/* foreground animated arc */}
+        {/* foreground arc — gradient mode draws the FULL green→red scale
+            (speedometer); the needle indicates the score. Solid mode keeps the
+            animated fill. */}
         <path
           d={`M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`}
           fill="none"
-          stroke={color}
+          stroke={gradient ? "url(#gauge-risk-grad)" : color}
           strokeWidth="12"
           strokeLinecap="round"
-          strokeDasharray={arcLen}
-          strokeDashoffset={offset}
+          strokeDasharray={gradient ? undefined : arcLen}
+          strokeDashoffset={gradient ? undefined : offset}
         />
+        {/* speedometer needle */}
+        {gradient && (
+          <line
+            x1={cx + (r - 34) * Math.cos(angle)}
+            y1={cy - (r - 34) * Math.sin(angle)}
+            x2={cx + (r - 12) * Math.cos(angle)}
+            y2={cy - (r - 12) * Math.sin(angle)}
+            stroke="#1f2937"
+            strokeWidth="5"
+            strokeLinecap="round"
+          />
+        )}
         {/* needle dot */}
         <circle cx={nx} cy={ny} r="6" fill={color} stroke="white" strokeWidth="2" />
       </svg>
@@ -76,12 +103,14 @@ export function AnimatedScoreGauge({ score, max = 100, duration = 1500, showMax 
             <span className="text-sm font-medium text-muted-foreground">/{max}</span>
           )}
         </div>
-        <span
-          className="mt-1 rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider"
-          style={{ backgroundColor: `${color}22`, color }}
-        >
-          {label}
-        </span>
+        {showLabel && (
+          <span
+            className="mt-1 rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider"
+            style={{ backgroundColor: `${color}22`, color }}
+          >
+            {label}
+          </span>
+        )}
       </div>
     </div>
   );
