@@ -47,10 +47,10 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
     try {
       const session = await stripe.checkout.sessions.create({
         mode: "subscription",
-        // Brazilian payment methods: card + PIX (instant) + boleto.
-        payment_method_types: ["card", "pix", "boleto"],
-        // PIX requires an expiry window (and the customer e-mail, already collected).
-        payment_method_options: { pix: { expires_after_seconds: 3600 } },
+        // Don't hardcode payment_method_types — let Stripe use the methods enabled
+        // in the Dashboard that are valid for subscriptions (card, boleto, PicPay,
+        // Apple Pay…). Forcing "pix" here breaks the whole session because PIX
+        // isn't supported for recurring subscriptions.
         line_items: [{ price, quantity: 1 }],
         customer_email: data.email || undefined,
         metadata: { plan: data.plan },
