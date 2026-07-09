@@ -129,7 +129,15 @@ function Index() {
 
     void hibpP.then((h) => {
       if (h && typeof h.count === "number" && h.count > 0) breachCount = h.count;
-      setScanResult({ breachCount, hibp: h });
+      const sr = { breachCount, hibp: h };
+      setScanResult(sr);
+      // Persist directly too — the /relatorio route reads this from localStorage
+      // and the AppProvider effect may not flush before we navigate away.
+      try {
+        localStorage.setItem("priva_scan_result", JSON.stringify(sr));
+      } catch {
+        /* ignore */
+      }
     });
 
     // Dashboard-only real free sources (GitHub + SerpAPI). The LP mock
@@ -178,16 +186,15 @@ function Index() {
       }).catch(() => {});
     });
 
-    setTimeout(() => {
+    // Land on /relatorio only once the real HIBP result is in (so the report
+    // never opens empty), keeping the ≥3.5s scan animation and capping the wait
+    // at 7s if HIBP is slow. Paid users (silent) stay on the dashboard.
+    const minAnim = new Promise<void>((res) => setTimeout(res, 3500));
+    const hibpReady = Promise.race([hibpP, new Promise((res) => setTimeout(res, 7000))]);
+    void Promise.all([minAnim, hibpReady]).then(() => {
       setScanning(false);
-      // Paid users (silent) skip the sales funnel — the dashboard just updates
-      // with the fresh, persisted scan data.
-      if (!opts?.silent) {
-        // Straight to the exposure report (no teaser sheet). ViewContent fires
-        // once on the /relatorio mount — not here — avoiding duplicates.
-        navigate({ to: "/relatorio" });
-      }
-    }, 3500);
+      if (!opts?.silent) navigate({ to: "/relatorio" });
+    });
   };
 
   // Single entry point used by the landing form and the CPF modal.
