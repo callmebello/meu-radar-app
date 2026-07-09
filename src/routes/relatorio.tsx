@@ -151,7 +151,25 @@ function RelatorioPage() {
   const breaches = useMemo(() => (scan?.hibp?.breaches ?? []).filter(Boolean), [scan]);
   const breachCount = scan?.hibp?.count ?? breaches.length;
   const displayCount = breachCount;
-  const score = cpf ? getScore(cpf, breachCount) : 46;
+
+  // Broken, session-varied score (more authority than a round "20", and not
+  // always identical). Stable within a session, fresh on a new one. SSR-safe:
+  // deterministic on first render, refined on the client in the effect below.
+  const [score, setScore] = useState(() => (cpf ? getScore(cpf, breachCount) : 20));
+  useEffect(() => {
+    const KEY = "priva_report_score";
+    let v = Number(sessionStorage.getItem(KEY));
+    if (!v) {
+      const [lo, hi] = breachCount >= 5 ? [12, 31] : breachCount >= 2 ? [28, 47] : [54, 72];
+      v = lo + Math.floor(Math.random() * (hi - lo + 1));
+      try {
+        sessionStorage.setItem(KEY, String(v));
+      } catch {
+        /* ignore */
+      }
+    }
+    setScore(v);
+  }, [breachCount]);
 
   const risk =
     score < 40

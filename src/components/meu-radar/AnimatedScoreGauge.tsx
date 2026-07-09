@@ -93,25 +93,41 @@ export function AnimatedScoreGauge({ score, max = 100, duration = 1500, showMax 
         )}
         {/* needle dot */}
         <circle cx={nx} cy={ny} r="6" fill={color} stroke="white" strokeWidth="2" />
+        {/* Speedometer mode: number lives INSIDE the svg (centered, bottom of the
+            arc) so it scales with the gauge and never collides with the needle. */}
+        {gradient && (
+          <>
+            <text x="100" y="86" textAnchor="middle" className="text-foreground" fill="currentColor" fontSize="34" fontWeight={800}>
+              {Math.round(current)}
+            </text>
+            {showMax && (
+              <text x="100" y="103" textAnchor="middle" className="text-muted-foreground" fill="currentColor" fontSize="12" fontWeight={600}>
+                / {max}
+              </text>
+            )}
+          </>
+        )}
       </svg>
-      <div className="-mt-12 flex flex-col items-center">
-        <div className="flex items-baseline gap-1">
-          <span className="text-4xl font-extrabold tracking-tight text-foreground">
-            {Math.round(current)}
-          </span>
-          {showMax && (
-            <span className="text-sm font-medium text-muted-foreground">/{max}</span>
+      {!gradient && (
+        <div className="-mt-12 flex flex-col items-center">
+          <div className="flex items-baseline gap-1">
+            <span className="text-4xl font-extrabold tracking-tight text-foreground">
+              {Math.round(current)}
+            </span>
+            {showMax && (
+              <span className="text-sm font-medium text-muted-foreground">/{max}</span>
+            )}
+          </div>
+          {showLabel && (
+            <span
+              className="mt-1 rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider"
+              style={{ backgroundColor: `${color}22`, color }}
+            >
+              {label}
+            </span>
           )}
         </div>
-        {showLabel && (
-          <span
-            className="mt-1 rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider"
-            style={{ backgroundColor: `${color}22`, color }}
-          >
-            {label}
-          </span>
-        )}
-      </div>
+      )}
     </div>
   );
 }
