@@ -34,6 +34,16 @@ export const saveUser = createServerFn({ method: "POST" })
         .single();
 
       if (error || !row) return { userId: null, plan: "free", cpfHash };
+
+      // Remarketing: add the lead to the Brevo list (best-effort, non-blocking
+      // failure). Every scan captures the e-mail even if they never buy.
+      try {
+        const { addBrevoContact } = await import("../brevo.server");
+        await addBrevoContact(data.email);
+      } catch {
+        /* ignore */
+      }
+
       return { userId: row.id as string, plan: (row.plan as string) ?? "free", cpfHash };
     },
   );

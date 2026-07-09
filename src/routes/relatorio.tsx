@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, Check, KeyRound, Lock, Mail, Phone, Shield, ShieldCheck, User } from "lucide-react";
+import { ArrowLeft, Check, Clock, KeyRound, Lock, Mail, Phone, Shield, ShieldCheck, User } from "lucide-react";
 import { getScore } from "@/lib/funnel";
 import { startCheckout, type CheckoutPlan } from "@/lib/checkout";
 import { track, gaEvent } from "@/lib/analytics";
@@ -333,7 +333,11 @@ function RelatorioPage() {
             </div>
 
             {/* Plans */}
-            <p className="mb-4 mt-6 text-center text-base font-semibold text-foreground">O que você está perdendo</p>
+            <p className="mt-6 text-center text-base font-semibold text-foreground">O que você está perdendo</p>
+            {/* Honest urgency — no fake countdowns (their data really is exposed). */}
+            <p className="mb-4 mt-1.5 flex items-center justify-center gap-1.5 text-xs font-medium text-red-600">
+              <Clock className="h-3.5 w-3.5" /> Seus dados seguem expostos enquanto você espera
+            </p>
             <div ref={plansRef} className="grid grid-cols-2 gap-3">
               {/* Essencial */}
               <div className="self-center rounded-2xl border border-indigo-500/30 bg-card p-4 shadow-sm">
