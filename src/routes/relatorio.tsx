@@ -142,6 +142,7 @@ function RelatorioPage() {
   const plansRef = useRef<HTMLDivElement | null>(null);
   const [redirecting, setRedirecting] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const [showSticky, setShowSticky] = useState(false);
 
   const scan = readJSON<StoredScan>("priva_scan_result");
   const cpf = typeof window !== "undefined" ? sessionStorage.getItem("priva_cpf") || "" : "";
@@ -191,6 +192,16 @@ function RelatorioPage() {
     track("ViewContent", { content_name: "Relatorio Resumido", value: 9.9, currency: "BRL" });
     gaEvent("view_relatorio", { breach_count: displayCount, risk_level: risk.label });
   }, [displayCount, risk.label]);
+
+  // Sticky CTA: persistent nudge while the plans are off-screen; hides once the
+  // plan cards are in view so it never covers their buttons.
+  useEffect(() => {
+    const el = plansRef.current;
+    if (!el || isPaid) return;
+    const obs = new IntersectionObserver(([e]) => setShowSticky(!e.isIntersecting), { threshold: 0.25 });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [isPaid]);
 
   const checkout = async (plan: CheckoutPlan) => {
     // InitiateCheckout (Pixel) + begin_checkout (GA4) fire inside startCheckout.
@@ -380,6 +391,26 @@ function RelatorioPage() {
           </>
         )}
       </div>
+
+      {/* Sticky conversion CTA — persistent while scrolling; smooth-scrolls to
+          the plans. Hidden for paid users and once the plans are on screen. */}
+      {!isPaid && (
+        <div
+          className={`fixed bottom-0 left-1/2 z-50 w-full max-w-md -translate-x-1/2 px-4 pt-6 transition-transform duration-300 ${showSticky ? "translate-y-0" : "translate-y-full"}`}
+          style={{
+            background: "linear-gradient(to top, var(--color-background) 55%, transparent)",
+            paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))",
+          }}
+        >
+          <button
+            onClick={() => plansRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })}
+            className="w-full rounded-2xl py-4 text-base font-bold text-white transition active:scale-[0.99]"
+            style={{ background: "linear-gradient(135deg,#4F46E5,#6366F1)", boxShadow: "0 8px 28px rgba(79,70,229,0.45)" }}
+          >
+            Desbloquear relatório completo →
+          </button>
+        </div>
+      )}
     </div>
   );
 }
