@@ -162,6 +162,16 @@
   animation: scan-step-in 0.35s ease-out both;
 }
 
+/* /relatorio entrance — drops in from the top (after the scan loading below) */
+@keyframes report-drop {
+  from { opacity: 0; transform: translateY(-28px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-report-drop {
+  animation: report-drop 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  will-change: transform, opacity;
+}
+
 /* Full-screen scan sweep (funnel) */
 @keyframes scan-sweep {
   from { transform: rotate(0deg); }

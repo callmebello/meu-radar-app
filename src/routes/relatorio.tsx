@@ -202,7 +202,7 @@ function RelatorioPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="mx-auto max-w-md px-5 pb-16">
+      <div className="animate-report-drop mx-auto max-w-md px-5 pb-16">
         {/* Header */}
         <header className="sticky top-0 z-10 -mx-5 flex items-center justify-between bg-background px-5 py-4">
           <button onClick={() => navigate({ to: "/" })} aria-label="Voltar" className="grid h-9 w-9 place-items-center rounded-full bg-secondary text-foreground hover:opacity-80">
