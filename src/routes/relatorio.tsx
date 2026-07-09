@@ -64,10 +64,12 @@ function yearOf(d?: string): string {
 // contact-style circle with the source's initial when there's no favicon.
 function SourceLogo({ domain, initial, locked = false }: { domain?: string; initial: string; locked?: boolean }) {
   const [failed, setFailed] = useState(false);
-  if (locked) {
+  // Locked rows use a contact-style initial avatar — never the real favicon,
+  // so the hidden breach's identity isn't given away.
+  if (locked || !domain || failed) {
     return (
-      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-secondary">
-        <Lock className="h-4 w-4 text-muted-foreground" />
+      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-indigo-500/10 text-sm font-bold text-indigo-600">
+        {initial}
       </span>
     );
   }
@@ -108,7 +110,7 @@ function ExpoRow({ e, delayMs, divider }: { e: Expo; delayMs?: number; divider: 
       className={`flex items-center gap-3 px-4 py-3.5 ${divider ? "border-t border-border" : ""} ${delayMs !== undefined ? "animate-fade-in" : ""}`}
       style={delayMs !== undefined ? { animationDelay: `${delayMs}ms`, animationDuration: "180ms", animationFillMode: "backwards" } : undefined}
     >
-      <SourceLogo domain={e.domain} initial={(e.name[0] || "•").toUpperCase()} locked={e.locked && !e.name.trim()} />
+      <SourceLogo domain={e.domain} initial={(e.name[0] || "•").toUpperCase()} locked={e.locked} />
       <div className="min-w-0 flex-1">
         {/* Locked rows keep the EXACT real layout (icons + typed data + year),
             just blurred — reads as authentic hidden content, not empty rows. */}
@@ -145,9 +147,10 @@ function RelatorioPage() {
   const cpf = typeof window !== "undefined" ? sessionStorage.getItem("priva_cpf") || "" : "";
   const isPaid = typeof window !== "undefined" && localStorage.getItem("priva_is_paid") === "true";
 
+  // Real data only — the breach list + count come straight from HIBP.
   const breaches = useMemo(() => (scan?.hibp?.breaches ?? []).filter(Boolean), [scan]);
-  const breachCount = scan?.hibp?.count ?? scan?.breachCount ?? breaches.length;
-  const displayCount = Math.max(2, breachCount);
+  const breachCount = scan?.hibp?.count ?? breaches.length;
+  const displayCount = breachCount;
   const score = cpf ? getScore(cpf, breachCount) : 46;
 
   const risk =
@@ -157,11 +160,8 @@ function RelatorioPage() {
         ? { color: "#F59E0B", label: "RISCO MÉDIO", short: "MÉDIO", phrase: "Sua identidade digital precisa de atenção.", badge: "bg-amber-500/10 text-amber-600" }
         : { color: "#10B981", label: "RISCO BAIXO", short: "BAIXO", phrase: "Sua identidade digital está protegida.", badge: "bg-emerald-500/10 text-emerald-600" };
 
-  // Exposed-data count: real sum of leaked data types, floored like the funnel.
-  const dataExposed = Math.max(
-    breaches.reduce((a, b) => a + (b.DataClasses?.length ?? 0), 0),
-    4 + displayCount,
-  );
+  // Exposed-data count: real sum of leaked data types across the breaches.
+  const dataExposed = breaches.reduce((a, b) => a + (b.DataClasses?.length ?? 0), 0);
 
   useEffect(() => {
     if (!scan && !cpf) navigate({ to: "/" });
@@ -181,56 +181,22 @@ function RelatorioPage() {
     setRedirecting(false);
   };
 
-  // Real exposures: 2 fully revealed max. Everything else appears as locked
-  // rows — real names blurred (initial visible on the avatar) when we have
-  // them, anonymous lock rows as filler. Curiosity comes from the volume.
+  // 100% real data (HIBP). 2 breaches fully revealed; the rest are the real
+  // breaches shown as locked rows (name + data blurred, initial on the avatar).
+  // No fabricated/mock content — curiosity comes from the real volume.
   const guessDomain = (b: RawBreach) =>
     b.Domain || `${(b.Name || "").toLowerCase().replace(/[^a-z0-9]/g, "")}.com`;
-  const toExpo = (b: RawBreach, i: number): Expo => ({
-    name: b.Name || b.Title || "Vazamento detectado",
+  const toExpo = (b: RawBreach, i: number, locked = false): Expo => ({
+    name: b.Name || b.Title || "Vazamento de dados",
     domain: guessDomain(b),
     year: yearOf(b.BreachDate || b.AddedDate),
     types: (b.DataClasses ?? []).map(translateDC),
-    sevLabel: i === 0 ? "ALTO" : "MÉDIO",
-    sevClass: i === 0 ? "text-red-600 bg-red-500/10" : "text-amber-600 bg-amber-500/10",
-    locked: false,
+    sevLabel: locked ? "OCULTO" : i === 0 ? "ALTO" : "MÉDIO",
+    sevClass: locked ? "text-muted-foreground bg-secondary" : i === 0 ? "text-red-600 bg-red-500/10" : "text-amber-600 bg-amber-500/10",
+    locked,
   });
-  const revealed: Expo[] = breaches.slice(0, 2).map(toExpo);
-  if (revealed.length === 0) {
-    revealed.push({ name: "Base de dados comprometida", year: "", types: ["Senha", "E-mail"], sevLabel: "ALTO", sevClass: "text-red-600 bg-red-500/10", locked: false });
-  }
-  // Locked rows carry realistic (blurred) mock content — same icons/labels as
-  // the real rows — so the hidden list reads as authentic, not as empty stubs.
-  const MOCK_LOCKED: { types: string[]; year: string }[] = [
-    { types: ["E-mail", "Senha"], year: "2021" },
-    { types: ["E-mail", "Telefone"], year: "2019" },
-    { types: ["Senha", "Nome"], year: "2022" },
-    { types: ["E-mail", "Senha", "Nome"], year: "2020" },
-    { types: ["E-mail", "Senha"], year: "2023" },
-    { types: ["Telefone", "Nome"], year: "2018" },
-  ];
-  const lockedReal: Expo[] = breaches.slice(2).map((b, i) => ({
-    name: b.Name || b.Title || "Vazamento de dados",
-    year: yearOf(b.BreachDate || b.AddedDate) || MOCK_LOCKED[i % MOCK_LOCKED.length].year,
-    types: (b.DataClasses ?? []).map(translateDC).slice(0, 3).length
-      ? (b.DataClasses ?? []).map(translateDC)
-      : MOCK_LOCKED[i % MOCK_LOCKED.length].types,
-    sevLabel: "OCULTO",
-    sevClass: "text-muted-foreground bg-secondary",
-    locked: true,
-  }));
-  const fillerCount = Math.max(0, Math.min(6, displayCount - revealed.length - lockedReal.length));
-  const lockedFiller: Expo[] = Array.from({ length: fillerCount }).map((_, i) => ({
-    name: "",
-    year: MOCK_LOCKED[i % MOCK_LOCKED.length].year,
-    types: MOCK_LOCKED[i % MOCK_LOCKED.length].types,
-    sevLabel: "OCULTO",
-    sevClass: "text-muted-foreground bg-secondary",
-    locked: true,
-  }));
-  // Cap the teaser list — with heavy HIBP hits (100+ breaches) we still show at
-  // most 6 locked rows; the real total lives in the score card / plan copy.
-  const lockedRows = [...lockedReal, ...lockedFiller].slice(0, 6);
+  const revealed: Expo[] = breaches.slice(0, 2).map((b, i) => toExpo(b, i));
+  const lockedRows: Expo[] = breaches.slice(2, 8).map((b, i) => toExpo(b, i, true));
 
   const logo = isDark ? "/PRIVA_logo_dark_theme.png" : "/PRIVA_logo_light_theme.png";
 
@@ -260,7 +226,7 @@ function RelatorioPage() {
           </div>
           {/* Sources ≠ breaches: CPF, e-mail, telefone, web pública e repositórios. */}
           <p className="mt-4 flex items-center justify-center gap-1.5 text-sm text-muted-foreground">
-            <ShieldCheck className="h-4 w-4 text-emerald-500" /> Analisamos 5 fontes verificadas
+            <ShieldCheck className="h-4 w-4 text-emerald-500" /> Analisamos suas informações em fontes verificadas
           </p>
           {/* Lead-facing summary: leaks · risk level (red) · exposed data */}
           <div className="mt-5 grid grid-cols-3 border-t border-border pt-4 text-center">
@@ -280,7 +246,8 @@ function RelatorioPage() {
         </section>
 
         {/* SECTION 2 — Exposições. Closed: 1 full row + "Abrir relatório".
-            Open: 2 full rows + locked/blurred rest + plan link. */}
+            Open: 2 full rows + real locked/blurred rest + plan link. */}
+        {revealed.length > 0 && (
         <section className="mt-8">
           <h2 className="mb-3 text-lg font-bold text-foreground">Exposições encontradas</h2>
 
@@ -317,6 +284,7 @@ function RelatorioPage() {
             )}
           </div>
         </section>
+        )}
 
         {/* PAID users → full report */}
         {isPaid ? (

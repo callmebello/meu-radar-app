@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { BottomNav, type TabId } from "@/components/meu-radar/BottomNav";
 import { DesktopSidebar } from "@/components/meu-radar/DesktopSidebar";
@@ -50,6 +50,7 @@ function Index() {
   const [captureOpen, setCaptureOpen] = useState(false);
   const [captureReason, setCaptureReason] = useState<CaptureReason>("scan");
   const { setGoToTab, isPremium, setIsPremium, setOpenScan, setOpenCapture, scanning, setScanning, setScanResult, setExposure } = useApp();
+  const navigate = useNavigate();
 
   // Restore the logged-in account on load: if there's a Supabase session, sync
   // the plan/paid state and e-mail so the user stays logged in with their data.
@@ -182,9 +183,9 @@ function Index() {
       // Paid users (silent) skip the sales funnel — the dashboard just updates
       // with the fresh, persisted scan data.
       if (!opts?.silent) {
-        setFunnelOpen(true);
-        // ViewContent fires once on the /relatorio page (the real sales content),
-        // not when the teaser sheet opens — avoids duplicate ViewContent.
+        // Straight to the exposure report (no teaser sheet). ViewContent fires
+        // once on the /relatorio mount — not here — avoiding duplicates.
+        navigate({ to: "/relatorio" });
       }
     }, 3500);
   };
@@ -287,7 +288,6 @@ function Index() {
         </div>
       </div>
 
-      <ScanFunnel open={funnelOpen} onClose={closeFunnel} onScanStart={onScanStart} />
       <PaymentReturn />
       {captureOpen && (
         <CpfCaptureSheet
