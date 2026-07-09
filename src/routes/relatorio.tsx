@@ -360,7 +360,7 @@ function RelatorioPage() {
 
               {/* Proteção Total — visually dominant (~10% larger via scale) */}
               <div className="relative z-10 scale-[1.05] rounded-2xl border-2 border-purple-500/50 bg-card p-4 shadow-lg">
-                <span className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-purple-600 px-3 py-1 text-[10px] font-bold text-white">MAIS ESCOLHIDO</span>
+                <span className="absolute -bottom-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-purple-600 px-3 py-1 text-[10px] font-bold text-white shadow-md">MAIS ESCOLHIDO</span>
                 <p className="mb-2 text-xs font-bold text-purple-600">Proteção Total</p>
                 <p className="text-2xl font-extrabold text-foreground">R$24,90<span className="text-sm font-normal text-muted-foreground">/mês</span></p>
                 <ul className="mt-3 space-y-2">
