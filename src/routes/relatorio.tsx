@@ -65,7 +65,23 @@ function RelatorioPage() {
   const [mounted, setMounted] = useState(false); // drives bar-width + count animations
   const [countDays, setCountDays] = useState(0);
 
-  const scan = readJSON<StoredScan>("priva_scan_result");
+  // Scan is read from localStorage AND re-read for a few seconds: the HIBP
+  // result can land right after the scan navigation, so poll until breaches
+  // appear (or give up) instead of rendering an empty report forever.
+  const [scan, setScan] = useState<StoredScan | null>(() => readJSON<StoredScan>("priva_scan_result"));
+  useEffect(() => {
+    if ((scan?.hibp?.breaches?.length ?? 0) > 0) return;
+    let tries = 0;
+    const id = setInterval(() => {
+      tries += 1;
+      const fresh = readJSON<StoredScan>("priva_scan_result");
+      if ((fresh?.hibp?.breaches?.length ?? 0) > 0 || tries >= 20) {
+        if (fresh) setScan(fresh);
+        clearInterval(id);
+      }
+    }, 500);
+    return () => clearInterval(id);
+  }, [scan]);
   const exposure = readJSON<Exposure>("priva_exposure");
   const cpf = typeof window !== "undefined" ? sessionStorage.getItem("priva_cpf") || "" : "";
   const isPaid = typeof window !== "undefined" && localStorage.getItem("priva_is_paid") === "true";

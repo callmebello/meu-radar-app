@@ -26,10 +26,20 @@ export function ScanLanding({ onSubmit }: { onSubmit: (cpf: string, email: strin
   const [cpf, setCpf] = useState("");
   const [email, setEmail] = useState("");
   const [emailFix, setEmailFix] = useState<string | null>(null);
+  const [err, setErr] = useState("");
 
-  const valid = isValidCPF(cpf) && isValidEmail(email);
+  // Button stays clickable so a tap always responds — invalid input shows an
+  // inline message instead of a dead/disabled button (leads were getting stuck).
   const submit = () => {
-    if (!valid) return;
+    if (!isValidCPF(cpf)) {
+      setErr("Digite um CPF válido para continuar.");
+      return;
+    }
+    if (!isValidEmail(email)) {
+      setErr("Digite um e-mail válido para receber o resultado.");
+      return;
+    }
+    setErr("");
     onSubmit(cpf, email.trim());
   };
 
@@ -68,7 +78,7 @@ export function ScanLanding({ onSubmit }: { onSubmit: (cpf: string, email: strin
             </span>
             <input
               value={cpf}
-              onChange={(e) => setCpf(formatCPF(e.target.value))}
+              onChange={(e) => { setCpf(formatCPF(e.target.value)); setErr(""); }}
               inputMode="numeric"
               placeholder="000.000.000-00"
               className={inputClass}
@@ -88,7 +98,7 @@ export function ScanLanding({ onSubmit }: { onSubmit: (cpf: string, email: strin
             <input
               type="email"
               value={email}
-              onChange={(e) => { setEmail(e.target.value); setEmailFix(null); }}
+              onChange={(e) => { setEmail(e.target.value); setEmailFix(null); setErr(""); }}
               onBlur={() => setEmailFix(suggestEmailFix(email))}
               onKeyDown={(e) => e.key === "Enter" && submit()}
               placeholder="seu@email.com"
@@ -100,15 +110,15 @@ export function ScanLanding({ onSubmit }: { onSubmit: (cpf: string, email: strin
             <EmailTypoHint suggestion={emailFix} onAccept={() => { setEmail(emailFix); setEmailFix(null); }} />
           )}
 
-          {/* CTA */}
+          {/* CTA — always clickable; validation shows inline feedback */}
           <button
             onClick={submit}
-            disabled={!valid}
-            className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl py-4 text-lg font-bold text-white transition-all active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-70"
+            className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl py-4 text-lg font-bold text-white transition-all active:scale-[0.99]"
             style={{ background: "linear-gradient(135deg,#4F46E5,#6366F1)", boxShadow: "0 8px 28px rgba(79,70,229,0.4)" }}
           >
             Fazer Scan Grátis <ArrowRight className="h-5 w-5" />
           </button>
+          {err && <p className="mt-2 text-center text-sm font-medium text-red-500">{err}</p>}
 
           {/* Terms / LGPD consent */}
           <p className="mt-3 text-center text-[11px] leading-snug text-muted-foreground">
