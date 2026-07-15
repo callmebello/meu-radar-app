@@ -14,6 +14,7 @@ import { Route as RelatorioRouteImport } from './routes/relatorio'
 import { Route as PrivacidadeRouteImport } from './routes/privacidade'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
+import { Route as AdminRemovalRouteImport } from './routes/admin/removal'
 
 const TermosRoute = TermosRouteImport.update({
   id: '/termos',
@@ -40,12 +41,18 @@ const AuthCallbackRoute = AuthCallbackRouteImport.update({
   path: '/auth/callback',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRemovalRoute = AdminRemovalRouteImport.update({
+  id: '/admin/removal',
+  path: '/admin/removal',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/privacidade': typeof PrivacidadeRoute
   '/relatorio': typeof RelatorioRoute
   '/termos': typeof TermosRoute
+  '/admin/removal': typeof AdminRemovalRoute
   '/auth/callback': typeof AuthCallbackRoute
 }
 export interface FileRoutesByTo {
@@ -53,6 +60,7 @@ export interface FileRoutesByTo {
   '/privacidade': typeof PrivacidadeRoute
   '/relatorio': typeof RelatorioRoute
   '/termos': typeof TermosRoute
+  '/admin/removal': typeof AdminRemovalRoute
   '/auth/callback': typeof AuthCallbackRoute
 }
 export interface FileRoutesById {
@@ -61,19 +69,33 @@ export interface FileRoutesById {
   '/privacidade': typeof PrivacidadeRoute
   '/relatorio': typeof RelatorioRoute
   '/termos': typeof TermosRoute
+  '/admin/removal': typeof AdminRemovalRoute
   '/auth/callback': typeof AuthCallbackRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/privacidade' | '/relatorio' | '/termos' | '/auth/callback'
+  fullPaths:
+    | '/'
+    | '/privacidade'
+    | '/relatorio'
+    | '/termos'
+    | '/admin/removal'
+    | '/auth/callback'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/privacidade' | '/relatorio' | '/termos' | '/auth/callback'
+  to:
+    | '/'
+    | '/privacidade'
+    | '/relatorio'
+    | '/termos'
+    | '/admin/removal'
+    | '/auth/callback'
   id:
     | '__root__'
     | '/'
     | '/privacidade'
     | '/relatorio'
     | '/termos'
+    | '/admin/removal'
     | '/auth/callback'
   fileRoutesById: FileRoutesById
 }
@@ -82,6 +104,7 @@ export interface RootRouteChildren {
   PrivacidadeRoute: typeof PrivacidadeRoute
   RelatorioRoute: typeof RelatorioRoute
   TermosRoute: typeof TermosRoute
+  AdminRemovalRoute: typeof AdminRemovalRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
 }
 
@@ -122,6 +145,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/removal': {
+      id: '/admin/removal'
+      path: '/admin/removal'
+      fullPath: '/admin/removal'
+      preLoaderRoute: typeof AdminRemovalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -130,6 +160,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacidadeRoute: PrivacidadeRoute,
   RelatorioRoute: RelatorioRoute,
   TermosRoute: TermosRoute,
+  AdminRemovalRoute: AdminRemovalRoute,
   AuthCallbackRoute: AuthCallbackRoute,
 }
 export const routeTree = rootRouteImport

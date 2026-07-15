@@ -6,9 +6,10 @@ import { confirmStripeSession } from "@/lib/api/stripeCheckout.functions";
 import { generateRelatorioPdf } from "@/lib/api/generateRelatorio.functions";
 import { signInWithEmail } from "@/lib/auth";
 import { LgpdAuthorization } from "@/components/LgpdAuthorization";
+import { ProtecaoTotalFlow } from "@/components/ProtecaoTotalFlow";
 import { track, gaEvent } from "@/lib/analytics";
 
-type Phase = "idle" | "activating" | "account" | "lgpd" | "done";
+type Phase = "idle" | "activating" | "account" | "protecaoflow" | "lgpd" | "done";
 const MIN_ACTIVATING_MS = 2400;
 
 /**
@@ -40,7 +41,9 @@ export function PaymentReturn() {
   // Essencial → generate/e-mail the report (or ask for a CPF if none on file yet).
   const finishAfterAccount = (resolvedPlan: string) => {
     if (resolvedPlan === "protecao_total") {
-      setPhase(localStorage.getItem("priva_lgpd_authorized") === "true" ? "done" : "lgpd");
+      // Already authorized (re-visit) → just show the dashboard; otherwise run
+      // the full Proteção Total onboarding flow.
+      setPhase(localStorage.getItem("priva_lgpd_authorized") === "true" ? "idle" : "protecaoflow");
     } else {
       const uid = localStorage.getItem("priva_user_id");
       const canReport = Boolean(uid) && Boolean(localStorage.getItem("priva_scan_result"));
@@ -166,7 +169,9 @@ export function PaymentReturn() {
         // log back into on any device (localStorage alone dies on another browser).
         // Show the account step once, unless they already secured an account.
         const hasAccount = localStorage.getItem("priva_has_account") === "true";
-        if (!hasAccount) {
+        // Proteção Total goes straight into its onboarding flow (welcome →
+        // authorization); the account/login prompt is only for Essencial.
+        if (resolvedPlan !== "protecao_total" && !hasAccount) {
           setPhase("account");
         } else {
           finishAfterAccountRef.current(resolvedPlan);
@@ -177,6 +182,21 @@ export function PaymentReturn() {
   }, []);
 
   if (phase === "idle") return null;
+
+  // Proteção Total onboarding (welcome → confirm → collect → authorize → timeline)
+  if (phase === "protecaoflow") {
+    return (
+      <ProtecaoTotalFlow
+        email={email}
+        userId={userId}
+        onDone={() => {
+          setIsPremium(true);
+          if (typeof window !== "undefined") window.location.href = "/";
+          else setPhase("idle");
+        }}
+      />
+    );
+  }
 
   // STEP — secure the account (web: buyer needs a login that works on any device)
   if (phase === "account") {

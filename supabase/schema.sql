@@ -70,6 +70,26 @@ create table if not exists lgpd_authorizations (
   ip_address text
 );
 
+-- Proteção Total (R$24,90) removal cases — one per authorized request.
+create table if not exists removal_requests (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references users(id),
+  case_id text unique not null,
+  full_name text not null,
+  cpf text not null,
+  phone text not null,
+  birth_date text not null,
+  address text,
+  confirmed_data jsonb,
+  sources_to_remove jsonb,
+  authorization_text text not null,
+  status text default 'pending', -- pending | sent | waiting | resolved | escalated
+  created_at timestamp default now(),
+  updated_at timestamp default now()
+);
+create index if not exists removal_requests_user_idx on removal_requests(user_id);
+create index if not exists removal_requests_status_idx on removal_requests(status);
+
 -- Storage buckets used by the PDF generators are created on first use by the
 -- server functions (admin.storage.createBucket). They are PRIVATE; the app
 -- serves time-limited signed URLs (7 days):

@@ -10,6 +10,7 @@ import { startCheckout } from "@/lib/checkout";
 import { generateRelatorioPdf } from "@/lib/api/generateRelatorio.functions";
 import { track } from "@/lib/analytics";
 import { UpsellBanner, shouldShowUpsell } from "../UpsellBanner";
+import { ProtecaoTrackingCard } from "../ProtecaoTrackingCard";
 import { IdentityCardSheet, type CardType } from "../IdentityCardSheet";
 
 const levelColor = (l: string) =>
@@ -93,20 +94,8 @@ export function RadarTab() {
     <>
       <AppHeader title="" showBell />
       <div className="space-y-5 px-5 py-5">
-        {/* Proteção Total — data-removal status (no downloads) */}
-        {isPremium && isProtecao && lgpdRequestedAt && (
-          <div className="flex items-center gap-3 rounded-2xl border border-[var(--color-warning)]/30 bg-[var(--color-warning)]/10 p-4">
-            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[var(--color-warning)]/15">
-              <Trash2 className="h-5 w-5 text-[var(--color-warning)]" />
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold text-foreground">
-                Remoção solicitada em {new Date(lgpdRequestedAt).toLocaleDateString("pt-BR")}
-              </p>
-              <p className="text-[11px] text-muted-foreground">Em andamento · nossa equipe está processando seu pedido</p>
-            </div>
-          </div>
-        )}
+        {/* Proteção Total — persistent case tracker (above the score) */}
+        {isPremium && isProtecao && <ProtecaoTrackingCard />}
 
         {hasChecked && bannerVisible && (
           <div className="flex items-center gap-2 rounded-xl border border-[var(--color-teal)]/30 bg-[var(--color-teal)]/8 px-3 py-2.5">
