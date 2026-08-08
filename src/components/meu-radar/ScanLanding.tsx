@@ -1,7 +1,14 @@
 import { AppHeader } from "./Header";
-import { ArrowRight, ChevronRight, CircleCheck, Lock } from "lucide-react";
+import { ArrowRight, ChevronRight, CircleCheck, Eraser, Lock, Search, Shield } from "lucide-react";
 
 const TRUST = ["100% Grátis", "Dados protegidos", "Rápido e Seguro"];
+
+// The whole product in one glance: find it → get it removed → keep watching.
+const VALUE = [
+  { Icon: Search, title: "DETECTA", text: "Encontra exposições" },
+  { Icon: Eraser, title: "REMOVE", text: "Ajuda a remover" },
+  { Icon: Shield, title: "MONITORA", text: "Acompanha novos riscos" },
+];
 
 const AVATARS = [
   "https://i.pravatar.cc/64?img=12",
@@ -101,7 +108,7 @@ export function ScanLanding({ onStart }: { onStart: () => void }) {
         </p>
 
         {/* Hero — idle radar with a sample finding card over it */}
-        <div className="relative mt-5 h-[176px]">
+        <div className="relative mt-5 h-[158px]">
           <div className="pointer-events-none absolute -right-10 top-1/2 h-[210px] w-[210px] -translate-y-1/2">
             <RadarBackdrop />
           </div>
@@ -157,16 +164,30 @@ export function ScanLanding({ onStart }: { onStart: () => void }) {
           ))}
         </div>
 
-        <div className="mt-4 flex items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3">
-          <Lock className="h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={1.9} />
-          <p className="flex-1 text-xs text-muted-foreground">Seguimos rigorosamente a LGPD</p>
-          <span className="flex shrink-0 items-center gap-1.5 rounded-lg bg-secondary px-2 py-1">
-            <FlagBR className="h-3 w-[17px] rounded-[2px]" />
-            <span className="text-[11px] font-bold text-foreground">LGPD</span>
-          </span>
+        {/* Value proposition — DETECTA → REMOVE → MONITORA. Kept deliberately
+            light (thin strokes, small type, soft shadow) so it never competes
+            with the CTA above it. */}
+        <div className="mt-4 grid grid-cols-3 gap-2">
+          {VALUE.map((v) => (
+            <div
+              key={v.title}
+              className="rounded-xl border border-indigo-500/10 bg-card px-2 py-2.5 text-center"
+              style={{ boxShadow: "0 2px 8px rgba(15,15,30,0.05)" }}
+            >
+              <v.Icon
+                className="mx-auto mb-1.5 h-[18px] w-[18px]"
+                strokeWidth={1.5}
+                color="#6C5CE7"
+              />
+              <p className="text-[11px] font-semibold leading-none tracking-wide text-foreground">
+                {v.title}
+              </p>
+              <p className="mt-1 text-[10px] leading-tight text-muted-foreground">{v.text}</p>
+            </div>
+          ))}
         </div>
 
-        <div className="mt-5 flex items-center gap-3">
+        <div className="mt-4 flex items-center gap-3">
           <div className="flex -space-x-2.5">
             {AVATARS.map((src, i) => (
               <img
@@ -189,7 +210,16 @@ export function ScanLanding({ onStart }: { onStart: () => void }) {
           </div>
         </div>
 
-        <p className="mt-auto pt-6 text-center text-[11px] text-muted-foreground/70">
+        <div className="mt-4 flex items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3">
+          <Lock className="h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={1.9} />
+          <p className="flex-1 text-xs text-muted-foreground">Seguimos rigorosamente a LGPD</p>
+          <span className="flex shrink-0 items-center gap-1.5 rounded-lg bg-secondary px-2 py-1">
+            <FlagBR className="h-3 w-[17px] rounded-[2px]" />
+            <span className="text-[11px] font-bold text-foreground">LGPD</span>
+          </span>
+        </div>
+
+        <p className="mt-auto pt-4 text-center text-[11px] text-muted-foreground/70">
           PRIVA © {new Date().getFullYear()} · Todos os direitos reservados.
         </p>
       </div>
