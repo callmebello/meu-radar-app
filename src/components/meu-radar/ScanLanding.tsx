@@ -197,7 +197,7 @@ export function ScanLanding({ onStart }: { onStart: () => void }) {
           </div>
           <div>
             <p className="text-sm text-foreground">
-              <span className="font-bold text-indigo-400">+18.427</span> verificações realizadas
+              <span className="font-bold text-indigo-400">+2.847</span> verificações realizadas
             </p>
             <p className="text-xs text-muted-foreground">
               Milhares de brasileiros já verificaram seus dados.
