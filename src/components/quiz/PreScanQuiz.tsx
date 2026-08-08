@@ -2,10 +2,17 @@ import { useEffect, useRef, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
+  BadgeCheck,
   Check,
   Clock,
+  HelpCircle,
   IdCard,
+  KeyRound,
+  Landmark,
+  Lock,
   Mail,
+  MapPin,
+  Phone,
   PhoneCall,
   Shield,
   ShieldCheck,
@@ -29,12 +36,12 @@ import {
 const Q1_OPTIONS = ["Sim, com frequência", "Às vezes", "Raramente", "Nunca recebi"];
 
 const Q2_OPTIONS = [
-  { emoji: "📧", label: Q2_EMAIL },
-  { emoji: "🪪", label: Q2_CPF },
-  { emoji: "📞", label: Q2_PHONE },
-  { emoji: "📍", label: Q2_ADDRESS },
-  { emoji: "🔑", label: Q2_PASSWORDS },
-  { emoji: "❓", label: Q2_UNSURE },
+  { Icon: Mail, label: Q2_EMAIL },
+  { Icon: IdCard, label: Q2_CPF },
+  { Icon: Phone, label: Q2_PHONE },
+  { Icon: MapPin, label: Q2_ADDRESS },
+  { Icon: KeyRound, label: Q2_PASSWORDS },
+  { Icon: HelpCircle, label: Q2_UNSURE },
 ];
 
 const Q3_OPTIONS = [
@@ -95,14 +102,14 @@ function Progress({ step }: { step: number }) {
 function OptionCard({
   selected,
   multi,
-  emoji,
+  Icon,
   label,
   compact,
   onClick,
 }: {
   selected: boolean;
   multi?: boolean;
-  emoji?: string;
+  Icon?: typeof Shield;
   label: string;
   compact?: boolean;
   onClick: () => void;
@@ -135,7 +142,12 @@ function OptionCard({
           {selected && <span className="h-2.5 w-2.5 rounded-full bg-indigo-500" />}
         </span>
       )}
-      {emoji && <span className="text-lg leading-none">{emoji}</span>}
+      {Icon && (
+        <Icon
+          className={`h-[18px] w-[18px] shrink-0 ${selected ? "text-indigo-400" : "text-muted-foreground"}`}
+          strokeWidth={1.8}
+        />
+      )}
       <span className="text-sm font-medium text-foreground">{label}</span>
     </button>
   );
@@ -279,7 +291,9 @@ export function PreScanQuiz({
           <Progress step={step} />
         </div>
 
-        <div key={step} className={`flex flex-1 flex-col justify-center py-6 ${anim}`}>
+        {/* Content sits high on the screen (not vertically centred): the question
+            and the first options must land in the top half, where the eye goes. */}
+        <div key={step} className={`flex flex-1 flex-col pb-6 pt-8 ${anim}`}>
           {step === 0 && (
             <>
               <StepHeader
@@ -313,7 +327,7 @@ export function PreScanQuiz({
                     key={o.label}
                     multi
                     compact
-                    emoji={o.emoji}
+                    Icon={o.Icon}
                     label={o.label}
                     selected={q2.includes(o.label)}
                     onClick={() => toggleQ2(o.label)}
@@ -361,10 +375,16 @@ export function PreScanQuiz({
                 Análise gratuita · Resultado em 30 segundos
               </p>
 
-              <div className="mb-6 flex justify-center gap-4 text-xs text-gray-600">
-                <span>🔒 Criptografado</span>
-                <span>🇧🇷 Empresa BR</span>
-                <span>✓ LGPD compliant</span>
+              <div className="mb-6 flex justify-center gap-4 text-xs text-gray-500">
+                <span className="flex items-center gap-1.5">
+                  <Lock className="h-3.5 w-3.5" strokeWidth={2} /> Criptografado
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <Landmark className="h-3.5 w-3.5" strokeWidth={2} /> Empresa BR
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <BadgeCheck className="h-3.5 w-3.5" strokeWidth={2} /> LGPD
+                </span>
               </div>
 
               <label className="mb-1 block text-xs text-gray-400">CPF</label>
