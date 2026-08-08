@@ -275,8 +275,10 @@ function Index() {
   return (
     <div className="min-h-screen bg-muted/40">
       <div className="relative mx-auto flex min-h-screen max-w-[420px] bg-background shadow-2xl sm:max-w-[640px] lg:max-w-[1120px]">
-        {/* Desktop-only left nav (lg+). Mobile keeps the BottomNav untouched. */}
-        <DesktopSidebar active={tab} onChange={setTab} onScan={onScan} scanning={scanning} />
+        {/* Desktop-only left nav (lg+). Mobile keeps the BottomNav untouched.
+            Both are hidden on the pre-scan landing: it's a funnel entry page,
+            not a place to wander off into empty tabs. */}
+        {!showEmpty && <DesktopSidebar active={tab} onChange={setTab} onScan={onScan} scanning={scanning} />}
 
         {/* Content column */}
         <div className="relative flex min-h-screen flex-1 flex-col">
@@ -295,8 +297,8 @@ function Index() {
           <ScanningOverlay open={scanning} />
           {/* Nudge stays visible until the lead converts (buys). Hidden on desktop
               (no bottom scan button to point at — the sidebar has its own). */}
-          <ScanNudge show={!isPremium && !scanning && !funnelOpen} onScan={onScan} />
-          <BottomNav active={tab} onChange={setTab} onScan={onScan} scanning={scanning} />
+          <ScanNudge show={!showEmpty && !isPremium && !scanning && !funnelOpen} onScan={onScan} />
+          {!showEmpty && <BottomNav active={tab} onChange={setTab} onScan={onScan} scanning={scanning} />}
         </div>
       </div>
 

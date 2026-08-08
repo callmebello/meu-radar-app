@@ -217,6 +217,39 @@
   animation: sheet-up 0.85s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+/* Landing hero radar — idle, ambient motion. Slow on purpose: it should be
+   noticed peripherally, never compete with the headline or the CTA. */
+.radar-sweep-idle {
+  transform-origin: center;
+  transform-box: view-box;
+  animation: radar-sweep 14s linear infinite;
+}
+
+@keyframes radar-blip {
+  0%, 100% { opacity: 0.15; }
+  50%      { opacity: 0.7; }
+}
+.radar-blip {
+  animation: radar-blip 4.5s ease-in-out infinite;
+}
+.radar-blip-late {
+  animation: radar-blip 4.5s ease-in-out infinite;
+  animation-delay: 2.2s;
+}
+
+/* Users who ask for less motion get a still radar. */
+@media (prefers-reduced-motion: reduce) {
+  .radar-sweep-idle,
+  .radar-blip,
+  .radar-blip-late {
+    animation: none;
+  }
+  .radar-blip,
+  .radar-blip-late {
+    opacity: 0.5;
+  }
+}
+
 /* Pre-scan quiz — first mount fades up, step changes slide sideways */
 @keyframes quiz-fade-up {
   from { opacity: 0; transform: translateY(18px); }
