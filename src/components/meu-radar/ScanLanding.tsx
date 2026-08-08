@@ -5,9 +5,9 @@ const TRUST = ["100% Grátis", "Dados protegidos", "Rápido e Seguro"];
 
 // The whole product in one glance: find it → get it removed → keep watching.
 const VALUE = [
-  { Icon: Search, title: "DETECTA", text: "Encontra exposições" },
-  { Icon: Eraser, title: "REMOVE", text: "Ajuda a remover" },
-  { Icon: Shield, title: "MONITORA", text: "Acompanha novos riscos" },
+  { Icon: Search, title: "DETECTA" },
+  { Icon: Eraser, title: "REMOVE" },
+  { Icon: Shield, title: "MONITORA" },
 ];
 
 const AVATARS = [
@@ -171,18 +171,13 @@ export function ScanLanding({ onStart }: { onStart: () => void }) {
           {VALUE.map((v) => (
             <div
               key={v.title}
-              className="rounded-xl border border-indigo-500/10 bg-card px-2 py-2.5 text-center"
+              className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-indigo-500/10 bg-card px-2 py-3"
               style={{ boxShadow: "0 2px 8px rgba(15,15,30,0.05)" }}
             >
-              <v.Icon
-                className="mx-auto mb-1.5 h-[18px] w-[18px]"
-                strokeWidth={1.5}
-                color="#6C5CE7"
-              />
+              <v.Icon className="h-5 w-5" strokeWidth={1.5} color="#6C5CE7" />
               <p className="text-[11px] font-semibold leading-none tracking-wide text-foreground">
                 {v.title}
               </p>
-              <p className="mt-1 text-[10px] leading-tight text-muted-foreground">{v.text}</p>
             </div>
           ))}
         </div>
