@@ -16,6 +16,7 @@ import {
   PhoneCall,
   Shield,
   ShieldCheck,
+  User,
 } from "lucide-react";
 import { formatCPF, isValidCPF, isValidEmail } from "@/lib/funnel";
 import { suggestEmailFix } from "@/lib/emailSuggest";
@@ -258,13 +259,14 @@ export function PreScanQuiz({
     if (captureValid) onComplete(cpf, email.trim());
   };
 
-  // The capture screen echoes what the user just told us in Q2.
+  // The capture screen echoes what the user just told us in Q2. Split in three
+  // so the operative word can carry the indigo highlight in every variant.
   const captureTitle =
     q2.includes(Q2_EMAIL) || q2.includes(Q2_CPF)
-      ? "Vamos verificar os dados que você indicou."
+      ? { pre: "Vamos verificar os dados que você ", hi: "indicou", post: "." }
       : q2.includes(Q2_UNSURE)
-        ? "Vamos descobrir o que está exposto sobre você."
-        : "Agora vamos verificar sua exposição.";
+        ? { pre: "Vamos descobrir o que está ", hi: "exposto", post: " sobre você." }
+        : { pre: "Agora vamos verificar sua ", hi: "exposição", post: "." };
 
   const anim = firstRender.current
     ? "animate-quiz-fade-up"
@@ -273,7 +275,7 @@ export function PreScanQuiz({
       : "animate-quiz-slide-right";
 
   const inputClass =
-    "w-full rounded-xl border border-border bg-card py-3.5 pl-4 pr-11 text-foreground outline-none transition-colors placeholder:text-muted-foreground/60 focus:border-indigo-500";
+    "w-full rounded-xl border border-border bg-card py-3.5 pl-11 pr-11 text-foreground outline-none transition-colors placeholder:text-muted-foreground/60 focus:border-indigo-500";
 
   return (
     <div className="fixed inset-0 z-[70] overflow-y-auto bg-background">
@@ -367,28 +369,27 @@ export function PreScanQuiz({
 
           {step === 3 && (
             <>
-              <ShieldCheck className="mx-auto mb-4 h-8 w-8 text-green-400" strokeWidth={1.8} />
-              <h2 className="mb-2 text-center text-xl font-bold leading-snug text-foreground">
-                {captureTitle}
+              {/* Brand mark — this is the moment we ask for a CPF, so the screen
+                  should look like it belongs to a company, not to a form. */}
+              <img
+                src="/icon-192.png"
+                alt="Priva"
+                className="mx-auto mb-4 h-14 w-14"
+                width={56}
+                height={56}
+              />
+              <h2 className="mb-2 text-center text-[22px] font-bold leading-snug text-foreground">
+                {captureTitle.pre}
+                <span className="text-indigo-600 dark:text-indigo-400">{captureTitle.hi}</span>
+                {captureTitle.post}
               </h2>
               <p className="mb-6 text-center text-sm text-muted-foreground">
                 Análise gratuita · Resultado em 30 segundos
               </p>
 
-              <div className="mb-6 flex justify-center gap-4 text-xs text-gray-500">
-                <span className="flex items-center gap-1.5">
-                  <Lock className="h-3.5 w-3.5" strokeWidth={2} /> Criptografado
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <Landmark className="h-3.5 w-3.5" strokeWidth={2} /> Empresa BR
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <BadgeCheck className="h-3.5 w-3.5" strokeWidth={2} /> LGPD
-                </span>
-              </div>
-
-              <label className="mb-1 block text-xs text-gray-400">CPF</label>
+              <label className="mb-1.5 block text-[13px] font-semibold text-foreground">CPF</label>
               <div className="relative">
+                <User className="pointer-events-none absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-muted-foreground" />
                 <input
                   value={cpf}
                   onChange={(e) => setCpf(formatCPF(e.target.value))}
@@ -396,11 +397,14 @@ export function PreScanQuiz({
                   placeholder="000.000.000-00"
                   className={inputClass}
                 />
-                <IdCard className="pointer-events-none absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+                <IdCard className="pointer-events-none absolute right-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-indigo-400" />
               </div>
 
-              <label className="mb-1 mt-4 block text-xs text-gray-400">E-mail</label>
+              <label className="mb-1.5 mt-4 block text-[13px] font-semibold text-foreground">
+                E-mail
+              </label>
               <div className="relative">
+                <Mail className="pointer-events-none absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-muted-foreground" />
                 <input
                   type="email"
                   value={email}
@@ -413,7 +417,7 @@ export function PreScanQuiz({
                   placeholder="seu@email.com"
                   className={inputClass}
                 />
-                <Mail className="pointer-events-none absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+                <Mail className="pointer-events-none absolute right-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-indigo-400" />
               </div>
               {emailFix && (
                 <EmailTypoHint
@@ -425,13 +429,22 @@ export function PreScanQuiz({
                 />
               )}
 
-              <p className="mt-3 text-center text-xs leading-snug text-gray-600">
+              <button
+                type="button"
+                onClick={submitCapture}
+                disabled={!captureValid}
+                className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-indigo-600 py-4 font-bold text-white transition-all active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                Fazer scan gratuito <ArrowRight className="h-5 w-5" />
+              </button>
+
+              <p className="mt-3 text-center text-xs leading-snug text-muted-foreground">
                 Ao continuar, você concorda com os{" "}
                 <a
                   href="/termos"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-indigo-400 underline"
+                  className="text-indigo-500 underline"
                 >
                   Termos
                 </a>{" "}
@@ -440,21 +453,48 @@ export function PreScanQuiz({
                   href="https://www.iubenda.com/privacy-policy/23107752"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-indigo-400 underline"
+                  className="text-indigo-500 underline"
                 >
                   Política de Privacidade
                 </a>
                 .
               </p>
 
-              <button
-                type="button"
-                onClick={submitCapture}
-                disabled={!captureValid}
-                className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-indigo-600 py-4 font-bold text-white transition-all active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                Fazer scan gratuito <ArrowRight className="h-5 w-5" />
-              </button>
+              <div className="mt-4 grid grid-cols-3 gap-2">
+                {[
+                  { Icon: Lock, label: "Criptografado" },
+                  { Icon: Landmark, label: "Empresa BR" },
+                  { Icon: BadgeCheck, label: "Conforme LGPD" },
+                ].map((t) => (
+                  <div
+                    key={t.label}
+                    className="flex items-center justify-center gap-1.5 rounded-xl border border-indigo-500/10 bg-card px-1.5 py-2"
+                    style={{ boxShadow: "0 2px 8px rgba(15,15,30,0.05)" }}
+                  >
+                    <t.Icon className="h-3.5 w-3.5 shrink-0 text-indigo-500" strokeWidth={1.8} />
+                    <span className="text-[10px] font-medium text-foreground">{t.label}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Concrete promise, not a vague one: the CPF really is hashed
+                  server-side (saveUser) and never stored as typed. */}
+              <div className="mt-3 flex gap-3 rounded-2xl border border-border bg-card p-4">
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-indigo-500/10">
+                  <ShieldCheck className="h-5 w-5 text-indigo-500" strokeWidth={1.8} />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-foreground">Seus dados estão seguros</p>
+                  <p className="mt-0.5 text-xs leading-snug text-muted-foreground">
+                    Conexão criptografada. Seu CPF vira um código irreversível — nunca guardamos o
+                    número digitado.
+                  </p>
+                </div>
+              </div>
+
+              <p className="mt-6 text-center text-[11px] text-muted-foreground/70">
+                PRIVA © {new Date().getFullYear()} · Todos os direitos reservados.
+              </p>
             </>
           )}
         </div>
