@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, Check, Globe, Lock, ShieldCheck } from "lucide-react";
 import { getScore } from "@/lib/funnel";
+import { highlightedReportLabels, readQuizAnswers } from "@/lib/quiz";
 import { startCheckout, type CheckoutPlan } from "@/lib/checkout";
 import { track, gaEvent } from "@/lib/analytics";
 import { useIsDark } from "@/hooks/use-is-dark";
@@ -98,6 +99,10 @@ function RelatorioPage() {
   const firstTs = firstBreach ? tsOf(firstBreach) : 0;
   const daysExposed = firstTs ? Math.max(1, Math.floor((Date.now() - firstTs) / 86_400_000)) : 0;
 
+  // Data types the user flagged in the pre-scan quiz — their own words come back
+  // as highlighted rows in the exposure map ("you told us X; here is X").
+  const flagged = useMemo(() => new Set(highlightedReportLabels(readQuizAnswers().q2)), []);
+
   // Exposure map — count breaches per data type (+ public exposure signals)
   const emailN = breaches.filter((b) => has(b, /email/)).length;
   const passN = breaches.filter((b) => has(b, /password/)).length;
@@ -109,8 +114,9 @@ function RelatorioPage() {
     { label: "Senha", n: passN, always: true },
     { label: "Telefone", n: phoneN, always: false },
     { label: "CPF", n: cpfN, always: false },
-  ].filter((b) => b.always || b.n > 0);
+  ].filter((b) => b.always || b.n > 0 || flagged.has(b.label));
   const maxBar = Math.max(1, ...bars.map((b) => b.n));
+  const anyFlagged = bars.some((b) => flagged.has(b.label));
 
   // Public exposure (SerpAPI/GitHub)
   const publicHits = (exposure?.cpf?.count ?? 0) + (exposure?.phone?.count ?? 0) + (exposure?.github?.count ?? 0);
@@ -252,22 +258,37 @@ function RelatorioPage() {
 
         {/* ── Exposure map (bar chart) ── */}
         <section className="mt-8 px-5">
-          <h2 className="mb-3 text-lg font-bold text-foreground">Seus dados comprometidos</h2>
+          <h2 className="mb-3 text-lg font-bold text-foreground">
+            {anyFlagged ? "Encontramos os dados que você indicou" : "Seus dados comprometidos"}
+          </h2>
           <div className="space-y-3 rounded-2xl border border-border bg-card p-4 shadow-sm">
-            {bars.map((b, i) => (
-              <div key={b.label}>
-                <div className="mb-1 flex items-center justify-between">
-                  <span className="text-sm font-medium text-foreground">{b.label}</span>
-                  <span className="text-xs font-semibold text-red-500">{b.n} {b.n === 1 ? "exposição" : "exposições"}</span>
+            {bars.map((b, i) => {
+              const isFlagged = flagged.has(b.label);
+              return (
+                <div
+                  key={b.label}
+                  className={isFlagged ? "-mx-2 rounded-xl px-2 py-2 ring-1 ring-indigo-500/40" : undefined}
+                >
+                  <div className="mb-1 flex items-center justify-between">
+                    <span className="flex items-center gap-2 text-sm font-medium text-foreground">
+                      {b.label}
+                      {isFlagged && (
+                        <span className="rounded-full bg-indigo-500/15 px-1.5 py-0.5 text-[10px] font-semibold text-indigo-400">
+                          você indicou
+                        </span>
+                      )}
+                    </span>
+                    <span className="text-xs font-semibold text-red-500">{b.n} {b.n === 1 ? "exposição" : "exposições"}</span>
+                  </div>
+                  <div className="h-2.5 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-800">
+                    <div
+                      className="h-full rounded-full bg-red-500"
+                      style={{ width: mounted ? `${Math.max(6, (b.n / maxBar) * 100)}%` : "0%", transition: `width 900ms cubic-bezier(0.22,1,0.36,1) ${i * 120}ms` }}
+                    />
+                  </div>
                 </div>
-                <div className="h-2.5 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-800">
-                  <div
-                    className="h-full rounded-full bg-red-500"
-                    style={{ width: mounted ? `${Math.max(6, (b.n / maxBar) * 100)}%` : "0%", transition: `width 900ms cubic-bezier(0.22,1,0.36,1) ${i * 120}ms` }}
-                  />
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </section>
 

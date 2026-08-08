@@ -217,6 +217,33 @@
   animation: sheet-up 0.85s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+/* Pre-scan quiz — first mount fades up, step changes slide sideways */
+@keyframes quiz-fade-up {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-quiz-fade-up {
+  animation: quiz-fade-up 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Forward: the next question slides in from the right */
+@keyframes quiz-slide-left {
+  from { opacity: 0; transform: translateX(28px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.animate-quiz-slide-left {
+  animation: quiz-slide-left 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Back: the previous question slides in from the left */
+@keyframes quiz-slide-right {
+  from { opacity: 0; transform: translateX(-28px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.animate-quiz-slide-right {
+  animation: quiz-slide-right 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
 /* CSS-only confetti */
 @keyframes confetti-fall {
   0%   { transform: translateY(-20px) rotate(0deg); opacity: 1; }

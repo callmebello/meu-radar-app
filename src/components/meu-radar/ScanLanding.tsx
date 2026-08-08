@@ -1,9 +1,5 @@
-import { useState } from "react";
 import { AppHeader } from "./Header";
-import { ShieldCheck, CircleCheck, Zap, IdCard, Mail, ArrowRight } from "lucide-react";
-import { formatCPF, isValidCPF, isValidEmail } from "@/lib/funnel";
-import { suggestEmailFix } from "@/lib/emailSuggest";
-import { EmailTypoHint } from "@/components/EmailTypoHint";
+import { ShieldCheck, CircleCheck, Zap, ArrowRight } from "lucide-react";
 
 const FEATURES = [
   { Icon: CircleCheck, title: "100% gratuito" },
@@ -18,34 +14,11 @@ const AVATARS = [
 ];
 
 /**
- * Initial scan landing (Início, before the first scan). Collects CPF + e-mail
- * and starts the scan. Theme-aware (works on light & dark); fits a phone with no
- * scroll, and centers in a narrow column on desktop (lg+).
+ * Initial scan landing (Início, before the first scan). Sells the scan and hands
+ * off to the pre-scan quiz — CPF/e-mail are collected on the quiz's last step,
+ * after the lead has answered 3 questions about their own exposure.
  */
-export function ScanLanding({ onSubmit }: { onSubmit: (cpf: string, email: string) => void }) {
-  const [cpf, setCpf] = useState("");
-  const [email, setEmail] = useState("");
-  const [emailFix, setEmailFix] = useState<string | null>(null);
-  const [err, setErr] = useState("");
-
-  // Button stays clickable so a tap always responds — invalid input shows an
-  // inline message instead of a dead/disabled button (leads were getting stuck).
-  const submit = () => {
-    if (!isValidCPF(cpf)) {
-      setErr("Digite um CPF válido para continuar.");
-      return;
-    }
-    if (!isValidEmail(email)) {
-      setErr("Digite um e-mail válido para receber o resultado.");
-      return;
-    }
-    setErr("");
-    onSubmit(cpf, email.trim());
-  };
-
-  const inputClass =
-    "w-full rounded-xl border border-[var(--color-navy)]/30 bg-secondary py-4 pl-4 pr-12 text-foreground outline-none placeholder:text-muted-foreground/60";
-
+export function ScanLanding({ onStart }: { onStart: () => void }) {
   return (
     <>
       <AppHeader title="" showBell />
@@ -61,81 +34,25 @@ export function ScanLanding({ onSubmit }: { onSubmit: (cpf: string, email: strin
             Descubra e remova seus dados da internet.
           </p>
           <p className="mx-auto mt-3 max-w-sm text-center text-sm leading-relaxed text-muted-foreground">
-            Analisamos CPF, e-mail, telefone e possíveis vazamentos para proteger sua identidade digital.
+            Analisamos CPF, e-mail, telefone e possíveis vazamentos para proteger sua identidade
+            digital.
           </p>
         </div>
 
-        {/* form */}
+        {/* CTA — opens the 3-question pre-scan quiz */}
         <div className="py-2">
-          {/* CPF */}
-          <label className="block text-sm font-semibold text-foreground">CPF</label>
-          <div className="relative mt-2">
-            <span
-              className="animate-nudge-bounce absolute -top-2.5 right-3 z-10 rounded-full px-2 py-0.5 text-[10px] font-bold text-white shadow-lg"
-              style={{ background: "linear-gradient(135deg,#4F46E5,#6366F1)" }}
-            >
-              Scan 100% grátis
-            </span>
-            <input
-              value={cpf}
-              onChange={(e) => { setCpf(formatCPF(e.target.value)); setErr(""); }}
-              inputMode="numeric"
-              placeholder="000.000.000-00"
-              className={inputClass}
-            />
-            <IdCard className="pointer-events-none absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-          </div>
-
-          {/* E-mail */}
-          <label className="mt-4 block text-sm font-semibold text-foreground">E-mail</label>
-          <div className="relative mt-2">
-            <span
-              className="animate-nudge-bounce absolute -top-2.5 right-3 z-10 rounded-full px-2 py-0.5 text-[10px] font-bold text-white shadow-lg"
-              style={{ background: "linear-gradient(135deg,#4F46E5,#6366F1)", animationDelay: "0.5s" }}
-            >
-              Receba o resultado grátis
-            </span>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => { setEmail(e.target.value); setEmailFix(null); setErr(""); }}
-              onBlur={() => setEmailFix(suggestEmailFix(email))}
-              onKeyDown={(e) => e.key === "Enter" && submit()}
-              placeholder="seu@email.com"
-              className={inputClass}
-            />
-            <Mail className="pointer-events-none absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-          </div>
-          {emailFix && (
-            <EmailTypoHint suggestion={emailFix} onAccept={() => { setEmail(emailFix); setEmailFix(null); }} />
-          )}
-
-          {/* CTA — always clickable; validation shows inline feedback */}
           <button
-            onClick={submit}
-            className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl py-4 text-lg font-bold text-white transition-all active:scale-[0.99]"
-            style={{ background: "linear-gradient(135deg,#4F46E5,#6366F1)", boxShadow: "0 8px 28px rgba(79,70,229,0.4)" }}
+            onClick={onStart}
+            className="flex w-full items-center justify-center gap-2 rounded-2xl py-4 text-lg font-bold text-white transition-all active:scale-[0.99]"
+            style={{
+              background: "linear-gradient(135deg,#4F46E5,#6366F1)",
+              boxShadow: "0 8px 28px rgba(79,70,229,0.4)",
+            }}
           >
             Fazer Scan Grátis <ArrowRight className="h-5 w-5" />
           </button>
-          {err && <p className="mt-2 text-center text-sm font-medium text-red-500">{err}</p>}
-
-          {/* Terms / LGPD consent */}
-          <p className="mt-3 text-center text-[11px] leading-snug text-muted-foreground">
-            Ao continuar, você concorda com os{" "}
-            <a href="/termos" target="_blank" rel="noopener noreferrer" className="text-indigo-400 underline">
-              Termos
-            </a>{" "}
-            e a{" "}
-            <a
-              href="https://www.iubenda.com/privacy-policy/23107752"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-indigo-400 underline"
-            >
-              Política de Privacidade
-            </a>
-            .
+          <p className="mt-3 text-center text-xs text-muted-foreground">
+            ✓ Grátis · ✓ 3 perguntas rápidas · ✓ Resultado na hora
           </p>
         </div>
 
@@ -172,7 +89,9 @@ export function ScanLanding({ onSubmit }: { onSubmit: (cpf: string, email: strin
               <p className="text-sm text-foreground">
                 <span className="font-bold text-indigo-400">+18.427</span> verificações realizadas
               </p>
-              <p className="text-xs text-muted-foreground">Milhares de brasileiros já verificaram seus dados.</p>
+              <p className="text-xs text-muted-foreground">
+                Milhares de brasileiros já verificaram seus dados.
+              </p>
             </div>
           </div>
         </div>

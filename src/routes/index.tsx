@@ -9,6 +9,7 @@ import { PerfilTab } from "@/components/meu-radar/tabs/PerfilTab";
 import { Toaster } from "@/components/ui/sonner";
 import { AppProvider, useApp, type CaptureReason } from "@/contexts/AppContext";
 import { CpfCaptureSheet } from "@/components/CpfCaptureSheet";
+import { PreScanQuiz } from "@/components/quiz/PreScanQuiz";
 import { PaywallModal } from "@/components/meu-radar/PaywallModal";
 import { ScanFunnel } from "@/components/meu-radar/ScanFunnel";
 import { ScanningOverlay } from "@/components/meu-radar/ScanningOverlay";
@@ -49,6 +50,7 @@ function Index() {
   const [hasScanned, setHasScanned] = useState(false);
   const [captureOpen, setCaptureOpen] = useState(false);
   const [captureReason, setCaptureReason] = useState<CaptureReason>("scan");
+  const [quizOpen, setQuizOpen] = useState(false);
   const { setGoToTab, isPremium, setIsPremium, setOpenScan, setOpenCapture, scanning, setScanning, setScanResult, setExposure } = useApp();
   const navigate = useNavigate();
 
@@ -197,15 +199,17 @@ function Index() {
     });
   };
 
-  // Single entry point used by the landing form and the CPF modal.
+  // Single entry point from the pre-scan quiz's CPF step. The Pixel `Lead` is
+  // fired by the quiz the moment that step is reached (not here), so it counts
+  // leads that got to the form — firing it again on submit would double it.
   const beginScan = (cpf: string, email: string) => {
+    setQuizOpen(false);
     try {
       sessionStorage.setItem("priva_cpf", cpf);
       if (email) sessionStorage.setItem("priva_email", email);
     } catch {
       /* ignore */
     }
-    track("Lead");
     runScan(cpf, email);
   };
 
@@ -223,17 +227,18 @@ function Index() {
     runScan(cpf, email, { silent: isPremium });
   };
 
-  // Central scan button: scan inline if CPF is known, else show the ScanLanding
-  // capture page (the full landing form — not the old modal).
+  // Central scan button: scan inline if CPF is known, else capture it. Free
+  // leads go through the pre-scan quiz (the sales flow); paid users skip it and
+  // get the bare CPF sheet — they've already converted, don't re-sell them.
   const onScan = () => {
     const c = typeof window !== "undefined" ? sessionStorage.getItem("priva_cpf") : null;
     const e = (typeof window !== "undefined" ? sessionStorage.getItem("priva_email") : null) ?? "";
     if (c && isValidCPF(c)) runScan(c, e, { silent: isPremium });
-    else {
-      // No CPF on file → open the capture modal. Works even when isPremium
-      // (the old ScanLanding path was gated to !isPremium and did nothing).
+    else if (isPremium) {
       setCaptureReason("scan");
       setCaptureOpen(true);
+    } else {
+      setQuizOpen(true);
     }
   };
 
@@ -277,7 +282,7 @@ function Index() {
         <div className="relative flex min-h-screen flex-1 flex-col">
           <main className="flex flex-1 flex-col pb-2 lg:mx-auto lg:w-full lg:max-w-3xl lg:px-2">
             {showEmpty ? (
-              <ScanLanding onSubmit={beginScan} />
+              <ScanLanding onStart={() => setQuizOpen(true)} />
             ) : (
               <>
                 {tab === "radar" && <RadarTab />}
@@ -296,6 +301,13 @@ function Index() {
       </div>
 
       <PaymentReturn />
+      {quizOpen && (
+        <PreScanQuiz
+          defaultEmail={(typeof window !== "undefined" && sessionStorage.getItem("priva_email")) || ""}
+          onComplete={beginScan}
+          onExit={() => setQuizOpen(false)}
+        />
+      )}
       {captureOpen && (
         <CpfCaptureSheet
           reason={captureReason}
