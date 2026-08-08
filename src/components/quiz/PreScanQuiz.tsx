@@ -370,11 +370,13 @@ export function PreScanQuiz({
           {step === 3 && (
             <>
               {/* Brand mark — this is the moment we ask for a CPF, so the screen
-                  should look like it belongs to a company, not to a form. */}
+                  should look like it belongs to a company, not to a form.
+                  The PNG has no alpha and a white square canvas, so it reads as a
+                  box on the light-grey page: rounded-full clips it to its circle. */}
               <img
                 src="/icon-192.png"
                 alt="Priva"
-                className="mx-auto mb-4 h-14 w-14"
+                className="mx-auto mb-4 h-14 w-14 rounded-full"
                 width={56}
                 height={56}
               />
