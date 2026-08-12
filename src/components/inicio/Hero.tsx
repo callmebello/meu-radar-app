@@ -166,28 +166,37 @@ export function Hero() {
     >
       <Nav />
 
-      {/* Right-hand imagery. On mobile it sits behind the copy at low opacity so
-          the headline stays legible. */}
-      <div className="absolute inset-y-0 right-0 w-full lg:w-[62%]">
-        {/* Bokeh sits underneath: it is what shows through while the photo is
-            missing, and it keeps the edges of the photo from ending abruptly. */}
+      {/* The photograph fills the whole hero. Its own left side is nearly black
+          and the subject sits to the right, so the scrim below only has to
+          finish that falloff behind the copy — the right half stays untouched
+          and sharp. */}
+      <div className="absolute inset-0">
+        {/* Bokeh is the fallback: it shows through only while the photo file is
+            missing, and the photo covers it completely once present. */}
         <BokehScene />
-        {/* Painted as a background rather than an <img>: if the file isn't there
-            yet the browser simply draws nothing and the bokeh shows through,
-            with no broken-image box and no error handling to get wrong. */}
+        {/* Painted as a background rather than an <img>: a missing file simply
+            draws nothing, with no broken-image box and no onError to get wrong. */}
         <div
           className="absolute inset-0 bg-cover bg-no-repeat"
-          style={{ backgroundImage: `url("${HERO_PHOTO}")`, backgroundPosition: "70% center" }}
+          style={{ backgroundImage: `url("${HERO_PHOTO}")`, backgroundPosition: "right center" }}
           aria-hidden="true"
         />
-        {/* Dissolve the imagery towards the copy on the left. */}
+        {/* Desktop: scrim only over the copy column, fully clear past ~62%. */}
         <div
-          className="absolute inset-0"
+          className="absolute inset-0 hidden lg:block"
           style={{
-            background: `linear-gradient(90deg, ${LP.dark} 0%, ${LP.dark} 18%, rgba(5,5,13,0.85) 42%, rgba(5,5,13,0.35) 78%, rgba(5,5,13,0.5) 100%)`,
+            background: `linear-gradient(90deg, ${LP.dark} 0%, rgba(5,5,13,0.92) 24%, rgba(5,5,13,0.55) 42%, rgba(5,5,13,0.12) 56%, rgba(5,5,13,0) 68%)`,
           }}
         />
-        <div className="absolute inset-0 lg:hidden" style={{ background: "rgba(5,5,13,0.72)" }} />
+        {/* Mobile: the copy sits over the image, so the scrim is vertical and
+            heaviest at the top where the headline is. */}
+        <div
+          className="absolute inset-0 lg:hidden"
+          style={{
+            background:
+              "linear-gradient(180deg, rgba(5,5,13,0.90) 0%, rgba(5,5,13,0.74) 55%, rgba(5,5,13,0.55) 100%)",
+          }}
+        />
       </div>
 
       <Container className="relative z-10 flex min-h-[92vh] flex-col justify-center pb-16 pt-[110px] lg:min-h-[88vh]">

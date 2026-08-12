@@ -43,10 +43,10 @@ const PLANS: Plan[] = [
   {
     name: "Proteção Total",
     monthly: 24.9,
-    blurb: "Proteção completa com monitoramento avançado.",
+    blurb: "Proteção completa: encontra, pede a remoção e monitora.",
     features: [
       "Tudo do Essencial",
-      "Recursos avançados de proteção",
+      "Remoção de dados da internet",
       "Alertas em tempo real",
       "Suporte prioritário",
     ],

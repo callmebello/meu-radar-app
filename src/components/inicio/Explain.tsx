@@ -1,7 +1,7 @@
 import {
   Ban,
   Check,
-  ClipboardList,
+  Eraser,
   FileLock2,
   Lock,
   Mail,
@@ -24,9 +24,9 @@ const STEPS = [
   },
   {
     n: "02",
-    Icon: ClipboardList,
-    title: "Entenda",
-    text: "Você recebe um relatório mostrando onde seus dados podem ter sido encontrados.",
+    Icon: Eraser,
+    title: "Remova",
+    text: "Com a sua autorização, acionamos as empresas que expõem seus dados e acompanhamos cada pedido de remoção.",
   },
   {
     n: "03",
@@ -98,6 +98,7 @@ export function HowItWorks() {
 
 const BULLETS = [
   "Relatórios claros e objetivos",
+  "Pedidos de remoção acompanhados",
   "Monitoramento contínuo",
   "Alertas sobre novas exposições",
   "Histórico das verificações",
@@ -208,17 +209,17 @@ export function Product() {
               className="mt-3 text-[30px] font-bold leading-[1.12] tracking-tight sm:text-[40px]"
               style={{ color: LP.text }}
             >
-              Descubra. Monitore.
+              Detecta. Remove.
               <br />
-              Proteja. Sempre.
+              Monitora.
             </h2>
             <p
               className="mt-5 max-w-[30rem] text-[15px] leading-relaxed"
               style={{ color: LP.muted }}
             >
               A Priva procura por possíveis exposições dos seus dados em vazamentos conhecidos e
-              fontes públicas. Você acompanha o histórico, recebe alertas quando algo novo aparece e
-              tem suporte para agir.
+              fontes públicas, ajuda você a pedir a remoção do que for encontrado e segue de olho
+              para avisar quando algo novo aparecer.
             </p>
             <ul className="mt-7 space-y-3.5">
               {BULLETS.map((b) => (
