@@ -5,15 +5,15 @@ import { Container, PrivaWordmark, ScanCta } from "./ui";
 import { LP, SCAN_HREF } from "./theme";
 
 /**
- * Cinematic hero photo (young person on a phone at night, urban bokeh).
+ * Cinematic hero photo (person on a phone at night, urban bokeh, eyes censored).
  *
- * There is no such asset in the repo yet, so the hero ships with a CSS night
- * scene instead of a stand-in image. To use the real photograph: drop it in
- * `public/` and set this to its path, e.g. "/hero-inicio.jpg". The censor bar
- * over the eyes renders only when a photo is present — align it with the two
- * CSS custom properties on `.lp-censor` below.
+ * Drop the file at `public/hero-inicio.jpg` and it appears — no code change
+ * needed. Until it exists the request 404s and we fall back to the CSS night
+ * scene below, so the hero is never broken. The photo already carries its own
+ * censor bar; `.lp-censor` in styles.css is there if a future image needs one
+ * added.
  */
-const HERO_PHOTO: string | null = null;
+const HERO_PHOTO = "/hero-inicio.jpg";
 
 const NAV = [
   { label: "Como funciona", href: "#como-funciona" },
@@ -169,14 +169,17 @@ export function Hero() {
       {/* Right-hand imagery. On mobile it sits behind the copy at low opacity so
           the headline stays legible. */}
       <div className="absolute inset-y-0 right-0 w-full lg:w-[62%]">
-        {HERO_PHOTO ? (
-          <div className="relative h-full w-full">
-            <img src={HERO_PHOTO} alt="" className="h-full w-full object-cover object-center" />
-            <span className="lp-censor" aria-hidden="true" />
-          </div>
-        ) : (
-          <BokehScene />
-        )}
+        {/* Bokeh sits underneath: it is what shows through while the photo is
+            missing, and it keeps the edges of the photo from ending abruptly. */}
+        <BokehScene />
+        {/* Painted as a background rather than an <img>: if the file isn't there
+            yet the browser simply draws nothing and the bokeh shows through,
+            with no broken-image box and no error handling to get wrong. */}
+        <div
+          className="absolute inset-0 bg-cover bg-no-repeat"
+          style={{ backgroundImage: `url("${HERO_PHOTO}")`, backgroundPosition: "70% center" }}
+          aria-hidden="true"
+        />
         {/* Dissolve the imagery towards the copy on the left. */}
         <div
           className="absolute inset-0"

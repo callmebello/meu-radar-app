@@ -121,24 +121,27 @@ export function ScanCta({
   );
 }
 
-/** PRIVA wordmark: the "P" mark plus the name, drawn instead of bitmapped. */
+/**
+ * Real brand lockup: the indigo "P" glyph plus the PRIVA wordmark.
+ *
+ * The glyph stays indigo on both backgrounds; only the wordmark swaps — white
+ * over the dark hero, brand indigo over white sections.
+ */
 export function PrivaWordmark({ light = false, size = 26 }: { light?: boolean; size?: number }) {
-  const color = light ? "#FFFFFF" : LP.text;
   return (
     <span className="inline-flex items-center gap-2">
-      <svg viewBox="0 0 40 40" style={{ height: size, width: size }} aria-hidden="true">
-        <path
-          d="M13 32V14a6 6 0 0 1 6-6h4a8 8 0 0 1 0 16h-4"
-          fill="none"
-          stroke={LP.violet}
-          strokeWidth="4.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-      <span className="text-[19px] font-extrabold tracking-[0.14em]" style={{ color }}>
-        PRIVA
-      </span>
+      <img
+        src="/PRIVA_mark_indigo.png"
+        alt=""
+        className="object-contain"
+        style={{ height: size, width: size }}
+      />
+      <img
+        src={light ? "/PRIVA_logo_dark_theme.png" : "/PRIVA_wordmark_indigo.png"}
+        alt="PRIVA"
+        className="w-auto object-contain"
+        style={{ height: Math.round(size * 0.52) }}
+      />
     </span>
   );
 }

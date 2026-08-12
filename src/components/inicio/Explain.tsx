@@ -158,7 +158,11 @@ function PhoneMockup() {
           aria-hidden="true"
         />
         <div className="mt-6 flex justify-center">
-          <span className="text-[13px] font-extrabold tracking-[0.16em] text-white">PRIVA</span>
+          <img
+            src="/PRIVA_logo_dark_theme.png"
+            alt="PRIVA"
+            className="h-[13px] w-auto object-contain"
+          />
         </div>
         <p className="mt-7 text-center text-[17px] font-bold leading-snug text-white">
           Encontramos
