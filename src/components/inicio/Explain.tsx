@@ -196,7 +196,7 @@ export function Product() {
       <Container>
         {/* The right column is wider than the left so the floating cards clear
             the phone instead of sitting on top of it. */}
-        <div className="grid items-center gap-16 lg:grid-cols-[0.9fr_1.1fr] lg:gap-12">
+        <div className="grid items-center gap-16 lg:grid-cols-[0.8fr_1.2fr] lg:gap-12">
           <Reveal>
             <p
               className="text-[11px] font-bold uppercase tracking-[0.18em]"
@@ -238,7 +238,9 @@ export function Product() {
           </Reveal>
 
           <Reveal delay={120}>
-            <div className="relative mx-auto max-w-[600px]">
+            {/* Wide enough that the absolutely-placed cards clear the phone:
+                (660 - 250) / 2 = 205 per side against 176px cards. */}
+            <div className="relative mx-auto max-w-[660px]">
               <PhoneMockup />
 
               {/* Floating cards: absolute around the phone from lg up, a plain
@@ -247,7 +249,7 @@ export function Product() {
                 {FLOATING.map((f, i) => (
                   <div
                     key={f.title}
-                    className={`lp-float flex items-center gap-3 rounded-2xl bg-white px-4 py-3 lg:absolute lg:w-[168px] ${f.pos}`}
+                    className={`lp-float flex items-center gap-3 rounded-2xl bg-white px-4 py-3 lg:absolute lg:w-[176px] lg:gap-2.5 lg:px-3 ${f.pos}`}
                     style={{
                       border: "1px solid rgba(17,17,26,0.07)",
                       boxShadow: "0 8px 24px rgba(15,15,40,0.08)",
@@ -255,7 +257,7 @@ export function Product() {
                     }}
                   >
                     <span
-                      className="grid h-9 w-9 shrink-0 place-items-center rounded-xl"
+                      className="grid h-9 w-9 shrink-0 place-items-center rounded-xl lg:h-8 lg:w-8"
                       style={{ backgroundColor: "rgba(99,102,241,0.1)" }}
                     >
                       <f.Icon className="h-4 w-4" strokeWidth={1.7} style={{ color: LP.indigo }} />

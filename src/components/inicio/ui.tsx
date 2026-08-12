@@ -122,16 +122,15 @@ export function ScanCta({
 }
 
 /**
- * Real brand lockup: the indigo "P" glyph plus the PRIVA wordmark.
- *
- * The glyph stays indigo on both backgrounds; only the wordmark swaps — white
- * over the dark hero, brand indigo over white sections.
+ * Brand lockup: the round PRIVA badge plus the wordmark — both the real assets,
+ * nothing redrawn. Only the wordmark swaps colour: white over the dark hero,
+ * brand indigo over white sections.
  */
-export function PrivaWordmark({ light = false, size = 26 }: { light?: boolean; size?: number }) {
+export function PrivaWordmark({ light = false, size = 30 }: { light?: boolean; size?: number }) {
   return (
-    <span className="inline-flex items-center gap-2">
+    <span className="inline-flex items-center gap-2.5">
       <img
-        src="/PRIVA_mark_indigo.png"
+        src="/PRIVA_mark.png"
         alt=""
         className="object-contain"
         style={{ height: size, width: size }}
