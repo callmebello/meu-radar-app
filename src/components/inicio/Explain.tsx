@@ -325,15 +325,9 @@ export function Security() {
                 style={{ backgroundColor: LP.violet, opacity: 0.16, filter: "blur(48px)" }}
                 aria-hidden="true"
               />
-              <span
-                className="mx-auto grid h-20 w-20 place-items-center rounded-2xl"
-                style={{
-                  backgroundColor: "rgba(139,124,255,0.12)",
-                  border: "1px solid rgba(139,124,255,0.25)",
-                }}
-              >
-                <Lock className="h-9 w-9" strokeWidth={1.4} style={{ color: LP.lilac }} />
-              </span>
+              {/* The brand mark carries this better than a generic padlock, and
+                  with no frame around it so it reads as identity, not as UI. */}
+              <img src="/PRIVA_mark.png" alt="" className="mx-auto h-20 w-20 object-contain" />
               <h3 className="mt-7 text-[24px] font-bold text-white">
                 Seus dados nunca são vendidos
               </h3>

@@ -314,39 +314,55 @@ export function SocialProof() {
 
 export function MobileApp() {
   return (
-    <section className="py-14" style={{ backgroundColor: "#FFFFFF" }}>
+    <section className="py-16" style={{ backgroundColor: "#FFFFFF" }}>
       <Container>
         <Reveal>
           <div
-            className="flex flex-col items-center gap-6 rounded-3xl px-7 py-8 text-center sm:flex-row sm:justify-between sm:text-left"
-            style={{ backgroundColor: LP.bgLight, border: "1px solid rgba(17,17,26,0.07)" }}
+            className="flex flex-col items-center gap-8 rounded-[28px] px-7 py-9 text-center sm:px-12 lg:flex-row lg:justify-between lg:text-left"
+            style={{
+              background: "linear-gradient(180deg, #FFFFFF 0%, #FAFAFE 100%)",
+              border: "1px solid rgba(99,102,241,0.12)",
+              boxShadow: "0 18px 50px rgba(80,70,200,0.10)",
+            }}
           >
-            <div>
-              <h2 className="text-[20px] font-bold" style={{ color: LP.text }}>
-                Priva no seu celular
-              </h2>
-              <p className="mt-1 text-[14px]" style={{ color: LP.muted }}>
-                Leve sua privacidade para qualquer lugar.
-              </p>
+            <div className="flex flex-col items-center gap-6 sm:flex-row sm:gap-7">
+              <img
+                src="/PRIVA_mark.png"
+                alt=""
+                className="h-[86px] w-[86px] shrink-0 object-contain"
+              />
+              <div>
+                <h2 className="text-[26px] font-bold tracking-tight" style={{ color: LP.text }}>
+                  <span style={{ color: LP.violet }}>Priva</span> App
+                </h2>
+                <p className="mt-2 text-[15px] leading-relaxed" style={{ color: LP.muted }}>
+                  Leve sua privacidade para qualquer lugar.
+                  <br className="hidden sm:block" />{" "}
+                  <span className="font-semibold" style={{ color: LP.violet }}>
+                    Em breve
+                  </span>{" "}
+                  no seu iPhone e no seu Android.
+                </p>
+              </div>
             </div>
-            <div className="flex flex-wrap justify-center gap-3">
+
+            {/* Deliberately not the official store badges — the apps aren't
+                published, and those badges say "Download". Same weight and
+                shape, wording that matches reality. */}
+            <div className="flex shrink-0 flex-wrap justify-center gap-3">
               {[
-                { Icon: Apple, os: "iOS" },
-                { Icon: Smartphone, os: "Android" },
+                { Icon: Apple, os: "App Store" },
+                { Icon: Smartphone, os: "Google Play" },
               ].map((s) => (
                 <div
                   key={s.os}
-                  className="flex items-center gap-3 rounded-2xl bg-white px-5 py-3"
-                  style={{ border: "1px solid rgba(17,17,26,0.09)" }}
+                  className="flex items-center gap-3 rounded-2xl px-5 py-3"
+                  style={{ backgroundColor: LP.text }}
                 >
-                  <s.Icon className="h-6 w-6" strokeWidth={1.6} style={{ color: LP.text }} />
+                  <s.Icon className="h-7 w-7 text-white" strokeWidth={1.5} />
                   <div className="text-left">
-                    <p className="text-[14px] font-bold leading-none" style={{ color: LP.text }}>
-                      {s.os}
-                    </p>
-                    <p className="mt-1 text-[11.5px]" style={{ color: LP.muted }}>
-                      Em breve
-                    </p>
+                    <p className="text-[11px] leading-none text-white/60">Em breve na</p>
+                    <p className="mt-1 text-[15px] font-bold leading-none text-white">{s.os}</p>
                   </div>
                 </div>
               ))}

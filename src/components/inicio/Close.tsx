@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { ChevronDown, Instagram, Linkedin, Lock, Mail } from "lucide-react";
+import { ChevronDown, Instagram, Linkedin, Mail } from "lucide-react";
 import { Container, Eyebrow, PrivaWordmark, Reveal, ScanCta, SectionTitle } from "./ui";
 import { LP, SCAN_HREF } from "./theme";
 
@@ -128,15 +128,13 @@ export function FinalCta() {
 
           <div className="relative flex flex-col items-start gap-10 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-center gap-6">
-              <span
-                className="hidden h-24 w-24 shrink-0 place-items-center rounded-3xl sm:grid"
-                style={{
-                  backgroundColor: "rgba(139,124,255,0.12)",
-                  border: "1px solid rgba(139,124,255,0.25)",
-                }}
-              >
-                <Lock className="h-10 w-10" strokeWidth={1.3} style={{ color: LP.lilac }} />
-              </span>
+              {/* Brand mark instead of a padlock, unframed — same treatment as
+                  the security card. */}
+              <img
+                src="/PRIVA_mark.png"
+                alt=""
+                className="hidden h-24 w-24 shrink-0 object-contain sm:block"
+              />
               <div>
                 <h2 className="text-[26px] font-bold leading-[1.15] tracking-tight text-white sm:text-[34px]">
                   Descubra o que a internet

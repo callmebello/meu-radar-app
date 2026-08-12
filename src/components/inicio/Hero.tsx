@@ -181,11 +181,12 @@ export function Hero() {
           style={{ backgroundImage: `url("${HERO_PHOTO}")`, backgroundPosition: "right center" }}
           aria-hidden="true"
         />
-        {/* Desktop: scrim only over the copy column, fully clear past ~62%. */}
+        {/* Desktop: hold the scrim solid across the copy column (which ends near
+            49%), then fall off fast so the subject and the phone stay clear. */}
         <div
           className="absolute inset-0 hidden lg:block"
           style={{
-            background: `linear-gradient(90deg, ${LP.dark} 0%, rgba(5,5,13,0.92) 24%, rgba(5,5,13,0.55) 42%, rgba(5,5,13,0.12) 56%, rgba(5,5,13,0) 68%)`,
+            background: `linear-gradient(90deg, ${LP.dark} 0%, rgba(5,5,13,0.95) 32%, rgba(5,5,13,0.85) 44%, rgba(5,5,13,0.35) 54%, rgba(5,5,13,0.05) 62%, rgba(5,5,13,0) 68%)`,
           }}
         />
         {/* Mobile: the copy sits over the image, so the scrim is vertical and
