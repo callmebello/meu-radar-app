@@ -142,22 +142,40 @@ export function LoginDialog({ open, onClose }: { open: boolean; onClose: () => v
             />
           </div>
           {mode === "signin" && (
-            <div className="relative">
-              <Lock
-                className="pointer-events-none absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2"
-                style={{ color: LP.muted }}
-              />
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Sua senha"
-                autoComplete="current-password"
-                className={field}
-                style={fieldStyle}
-                required
-              />
-            </div>
+            <>
+              <div className="relative">
+                <Lock
+                  className="pointer-events-none absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2"
+                  style={{ color: LP.muted }}
+                />
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Sua senha"
+                  autoComplete="current-password"
+                  className={field}
+                  style={fieldStyle}
+                  required
+                />
+              </div>
+              {/* Right under the password, where people look for it — and small,
+                  so it never competes with "Entrar". */}
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode("reset");
+                    setError(null);
+                    setResetSent(false);
+                  }}
+                  className="text-[12.5px] font-medium transition-opacity hover:opacity-70"
+                  style={{ color: LP.muted }}
+                >
+                  Esqueci minha senha
+                </button>
+              </div>
+            </>
           )}
 
           {resetSent && (
@@ -189,18 +207,20 @@ export function LoginDialog({ open, onClose }: { open: boolean; onClose: () => v
           </button>
         </form>
 
-        <button
-          type="button"
-          onClick={() => {
-            setMode(mode === "reset" ? "signin" : "reset");
-            setError(null);
-            setResetSent(false);
-          }}
-          className="mt-3 w-full text-center text-[12.5px] font-semibold"
-          style={{ color: LP.indigo }}
-        >
-          {mode === "reset" ? "Voltar para o login" : "Esqueci minha senha"}
-        </button>
+        {mode === "reset" && (
+          <button
+            type="button"
+            onClick={() => {
+              setMode("signin");
+              setError(null);
+              setResetSent(false);
+            }}
+            className="mt-3 w-full text-center text-[12.5px] font-semibold"
+            style={{ color: LP.indigo }}
+          >
+            Voltar para o login
+          </button>
+        )}
 
         <p className="mt-3 text-center text-[12.5px]" style={{ color: LP.muted }}>
           Ainda não tem conta?{" "}
