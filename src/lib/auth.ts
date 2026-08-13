@@ -16,6 +16,19 @@ export async function signInWithEmail(email: string) {
   return { error };
 }
 
+/**
+ * Sends the "define a new password" e-mail. Supabase deliberately reports
+ * success even for addresses that don't exist, so the caller must not turn the
+ * result into "this account exists" — that would leak who has an account.
+ */
+export async function requestPasswordReset(email: string) {
+  if (!supabase) return { error: new Error("Supabase não configurado") };
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: redirectTo(),
+  });
+  return { error };
+}
+
 export async function signInWithPassword(email: string, password: string) {
   if (!supabase) return { error: new Error("Supabase não configurado") };
   const { error } = await supabase.auth.signInWithPassword({ email, password });

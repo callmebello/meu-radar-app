@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { ChevronDown, Instagram, Linkedin, Youtube } from "lucide-react";
 import { Container, Eyebrow, PrivaWordmark, Reveal, ScanCta, SectionTitle } from "./ui";
+import { useContactDialog } from "./contact-context";
 import { LP, SCAN_HREF } from "./theme";
 
 /* ── 8. FAQ ───────────────────────────────────────────────────────── */
@@ -167,7 +168,6 @@ const FOOTER_LINKS: { label: string; to?: string; href?: string }[] = [
   { label: "Empresas", href: "#empresas" },
   { label: "Privacidade", href: "https://www.iubenda.com/privacy-policy/23107752" },
   { label: "Termos", to: "/termos" },
-  { label: "Contato", href: "#contato" },
 ];
 
 /* Lucide dropped brand marks, so TikTok and X are drawn here. Both take the
@@ -189,6 +189,7 @@ function XLogo({ className = "" }: { className?: string }) {
 }
 
 export function SiteFooter() {
+  const contact = useContactDialog();
   return (
     <footer style={{ backgroundColor: "#FFFFFF", borderTop: "1px solid rgba(17,17,26,0.08)" }}>
       <Container className="flex flex-col gap-8 py-10 lg:flex-row lg:items-center lg:justify-between">
@@ -223,6 +224,14 @@ export function SiteFooter() {
               </a>
             ),
           )}
+          <button
+            type="button"
+            onClick={contact.open}
+            className="text-[13px] transition-colors hover:opacity-70"
+            style={{ color: LP.muted }}
+          >
+            Contato
+          </button>
         </nav>
 
         <div className="flex items-center gap-3">

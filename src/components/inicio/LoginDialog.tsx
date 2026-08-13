@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { Loader2, Lock, Mail, X } from "lucide-react";
-import { signInWithPassword } from "@/lib/auth";
+import { requestPasswordReset, signInWithPassword } from "@/lib/auth";
 import { getUserPlan } from "@/lib/api/account.functions";
 import { LP } from "./theme";
 
@@ -18,6 +18,9 @@ export function LoginDialog({ open, onClose }: { open: boolean; onClose: () => v
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // "signin" collects the password; "reset" only needs the e-mail.
+  const [mode, setMode] = useState<"signin" | "reset">("signin");
+  const [resetSent, setResetSent] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -28,10 +31,26 @@ export function LoginDialog({ open, onClose }: { open: boolean; onClose: () => v
 
   if (!open) return null;
 
-  const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) && password.length >= 6;
+  const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+  const valid = mode === "reset" ? emailOk : emailOk && password.length >= 6;
+
+  const sendReset = async () => {
+    if (!emailOk || busy) return;
+    setBusy(true);
+    setError(null);
+    try {
+      await requestPasswordReset(email.trim());
+      // Shown regardless of whether the address has an account — confirming it
+      // would tell a stranger who is a Priva customer.
+      setResetSent(true);
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (mode === "reset") return sendReset();
     if (!valid || busy) return;
     setBusy(true);
     setError(null);
@@ -86,10 +105,12 @@ export function LoginDialog({ open, onClose }: { open: boolean; onClose: () => v
           <div>
             <img src="/PRIVA_mark.png" alt="" className="mb-3 h-11 w-11 object-contain" />
             <h2 className="text-[20px] font-bold" style={{ color: LP.text }}>
-              Entrar
+              {mode === "reset" ? "Redefinir senha" : "Entrar"}
             </h2>
             <p className="mt-1 text-[13px]" style={{ color: LP.muted }}>
-              Acesse sua conta Priva.
+              {mode === "reset"
+                ? "Informe seu e-mail e enviamos um link para criar uma nova senha."
+                : "Acesse sua conta Priva."}
             </p>
           </div>
           <button
@@ -120,22 +141,30 @@ export function LoginDialog({ open, onClose }: { open: boolean; onClose: () => v
               required
             />
           </div>
-          <div className="relative">
-            <Lock
-              className="pointer-events-none absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2"
-              style={{ color: LP.muted }}
-            />
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Sua senha"
-              autoComplete="current-password"
-              className={field}
-              style={fieldStyle}
-              required
-            />
-          </div>
+          {mode === "signin" && (
+            <div className="relative">
+              <Lock
+                className="pointer-events-none absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2"
+                style={{ color: LP.muted }}
+              />
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Sua senha"
+                autoComplete="current-password"
+                className={field}
+                style={fieldStyle}
+                required
+              />
+            </div>
+          )}
+
+          {resetSent && (
+            <p className="text-[13px] font-medium" style={{ color: LP.green }}>
+              Se houver uma conta com esse e-mail, o link de redefinição está a caminho.
+            </p>
+          )}
 
           {error && (
             <p className="text-[13px] font-medium" style={{ color: "#D93A3A" }}>
@@ -150,11 +179,30 @@ export function LoginDialog({ open, onClose }: { open: boolean; onClose: () => v
             style={{ background: `linear-gradient(135deg, ${LP.violet}, ${LP.indigo})` }}
           >
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-            {busy ? "Entrando..." : "Entrar"}
+            {busy
+              ? mode === "reset"
+                ? "Enviando..."
+                : "Entrando..."
+              : mode === "reset"
+                ? "Enviar link de redefinição"
+                : "Entrar"}
           </button>
         </form>
 
-        <p className="mt-4 text-center text-[12.5px]" style={{ color: LP.muted }}>
+        <button
+          type="button"
+          onClick={() => {
+            setMode(mode === "reset" ? "signin" : "reset");
+            setError(null);
+            setResetSent(false);
+          }}
+          className="mt-3 w-full text-center text-[12.5px] font-semibold"
+          style={{ color: LP.indigo }}
+        >
+          {mode === "reset" ? "Voltar para o login" : "Esqueci minha senha"}
+        </button>
+
+        <p className="mt-3 text-center text-[12.5px]" style={{ color: LP.muted }}>
           Ainda não tem conta?{" "}
           <a
             href="#planos"

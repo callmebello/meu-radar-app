@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { ChevronRight, Lock, Menu, ShieldCheck, X, Zap } from "lucide-react";
 import { Container, PrivaWordmark, ScanCta } from "./ui";
 import { LoginDialog } from "./LoginDialog";
+import { useContactDialog } from "./contact-context";
 import { LP } from "./theme";
 
 /**
@@ -20,7 +21,6 @@ const NAV = [
   { label: "Por que Priva?", href: "#seguranca" },
   { label: "Planos", href: "#planos" },
   { label: "Empresas", href: "#empresas" },
-  { label: "Contato", href: "#contato" },
 ];
 
 const TRUST = [
@@ -33,6 +33,7 @@ function Nav() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
+  const contact = useContactDialog();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -65,6 +66,13 @@ function Nav() {
               {n.label}
             </a>
           ))}
+          <button
+            type="button"
+            onClick={contact.open}
+            className="text-[14px] text-white/70 transition-colors hover:text-white"
+          >
+            Contato
+          </button>
         </nav>
 
         <div className="hidden items-center gap-5 lg:flex">
@@ -111,6 +119,16 @@ function Nav() {
                 {n.label}
               </a>
             ))}
+            <button
+              type="button"
+              onClick={() => {
+                setOpen(false);
+                contact.open();
+              }}
+              className="rounded-xl px-3 py-3 text-left text-[15px] text-white/80 transition-colors hover:bg-white/5 hover:text-white"
+            >
+              Contato
+            </button>
             <button
               type="button"
               onClick={() => {
@@ -192,12 +210,10 @@ export function Hero() {
           className="absolute inset-0 hidden bg-no-repeat lg:block"
           style={{
             backgroundImage: `url("${HERO_PHOTO}")`,
-            // This photo is nearly square, so plain `cover` scales it to the
-            // container width and leaves the subject sitting behind the copy.
-            // Sizing by height instead (at ~native pixel width, so it stays
-            // sharp) and anchoring left pushes her clear of the text column.
-            backgroundSize: "auto 132%",
-            backgroundPosition: "left 28%",
+            // `cover` always fills the section, whatever the screen width.
+            // Sizing by height instead left bare edges on wide monitors.
+            backgroundSize: "cover",
+            backgroundPosition: "right center",
           }}
           aria-hidden="true"
         />

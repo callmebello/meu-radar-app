@@ -3,7 +3,8 @@ import { Hero } from "@/components/inicio/Hero";
 import { HowItWorks, Product, Security } from "@/components/inicio/Explain";
 import { MobileApp, Pricing } from "@/components/inicio/Convert";
 import { Faq, FinalCta, SiteFooter } from "@/components/inicio/Close";
-import { Contact, ForCompanies } from "@/components/inicio/Contact";
+import { ForCompanies } from "@/components/inicio/Contact";
+import { ContactProvider } from "@/components/inicio/ContactDialog";
 import { LP } from "@/components/inicio/theme";
 
 export const Route = createFileRoute("/inicio")({
@@ -35,18 +36,19 @@ export const Route = createFileRoute("/inicio")({
  */
 function Inicio() {
   return (
-    <div className="lp-root" style={{ backgroundColor: LP.bgLight }}>
-      <Hero />
-      <HowItWorks />
-      <Product />
-      <Security />
-      <Pricing />
-      <ForCompanies />
-      <MobileApp />
-      <Faq />
-      <Contact />
-      <FinalCta />
-      <SiteFooter />
-    </div>
+    <ContactProvider>
+      <div className="lp-root" style={{ backgroundColor: LP.bgLight }}>
+        <Hero />
+        <HowItWorks />
+        <Product />
+        <Security />
+        <Pricing />
+        <ForCompanies />
+        <MobileApp />
+        <Faq />
+        <FinalCta />
+        <SiteFooter />
+      </div>
+    </ContactProvider>
   );
 }
