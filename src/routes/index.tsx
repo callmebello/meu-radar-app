@@ -188,9 +188,16 @@ function Index() {
             count: h.count,
             breaches: (h.breaches ?? []).map((raw) => {
               const b = raw as Record<string, unknown>;
+              // Title is the readable name ("LinkedIn"); Name is the machine key
+              // ("June2026StealerLogs"). Keep the brand fields too so the stored
+              // scan can render logos and rank companies, same as the report.
               return {
-                name: String(b.Name ?? b.Title ?? "Vazamento"),
+                name: String(b.Title ?? b.Name ?? "Vazamento"),
                 date: String(b.BreachDate ?? b.AddedDate ?? ""),
+                domain: String(b.Domain ?? ""),
+                logoPath: String(b.LogoPath ?? ""),
+                pwnCount: typeof b.PwnCount === "number" ? b.PwnCount : 0,
+                isStealerLog: b.IsStealerLog === true,
                 dataClasses: Array.isArray(b.DataClasses) ? (b.DataClasses as string[]) : [],
               };
             }),

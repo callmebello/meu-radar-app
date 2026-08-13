@@ -6,14 +6,26 @@ import { highlightedReportLabels, readQuizAnswers } from "@/lib/quiz";
 import { startCheckout, type CheckoutPlan } from "@/lib/checkout";
 import { track, gaEvent } from "@/lib/analytics";
 import { useIsDark } from "@/hooks/use-is-dark";
+import {
+  displayName,
+  displaySubtitle,
+  logoOf,
+  pwnCountLabel,
+  rankForDisplay,
+  recognisableCompanies,
+  type Breach,
+} from "@/lib/breaches";
 
 export const Route = createFileRoute("/relatorio")({
   head: () => ({ meta: [{ title: "Relatório de Exposição — Priva" }] }),
   component: RelatorioPage,
 });
 
-type RawBreach = { Name?: string; Title?: string; BreachDate?: string; AddedDate?: string; DataClasses?: string[] };
-type StoredScan = { breachCount?: number; hibp?: { count?: number; breaches?: RawBreach[] } | null };
+type RawBreach = Breach;
+type StoredScan = {
+  breachCount?: number;
+  hibp?: { count?: number; breaches?: RawBreach[] } | null;
+};
 type Exposure = {
   github?: { found?: boolean; count?: number } | null;
   cpf?: { found?: boolean; count?: number } | null;
@@ -46,8 +58,11 @@ const DATA_CLASS_PT: Record<string, string> = {
 const translateDC = (dc: string) => DATA_CLASS_PT[dc.toLowerCase()] || dc;
 const tsOf = (b: RawBreach) => Date.parse(b.BreachDate || b.AddedDate || "") || 0;
 const monthYear = (ts: number) =>
-  ts ? new Date(ts).toLocaleDateString("pt-BR", { month: "short", year: "numeric" }).replace(".", "") : "";
-const has = (b: RawBreach, re: RegExp) => (b.DataClasses ?? []).some((d) => re.test(d.toLowerCase()));
+  ts
+    ? new Date(ts).toLocaleDateString("pt-BR", { month: "short", year: "numeric" }).replace(".", "")
+    : "";
+const has = (b: RawBreach, re: RegExp) =>
+  (b.DataClasses ?? []).some((d) => re.test(d.toLowerCase()));
 
 function clarityTag(key: string, value: string) {
   const c = (window as unknown as { clarity?: (...a: unknown[]) => void }).clarity;
@@ -69,7 +84,9 @@ function RelatorioPage() {
   // Scan is read from localStorage AND re-read for a few seconds: the HIBP
   // result can land right after the scan navigation, so poll until breaches
   // appear (or give up) instead of rendering an empty report forever.
-  const [scan, setScan] = useState<StoredScan | null>(() => readJSON<StoredScan>("priva_scan_result"));
+  const [scan, setScan] = useState<StoredScan | null>(() =>
+    readJSON<StoredScan>("priva_scan_result"),
+  );
   useEffect(() => {
     if ((scan?.hibp?.breaches?.length ?? 0) > 0) return;
     let tries = 0;
@@ -91,7 +108,12 @@ function RelatorioPage() {
   const breachCount = scan?.hibp?.count ?? breaches.length;
 
   // Chronology
-  const byNewest = useMemo(() => [...breaches].sort((a, b) => tsOf(b) - tsOf(a)), [breaches]);
+  // Recognisable companies lead; stealer logs sink. Sorting by date alone put
+  // "June2026StealerLogs" at the top, which reads as noise to a lead.
+  const byNewest = useMemo(() => rankForDisplay(breaches), [breaches]);
+  // Named companies drive the interest; if the account only has malware dumps
+  // we still show something, but under an honest heading.
+  const companies = useMemo(() => recognisableCompanies(breaches), [breaches]);
   const firstBreach = useMemo(
     () => [...breaches].filter(tsOf).sort((a, b) => tsOf(a) - tsOf(b))[0],
     [breaches],
@@ -108,7 +130,8 @@ function RelatorioPage() {
   const passN = breaches.filter((b) => has(b, /password/)).length;
   const phoneN = breaches.filter((b) => has(b, /phone/)).length + (exposure?.phone?.count ?? 0);
   const cpfN =
-    breaches.filter((b) => has(b, /government|credit card|national id/)).length + (exposure?.cpf?.count ?? 0);
+    breaches.filter((b) => has(b, /government|credit card|national id/)).length +
+    (exposure?.cpf?.count ?? 0);
   const bars = [
     { label: "E-mail", n: emailN, always: true },
     { label: "Senha", n: passN, always: true },
@@ -119,7 +142,8 @@ function RelatorioPage() {
   const anyFlagged = bars.some((b) => flagged.has(b.label));
 
   // Public exposure (SerpAPI/GitHub)
-  const publicHits = (exposure?.cpf?.count ?? 0) + (exposure?.phone?.count ?? 0) + (exposure?.github?.count ?? 0);
+  const publicHits =
+    (exposure?.cpf?.count ?? 0) + (exposure?.phone?.count ?? 0) + (exposure?.github?.count ?? 0);
 
   // Broken, session-varied score (authority verdict AFTER the evidence)
   const [score, setScore] = useState(() => (cpf ? getScore(cpf, breachCount) : 20));
@@ -211,7 +235,9 @@ function RelatorioPage() {
   useEffect(() => {
     const el = plansRef.current;
     if (!el || isPaid) return;
-    const obs = new IntersectionObserver(([e]) => setShowSticky(!e.isIntersecting), { threshold: 0.25 });
+    const obs = new IntersectionObserver(([e]) => setShowSticky(!e.isIntersecting), {
+      threshold: 0.25,
+    });
     obs.observe(el);
     return () => obs.disconnect();
   }, [isPaid]);
@@ -226,14 +252,23 @@ function RelatorioPage() {
   const logo = isDark ? "/PRIVA_logo_dark_theme.png" : "/PRIVA_logo_light_theme.png";
   const visible = byNewest.slice(0, 3);
   const hidden = byNewest.slice(3);
-  const sev = (b: RawBreach) => (has(b, /password/) ? { l: "ALTO", c: "text-red-600 bg-red-500/10", dot: "#DC2626" } : { l: "MÉDIO", c: "text-amber-600 bg-amber-500/10", dot: "#D97706" });
+  // Prefer named companies in the cards; fall back to whatever we have.
+  const cardBreaches = (companies.length > 0 ? companies : byNewest).slice(0, 3);
+  const sev = (b: RawBreach) =>
+    has(b, /password/)
+      ? { l: "ALTO", c: "text-red-600 bg-red-500/10", dot: "#DC2626" }
+      : { l: "MÉDIO", c: "text-amber-600 bg-amber-500/10", dot: "#D97706" };
 
   return (
     <div className="min-h-screen bg-background">
       <div className="animate-report-drop mx-auto max-w-md pb-16">
         {/* Header */}
         <header className="sticky top-0 z-10 flex items-center justify-between bg-background px-5 py-4">
-          <button onClick={() => navigate({ to: "/" })} aria-label="Voltar" className="grid h-9 w-9 place-items-center rounded-full bg-secondary text-foreground hover:opacity-80">
+          <button
+            onClick={() => navigate({ to: "/" })}
+            aria-label="Voltar"
+            className="grid h-9 w-9 place-items-center rounded-full bg-secondary text-foreground hover:opacity-80"
+          >
             <ArrowLeft className="h-5 w-5" />
           </button>
           <img src={logo} alt="PRIVA" className="h-5 w-auto object-contain" />
@@ -242,15 +277,20 @@ function RelatorioPage() {
 
         {/* ── HERO — days-exposed counter (fear/urgency) ── */}
         <section className="px-5">
-          <div className="rounded-3xl px-6 py-7 text-center text-white" style={{ background: "linear-gradient(160deg,#7f1d1d,#b91c1c)" }}>
+          <div
+            className="rounded-3xl px-6 py-7 text-center text-white"
+            style={{ background: "linear-gradient(160deg,#7f1d1d,#b91c1c)" }}
+          >
             <p className="text-sm font-medium text-red-100/90">Seus dados estão expostos há</p>
             <p className="mt-1 text-6xl font-extrabold tabular-nums leading-none tracking-tight">
               {countDays.toLocaleString("pt-BR")}
             </p>
-            <p className="mt-1 text-xl font-bold text-red-50">{daysExposed === 1 ? "dia" : "dias"}</p>
+            <p className="mt-1 text-xl font-bold text-red-50">
+              {daysExposed === 1 ? "dia" : "dias"}
+            </p>
             {firstBreach && (
               <p className="mt-3 text-sm text-red-200/90">
-                Primeiro registro: {monthYear(firstTs)} — {firstBreach.Name || firstBreach.Title}
+                Primeiro registro: {monthYear(firstTs)} — {displayName(firstBreach)}
               </p>
             )}
           </div>
@@ -267,7 +307,9 @@ function RelatorioPage() {
               return (
                 <div
                   key={b.label}
-                  className={isFlagged ? "-mx-2 rounded-xl px-2 py-2 ring-1 ring-indigo-500/40" : undefined}
+                  className={
+                    isFlagged ? "-mx-2 rounded-xl px-2 py-2 ring-1 ring-indigo-500/40" : undefined
+                  }
                 >
                   <div className="mb-1 flex items-center justify-between">
                     <span className="flex items-center gap-2 text-sm font-medium text-foreground">
@@ -278,12 +320,17 @@ function RelatorioPage() {
                         </span>
                       )}
                     </span>
-                    <span className="text-xs font-semibold text-red-500">{b.n} {b.n === 1 ? "exposição" : "exposições"}</span>
+                    <span className="text-xs font-semibold text-red-500">
+                      {b.n} {b.n === 1 ? "exposição" : "exposições"}
+                    </span>
                   </div>
                   <div className="h-2.5 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-800">
                     <div
                       className="h-full rounded-full bg-red-500"
-                      style={{ width: mounted ? `${Math.max(6, (b.n / maxBar) * 100)}%` : "0%", transition: `width 900ms cubic-bezier(0.22,1,0.36,1) ${i * 120}ms` }}
+                      style={{
+                        width: mounted ? `${Math.max(6, (b.n / maxBar) * 100)}%` : "0%",
+                        transition: `width 900ms cubic-bezier(0.22,1,0.36,1) ${i * 120}ms`,
+                      }}
                     />
                   </div>
                 </div>
@@ -301,13 +348,29 @@ function RelatorioPage() {
               {visible.map((b, i) => {
                 const s = sev(b);
                 return (
-                  <div key={i} className="animate-fade-in relative mb-4 pl-4" style={{ animationDelay: `${i * 90}ms`, animationDuration: "220ms", animationFillMode: "backwards" }}>
-                    <span className="absolute left-[-8px] top-1 h-3 w-3 rounded-full border-2 border-background" style={{ backgroundColor: s.dot }} />
+                  <div
+                    key={i}
+                    className="animate-fade-in relative mb-4 pl-4"
+                    style={{
+                      animationDelay: `${i * 90}ms`,
+                      animationDuration: "220ms",
+                      animationFillMode: "backwards",
+                    }}
+                  >
+                    <span
+                      className="absolute left-[-8px] top-1 h-3 w-3 rounded-full border-2 border-background"
+                      style={{ backgroundColor: s.dot }}
+                    />
                     <p className="text-xs text-muted-foreground">{monthYear(tsOf(b))}</p>
-                    <p className="text-sm font-bold text-foreground">{b.Name || b.Title}</p>
+                    <p className="text-sm font-bold text-foreground">{displayName(b)}</p>
+                    {displaySubtitle(b) && (
+                      <p className="text-xs text-muted-foreground">{displaySubtitle(b)}</p>
+                    )}
                     <p className="text-xs text-muted-foreground">
-                      {(b.DataClasses?.length ?? 0)} tipos de dados expostos
-                      <span className={`ml-2 rounded px-1.5 py-0.5 text-[10px] font-bold ${s.c}`}>{s.l}</span>
+                      {b.DataClasses?.length ?? 0} tipos de dados expostos
+                      <span className={`ml-2 rounded px-1.5 py-0.5 text-[10px] font-bold ${s.c}`}>
+                        {s.l}
+                      </span>
                     </p>
                   </div>
                 );
@@ -318,14 +381,20 @@ function RelatorioPage() {
                     {hidden.slice(0, 4).map((b, i) => (
                       <div key={i} className="relative mb-4 pl-4">
                         <span className="absolute left-[-8px] top-1 h-3 w-3 rounded-full border-2 border-background bg-gray-400" />
-                        <p className="text-xs text-muted-foreground">{monthYear(tsOf(b)) || "20••"}</p>
-                        <p className="text-sm font-bold text-foreground">{b.Name || b.Title || "Vazamento"}</p>
-                        <p className="text-xs text-muted-foreground">{(b.DataClasses?.length ?? 2)} tipos de dados expostos</p>
+                        <p className="text-xs text-muted-foreground">
+                          {monthYear(tsOf(b)) || "20••"}
+                        </p>
+                        <p className="text-sm font-bold text-foreground">{displayName(b)}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {b.DataClasses?.length ?? 2} tipos de dados expostos
+                        </p>
                       </div>
                     ))}
                   </div>
                   <button
-                    onClick={() => plansRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })}
+                    onClick={() =>
+                      plansRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })
+                    }
                     className="absolute inset-0 flex items-center justify-center"
                   >
                     <span className="flex items-center gap-2 rounded-full bg-[var(--color-navy)] px-4 py-2 text-sm font-bold text-white shadow-lg">
@@ -342,31 +411,75 @@ function RelatorioPage() {
         <div ref={evidenceRef} className="h-px" />
 
         {/* ── Company cards (recognizable authority) ── */}
-        {visible.length > 0 && (
+        {cardBreaches.length > 0 && (
           <section className="mt-8 px-5">
-            <h2 className="mb-3 text-lg font-bold text-foreground">Empresas onde seus dados vazaram</h2>
-            {visible.map((b, i) => {
+            <h2 className="mb-3 text-lg font-bold text-foreground">
+              {companies.length > 0
+                ? "Empresas onde seus dados vazaram"
+                : "Onde seus dados apareceram"}
+            </h2>
+            {cardBreaches.map((b, i) => {
               const s = sev(b);
               const dcs = (b.DataClasses ?? []).map(translateDC);
+              const logo = logoOf(b);
+              const scale = pwnCountLabel(b);
               return (
-                <div key={i} className="mb-3 flex gap-3 rounded-xl border border-red-500/20 bg-card p-4 shadow-sm" style={{ backgroundColor: isDark ? "#12121A" : undefined }}>
-                  <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-red-500/10 text-xl font-bold text-red-500">
-                    {(b.Name || b.Title || "?")[0]?.toUpperCase()}
-                  </span>
+                <div
+                  key={i}
+                  className="mb-3 flex gap-3 rounded-xl border border-red-500/20 bg-card p-4 shadow-sm"
+                  style={{ backgroundColor: isDark ? "#12121A" : undefined }}
+                >
+                  {/* The brand's own logo is what makes this land — a lead skims
+                      logos, not names. Falls back to the initial when HIBP has
+                      no logo (stealer logs never do). */}
+                  {logo ? (
+                    <img
+                      src={logo}
+                      alt=""
+                      loading="lazy"
+                      className="h-12 w-12 shrink-0 rounded-xl bg-white object-contain p-1.5"
+                    />
+                  ) : (
+                    <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-red-500/10 text-xl font-bold text-red-500">
+                      {displayName(b)[0]?.toUpperCase()}
+                    </span>
+                  )}
                   <div className="min-w-0 flex-1">
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
-                        <p className="truncate text-base font-bold text-foreground">{b.Name || b.Title}</p>
-                        <p className="text-sm text-muted-foreground">{monthYear(tsOf(b))}</p>
+                        <p className="truncate text-base font-bold text-foreground">
+                          {displayName(b)}
+                        </p>
+                        <p className="truncate text-sm text-muted-foreground">
+                          {monthYear(tsOf(b))}
+                          {scale ? ` · ${scale}` : ""}
+                        </p>
                       </div>
-                      <span className={`shrink-0 rounded-md px-2 py-0.5 text-[11px] font-bold ${s.c}`}>{s.l}</span>
+                      <span
+                        className={`shrink-0 rounded-md px-2 py-0.5 text-[11px] font-bold ${s.c}`}
+                      >
+                        {s.l}
+                      </span>
                     </div>
                     <div className="mt-2 flex flex-wrap gap-1.5">
                       {dcs.slice(0, 3).map((d) => (
-                        <span key={d} className="rounded-full bg-red-500/15 px-2 py-0.5 text-xs text-red-500">{d}</span>
+                        <span
+                          key={d}
+                          className="rounded-full bg-red-500/15 px-2 py-0.5 text-xs text-red-500"
+                        >
+                          {d}
+                        </span>
                       ))}
                       {dcs.length > 3 && (
-                        <button onClick={() => plansRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })} className="rounded-full bg-red-500/15 px-2 py-0.5 text-xs font-semibold text-red-500">
+                        <button
+                          onClick={() =>
+                            plansRef.current?.scrollIntoView({
+                              behavior: "smooth",
+                              block: "center",
+                            })
+                          }
+                          className="rounded-full bg-red-500/15 px-2 py-0.5 text-xs font-semibold text-red-500"
+                        >
                           +{dcs.length - 3} mais →
                         </button>
                       )}
@@ -381,14 +494,19 @@ function RelatorioPage() {
         {/* ── Public exposure (only when found) ── */}
         {publicHits > 0 && (
           <section className="mt-8 px-5">
-            <h2 className="mb-3 text-lg font-bold text-foreground">Encontrado em pesquisas públicas</h2>
+            <h2 className="mb-3 text-lg font-bold text-foreground">
+              Encontrado em pesquisas públicas
+            </h2>
             <div className="flex gap-3 rounded-xl border border-amber-500/20 bg-amber-500/10 p-4">
               <Globe className="h-6 w-6 shrink-0 text-amber-500" />
               <div>
                 <p className="text-sm text-amber-600">
-                  Seus dados aparecem em {publicHits} {publicHits === 1 ? "resultado" : "resultados"} público(s) na internet
+                  Seus dados aparecem em {publicHits}{" "}
+                  {publicHits === 1 ? "resultado" : "resultados"} público(s) na internet
                 </p>
-                <p className="mt-1 text-xs text-muted-foreground">Qualquer pessoa pode encontrar seus dados pesquisando no Google.</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Qualquer pessoa pode encontrar seus dados pesquisando no Google.
+                </p>
               </div>
             </div>
           </section>
@@ -397,10 +515,21 @@ function RelatorioPage() {
         {/* ── Score card (verdict AFTER the evidence) ── */}
         <section className="mt-8 px-5">
           <div className="rounded-2xl border border-border bg-card p-5 text-center shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Sua pontuação de risco</p>
-            <p className="mt-2 text-6xl font-extrabold leading-none" style={{ color: risk.color }}>{score}<span className="text-2xl text-muted-foreground">/100</span></p>
-            <span className={`mt-3 inline-block rounded-full px-3 py-1 text-xs font-bold ${risk.badge}`}>{risk.label}</span>
-            <p className="mt-2 text-xs text-muted-foreground">Baseado em {factors.length} fatores analisados</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Sua pontuação de risco
+            </p>
+            <p className="mt-2 text-6xl font-extrabold leading-none" style={{ color: risk.color }}>
+              {score}
+              <span className="text-2xl text-muted-foreground">/100</span>
+            </p>
+            <span
+              className={`mt-3 inline-block rounded-full px-3 py-1 text-xs font-bold ${risk.badge}`}
+            >
+              {risk.label}
+            </span>
+            <p className="mt-2 text-xs text-muted-foreground">
+              Baseado em {factors.length} fatores analisados
+            </p>
             <ul className="mt-4 space-y-1.5 text-left">
               {factors.map((f) => (
                 <li key={f} className="flex gap-2 text-sm text-muted-foreground">
@@ -415,24 +544,41 @@ function RelatorioPage() {
         {isPaid ? (
           <section className="mt-8 px-5 text-center">
             <p className="text-lg font-bold text-emerald-600">Você já está protegido ✓</p>
-            <button onClick={() => navigate({ to: "/" })} className="mt-4 w-full rounded-2xl bg-[var(--color-navy)] py-4 font-bold text-white transition active:scale-[0.99]">
+            <button
+              onClick={() => navigate({ to: "/" })}
+              className="mt-4 w-full rounded-2xl bg-[var(--color-navy)] py-4 font-bold text-white transition active:scale-[0.99]"
+            >
               Ver relatório completo →
             </button>
           </section>
         ) : (
           <section className="mt-8 px-5">
-            <p className="mb-4 text-center text-lg font-bold text-foreground">O que você pode fazer agora</p>
+            <p className="mb-4 text-center text-lg font-bold text-foreground">
+              O que você pode fazer agora
+            </p>
             <div ref={plansRef} className="grid grid-cols-2 gap-3">
               {/* Essencial */}
               <div className="self-center rounded-2xl border border-indigo-500/30 bg-card p-4 shadow-sm">
                 <p className="mb-2 text-xs font-bold text-indigo-600">Essencial</p>
-                <p className="text-2xl font-extrabold text-foreground">R$9,90<span className="text-sm font-normal text-muted-foreground">/mês</span></p>
+                <p className="text-2xl font-extrabold text-foreground">
+                  R$9,90<span className="text-sm font-normal text-muted-foreground">/mês</span>
+                </p>
                 <ul className="mt-3 space-y-2">
-                  {[`Ver todos os ${breachCount} vazamentos completos`, "Monitoramento contínuo", "Alertas em tempo real"].map((f) => (
-                    <li key={f} className="flex gap-2 text-xs text-muted-foreground"><Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-500" /> {f}</li>
+                  {[
+                    `Ver todos os ${breachCount} vazamentos completos`,
+                    "Monitoramento contínuo",
+                    "Alertas em tempo real",
+                  ].map((f) => (
+                    <li key={f} className="flex gap-2 text-xs text-muted-foreground">
+                      <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-500" /> {f}
+                    </li>
                   ))}
                 </ul>
-                <button onClick={() => checkout("essencial")} disabled={redirecting} className="mt-4 w-full rounded-xl bg-indigo-600 py-3 text-sm font-bold text-white transition active:scale-[0.99] disabled:opacity-60">
+                <button
+                  onClick={() => checkout("essencial")}
+                  disabled={redirecting}
+                  className="mt-4 w-full rounded-xl bg-indigo-600 py-3 text-sm font-bold text-white transition active:scale-[0.99] disabled:opacity-60"
+                >
                   Assinar Essencial →
                 </button>
               </div>
@@ -440,25 +586,43 @@ function RelatorioPage() {
               {/* Proteção Total */}
               <div className="relative z-10 scale-[1.05] rounded-2xl border-2 border-purple-500/50 bg-card p-4 shadow-lg">
                 <p className="mb-2 text-xs font-bold text-purple-600">Proteção Total</p>
-                <p className="text-2xl font-extrabold text-foreground">R$24,90<span className="text-sm font-normal text-muted-foreground">/mês</span></p>
+                <p className="text-2xl font-extrabold text-foreground">
+                  R$24,90<span className="text-sm font-normal text-muted-foreground">/mês</span>
+                </p>
                 <ul className="mt-3 space-y-2">
-                  {["Tudo do Essencial +", "Remoção dos seus dados via LGPD", "Nossa equipe cuida por você", "Acompanhamento por e-mail"].map((f) => (
-                    <li key={f} className="flex gap-2 text-xs text-muted-foreground"><Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-purple-500" /> {f}</li>
+                  {[
+                    "Tudo do Essencial +",
+                    "Remoção dos seus dados via LGPD",
+                    "Nossa equipe cuida por você",
+                    "Acompanhamento por e-mail",
+                  ].map((f) => (
+                    <li key={f} className="flex gap-2 text-xs text-muted-foreground">
+                      <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-purple-500" /> {f}
+                    </li>
                   ))}
                 </ul>
                 <button
                   onClick={() => checkout("protecao_total")}
                   disabled={redirecting}
                   className="mt-4 w-full rounded-xl py-3 text-sm font-bold text-white transition active:scale-[0.99] disabled:opacity-60"
-                  style={{ background: "linear-gradient(135deg,#7C3AED,#4F46E5)", boxShadow: "0 0 16px rgba(124,58,237,0.3)" }}
+                  style={{
+                    background: "linear-gradient(135deg,#7C3AED,#4F46E5)",
+                    boxShadow: "0 0 16px rgba(124,58,237,0.3)",
+                  }}
                 >
                   Remover meus dados →
                 </button>
-                <span className="absolute -bottom-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-purple-600 px-3 py-1 text-[10px] font-bold text-white shadow-md">MAIS ESCOLHIDO</span>
+                <span className="absolute -bottom-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-purple-600 px-3 py-1 text-[10px] font-bold text-white shadow-md">
+                  MAIS ESCOLHIDO
+                </span>
               </div>
             </div>
 
-            {redirecting && <p className="mt-3 text-center text-xs text-indigo-500">Redirecionando para pagamento seguro...</p>}
+            {redirecting && (
+              <p className="mt-3 text-center text-xs text-indigo-500">
+                Redirecionando para pagamento seguro...
+              </p>
+            )}
 
             <div className="mt-8 space-y-1 text-center text-[11px] text-muted-foreground">
               <p>🔒 Pagamento seguro via Stripe</p>
@@ -472,12 +636,20 @@ function RelatorioPage() {
       {!isPaid && (
         <div
           className={`fixed bottom-0 left-1/2 z-50 w-full max-w-md -translate-x-1/2 px-4 pt-6 transition-transform duration-300 ${showSticky ? "translate-y-0" : "translate-y-full"}`}
-          style={{ background: "linear-gradient(to top, var(--color-background) 55%, transparent)", paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
+          style={{
+            background: "linear-gradient(to top, var(--color-background) 55%, transparent)",
+            paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))",
+          }}
         >
           <button
-            onClick={() => plansRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })}
+            onClick={() =>
+              plansRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })
+            }
             className="w-full rounded-2xl py-4 text-base font-bold text-white transition active:scale-[0.99]"
-            style={{ background: "linear-gradient(135deg,#4F46E5,#6366F1)", boxShadow: "0 8px 28px rgba(79,70,229,0.45)" }}
+            style={{
+              background: "linear-gradient(135deg,#4F46E5,#6366F1)",
+              boxShadow: "0 8px 28px rgba(79,70,229,0.45)",
+            }}
           >
             Proteger meus dados agora →
           </button>
