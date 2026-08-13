@@ -16,6 +16,12 @@ export async function signInWithEmail(email: string) {
   return { error };
 }
 
+export async function signInWithPassword(email: string, password: string) {
+  if (!supabase) return { error: new Error("Supabase não configurado") };
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  return { error };
+}
+
 export async function signUpWithPassword(email: string, password: string) {
   if (!supabase) return { error: new Error("Supabase não configurado") };
   const { error } = await supabase.auth.signUp({ email, password });

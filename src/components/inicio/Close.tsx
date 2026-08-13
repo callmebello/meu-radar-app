@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { ChevronDown, Instagram, Linkedin, Mail } from "lucide-react";
+import { ChevronDown, Instagram, Linkedin, Youtube } from "lucide-react";
 import { Container, Eyebrow, PrivaWordmark, Reveal, ScanCta, SectionTitle } from "./ui";
 import { LP, SCAN_HREF } from "./theme";
 
@@ -164,11 +164,29 @@ export function FinalCta() {
 const FOOTER_LINKS: { label: string; to?: string; href?: string }[] = [
   { label: "Como funciona", href: "#como-funciona" },
   { label: "Planos", href: "#planos" },
-  { label: "Conteúdos", href: "#faq" },
+  { label: "Empresas", href: "#empresas" },
   { label: "Privacidade", href: "https://www.iubenda.com/privacy-policy/23107752" },
   { label: "Termos", to: "/termos" },
-  { label: "Contato", href: "mailto:contato@privaapp.com.br" },
+  { label: "Contato", href: "#contato" },
 ];
+
+/* Lucide dropped brand marks, so TikTok and X are drawn here. Both take the
+   same className as the lucide icons around them so the row stays uniform. */
+function TikTok({ className = "" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden="true">
+      <path d="M16.6 5.82A4.28 4.28 0 0 1 15.54 3h-3.09v12.4a2.59 2.59 0 0 1-2.59 2.5 2.59 2.59 0 1 1 .76-5.06V9.7a5.66 5.66 0 0 0-.76-.05A5.68 5.68 0 1 0 15.54 15.4V9.01a7.35 7.35 0 0 0 4.3 1.38V7.3a4.28 4.28 0 0 1-3.24-1.48Z" />
+    </svg>
+  );
+}
+
+function XLogo({ className = "" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden="true">
+      <path d="M17.53 3h3.02l-6.6 7.54L21.75 21h-5.9l-4.63-6.05L5.93 21H2.9l7.06-8.07L2.4 3h6.05l4.19 5.54L17.53 3Zm-1.06 16.2h1.67L7.62 4.71H5.83L16.47 19.2Z" />
+    </svg>
+  );
+}
 
 export function SiteFooter() {
   return (
@@ -210,8 +228,10 @@ export function SiteFooter() {
         <div className="flex items-center gap-3">
           {[
             { Icon: Instagram, href: "https://instagram.com", label: "Instagram" },
+            { Icon: TikTok, href: "https://tiktok.com", label: "TikTok" },
+            { Icon: XLogo, href: "https://x.com", label: "X" },
+            { Icon: Youtube, href: "https://youtube.com", label: "YouTube" },
             { Icon: Linkedin, href: "https://linkedin.com", label: "LinkedIn" },
-            { Icon: Mail, href: "mailto:contato@privaapp.com.br", label: "E-mail" },
           ].map((s) => (
             <a
               key={s.label}

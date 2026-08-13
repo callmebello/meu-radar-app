@@ -1,8 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Hero } from "@/components/inicio/Hero";
 import { HowItWorks, Product, Security } from "@/components/inicio/Explain";
-import { MobileApp, Pricing, SocialProof } from "@/components/inicio/Convert";
+import { MobileApp, Pricing } from "@/components/inicio/Convert";
 import { Faq, FinalCta, SiteFooter } from "@/components/inicio/Close";
+import { Contact, ForCompanies } from "@/components/inicio/Contact";
 import { LP } from "@/components/inicio/theme";
 
 export const Route = createFileRoute("/inicio")({
@@ -40,9 +41,10 @@ function Inicio() {
       <Product />
       <Security />
       <Pricing />
-      <SocialProof />
+      <ForCompanies />
       <MobileApp />
       <Faq />
+      <Contact />
       <FinalCta />
       <SiteFooter />
     </div>

@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { Link } from "@tanstack/react-router";
 import { ChevronRight, Lock, Menu, ShieldCheck, X, Zap } from "lucide-react";
 import { Container, PrivaWordmark, ScanCta } from "./ui";
-import { LP, SCAN_HREF } from "./theme";
+import { LoginDialog } from "./LoginDialog";
+import { LP } from "./theme";
 
 /**
  * Cinematic hero photo (person on a phone at night, urban bokeh, eyes censored).
@@ -19,7 +19,8 @@ const NAV = [
   { label: "Como funciona", href: "#como-funciona" },
   { label: "Por que Priva?", href: "#seguranca" },
   { label: "Planos", href: "#planos" },
-  { label: "Conteúdos", href: "#faq" },
+  { label: "Empresas", href: "#empresas" },
+  { label: "Contato", href: "#contato" },
 ];
 
 const TRUST = [
@@ -31,6 +32,7 @@ const TRUST = [
 function Nav() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const [loginOpen, setLoginOpen] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -66,12 +68,13 @@ function Nav() {
         </nav>
 
         <div className="hidden items-center gap-5 lg:flex">
-          <Link
-            to={SCAN_HREF}
+          <button
+            type="button"
+            onClick={() => setLoginOpen(true)}
             className="text-[14px] text-white/70 transition-colors hover:text-white"
           >
             Entrar
-          </Link>
+          </button>
           <ScanCta size="sm">Verificar meus dados</ScanCta>
         </div>
 
@@ -108,16 +111,22 @@ function Nav() {
                 {n.label}
               </a>
             ))}
-            <Link
-              to={SCAN_HREF}
-              className="rounded-xl px-3 py-3 text-[15px] text-white/80 transition-colors hover:bg-white/5 hover:text-white"
+            <button
+              type="button"
+              onClick={() => {
+                setOpen(false);
+                setLoginOpen(true);
+              }}
+              className="rounded-xl px-3 py-3 text-left text-[15px] text-white/80 transition-colors hover:bg-white/5 hover:text-white"
             >
               Entrar
-            </Link>
+            </button>
             <ScanCta className="mt-2 w-full">Verificar meus dados grátis</ScanCta>
           </Container>
         </div>
       )}
+
+      <LoginDialog open={loginOpen} onClose={() => setLoginOpen(false)} />
     </header>
   );
 }
@@ -174,11 +183,22 @@ export function Hero() {
         {/* Bokeh is the fallback: it shows through only while the photo file is
             missing, and the photo covers it completely once present. */}
         <BokehScene />
-        {/* Painted as a background rather than an <img>: a missing file simply
+        {/* Desktop only. On a phone the copy has to sit on top of the photo,
+            which needs so much scrim that both the picture and the text end up
+            worse off — mobile gets the dark bokeh scene instead.
+            Painted as a background rather than an <img>: a missing file simply
             draws nothing, with no broken-image box and no onError to get wrong. */}
         <div
-          className="absolute inset-0 bg-cover bg-no-repeat"
-          style={{ backgroundImage: `url("${HERO_PHOTO}")`, backgroundPosition: "right center" }}
+          className="absolute inset-0 hidden bg-no-repeat lg:block"
+          style={{
+            backgroundImage: `url("${HERO_PHOTO}")`,
+            // This photo is nearly square, so plain `cover` scales it to the
+            // container width and leaves the subject sitting behind the copy.
+            // Sizing by height instead (at ~native pixel width, so it stays
+            // sharp) and anchoring left pushes her clear of the text column.
+            backgroundSize: "auto 132%",
+            backgroundPosition: "left 28%",
+          }}
           aria-hidden="true"
         />
         {/* Desktop: hold the scrim solid across the copy column (which ends near
@@ -189,13 +209,13 @@ export function Hero() {
             background: `linear-gradient(90deg, ${LP.dark} 0%, rgba(5,5,13,0.95) 32%, rgba(5,5,13,0.85) 44%, rgba(5,5,13,0.35) 54%, rgba(5,5,13,0.05) 62%, rgba(5,5,13,0) 68%)`,
           }}
         />
-        {/* Mobile: the copy sits over the image, so the scrim is vertical and
-            heaviest at the top where the headline is. */}
+        {/* Mobile: no photo, so the bokeh only needs taking down a notch to keep
+            the headline crisp. */}
         <div
           className="absolute inset-0 lg:hidden"
           style={{
             background:
-              "linear-gradient(180deg, rgba(5,5,13,0.90) 0%, rgba(5,5,13,0.74) 55%, rgba(5,5,13,0.55) 100%)",
+              "linear-gradient(180deg, rgba(5,5,13,0.82) 0%, rgba(5,5,13,0.68) 55%, rgba(5,5,13,0.55) 100%)",
           }}
         />
       </div>

@@ -87,9 +87,21 @@ export function maskedFields(cpf: string, seed: number) {
 // (VITE_MP_*) with safe placeholders so the flow works in dev.
 const env = (import.meta as unknown as { env?: Record<string, string> }).env ?? {};
 
+// Sandbox toggle (local/preview testing only). Defaults to false/unset, so
+// production builds — which don't set VITE_MP_SANDBOX_MODE — always use the real
+// production checkout URLs. When "true", Essencial/Proteção point at the *_TEST
+// plans instead.
+const isSandbox = env.VITE_MP_SANDBOX_MODE === "true";
+
 // Essencial (R$9,90) and Proteção Total (R$29,90) checkout links.
-export const MP_ESSENCIAL_URL = env.VITE_MP_ESSENCIAL_URL || "https://mpago.la/placeholder_essencial";
-export const MP_PROTECAO_URL = env.VITE_MP_PROTECAO_URL || "https://mpago.la/placeholder_protecao";
+export const MP_ESSENCIAL_URL =
+  (isSandbox ? env.VITE_MP_ESSENCIAL_URL_TEST : env.VITE_MP_ESSENCIAL_URL) ||
+  env.VITE_MP_ESSENCIAL_URL ||
+  "https://mpago.la/placeholder_essencial";
+export const MP_PROTECAO_URL =
+  (isSandbox ? env.VITE_MP_PROTECAO_URL_TEST : env.VITE_MP_PROTECAO_URL) ||
+  env.VITE_MP_PROTECAO_URL ||
+  "https://mpago.la/placeholder_protecao";
 export const MP_SCORE_URL = env.VITE_MP_SCORE_URL || "https://mpago.la/placeholder_score";
 export const MP_FAMILIA_URL = env.VITE_MP_FAMILIA_URL || "https://mpago.la/placeholder_familia";
 

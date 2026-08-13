@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Apple, Check, Lock, ShieldCheck, Smartphone } from "lucide-react";
+import { Apple, Check, Lock, Smartphone } from "lucide-react";
 import { Container, Eyebrow, Reveal, SectionTitle } from "./ui";
 import { LP, SCAN_HREF } from "./theme";
 
@@ -56,7 +56,7 @@ const PLANS: Plan[] = [
   },
   {
     name: "Família",
-    monthly: 39.9,
+    monthly: 50,
     blurb: "Proteção para você e quem é importante para você.",
     features: [
       "Tudo do Proteção Total",
@@ -218,93 +218,6 @@ export function Pricing() {
           <Lock className="h-3.5 w-3.5" strokeWidth={1.8} />
           Cancele quando quiser. Sem fidelidade.
         </p>
-      </Container>
-    </section>
-  );
-}
-
-/* ── 6. PROVA SOCIAL ──────────────────────────────────────────────── */
-
-/**
- * Deliberately empty until the backend can supply real figures. Fill these and
- * the block renders itself — nothing here is invented in the meantime.
- *   AVATARS: URLs of real, consented customer photos
- *   RATING:  verified score + how many reviews it came from
- */
-const AVATARS: string[] = [];
-const RATING: { score: number; count: number } | null = null;
-
-export function SocialProof() {
-  return (
-    <section className="py-16 sm:py-20" style={{ backgroundColor: LP.bgLight }}>
-      <Container>
-        <div className="grid items-center gap-10 lg:grid-cols-[1.2fr_1fr]">
-          <Reveal>
-            <h2
-              className="text-[24px] font-bold leading-[1.2] tracking-tight sm:text-[30px]"
-              style={{ color: LP.text }}
-            >
-              Milhares de pessoas já estão cuidando
-              <br className="hidden sm:block" /> da sua privacidade com a Priva
-            </h2>
-
-            {(AVATARS.length > 0 || RATING) && (
-              <div className="mt-6 flex flex-wrap items-center gap-5">
-                {AVATARS.length > 0 && (
-                  <div className="flex -space-x-2.5">
-                    {AVATARS.map((src, i) => (
-                      <img
-                        key={i}
-                        src={src}
-                        alt=""
-                        loading="lazy"
-                        className="h-10 w-10 rounded-full border-2 border-white object-cover"
-                      />
-                    ))}
-                  </div>
-                )}
-                {RATING && (
-                  <p className="text-[13px]" style={{ color: LP.muted }}>
-                    <span className="font-bold" style={{ color: LP.text }}>
-                      {RATING.score.toLocaleString("pt-BR", { minimumFractionDigits: 1 })} de 5
-                    </span>{" "}
-                    em {RATING.count} avaliações verificadas
-                  </p>
-                )}
-              </div>
-            )}
-          </Reveal>
-
-          <Reveal delay={100}>
-            <div className="grid gap-4 sm:grid-cols-2">
-              {[
-                { Icon: Lock, title: "Dados protegidos", sub: "com segurança" },
-                { Icon: ShieldCheck, title: "Privacidade", sub: "e LGPD" },
-              ].map((c) => (
-                <div
-                  key={c.title}
-                  className="flex items-center gap-3 rounded-2xl bg-white px-5 py-5"
-                  style={{
-                    border: "1px solid rgba(17,17,26,0.08)",
-                    boxShadow: "0 6px 20px rgba(15,15,40,0.05)",
-                  }}
-                >
-                  <span
-                    className="grid h-11 w-11 shrink-0 place-items-center rounded-xl"
-                    style={{ backgroundColor: "rgba(99,102,241,0.1)" }}
-                  >
-                    <c.Icon className="h-5 w-5" strokeWidth={1.7} style={{ color: LP.indigo }} />
-                  </span>
-                  <p className="text-[14px] font-semibold leading-snug" style={{ color: LP.text }}>
-                    {c.title}
-                    <br />
-                    <span style={{ color: LP.muted }}>{c.sub}</span>
-                  </p>
-                </div>
-              ))}
-            </div>
-          </Reveal>
-        </div>
       </Container>
     </section>
   );
