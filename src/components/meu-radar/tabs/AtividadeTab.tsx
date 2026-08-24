@@ -107,22 +107,18 @@ export function AtividadeTab() {
     <>
       <AppHeader title="Atividade" showBell />
 
-      {/* Filters */}
-      <div className="no-scrollbar mt-4 flex gap-2 overflow-x-auto px-5">
+      {/* Segmented control — same toolbar language as Proteção. */}
+      <div className="mx-5 mt-4 flex gap-1 rounded-full border border-border bg-secondary/40 p-1">
         {FILTERS.map((f) => {
           const isActive = filter === f.id;
           return (
             <button
               key={f.id}
               onClick={() => setFilter(f.id)}
-              className={`shrink-0 rounded-full px-3.5 py-1.5 text-[13px] font-medium transition ${
+              className={`flex-1 rounded-full px-0.5 py-1.5 text-[12px] font-medium transition ${
                 isActive ? "text-white" : "text-muted-foreground"
               }`}
-              style={
-                isActive
-                  ? { backgroundColor: "#4F46E5" }
-                  : { border: "1px solid var(--color-border)" }
-              }
+              style={isActive ? { backgroundColor: "#4F46E5" } : undefined}
             >
               {f.label}
             </button>

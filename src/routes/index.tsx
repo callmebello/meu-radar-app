@@ -7,7 +7,7 @@ import { ProtecaoTab } from "@/components/meu-radar/tabs/ProtecaoTab";
 import { AtividadeTab } from "@/components/meu-radar/tabs/AtividadeTab";
 import { FamiliaTab } from "@/components/meu-radar/tabs/FamiliaTab";
 import { PerfilTab } from "@/components/meu-radar/tabs/PerfilTab";
-import { QuickActionsSheet } from "@/components/meu-radar/QuickActionsSheet";
+import { IncidentMode } from "@/components/meu-radar/IncidentMode";
 import { Toaster } from "@/components/ui/sonner";
 import { AppProvider, useApp, type CaptureReason } from "@/contexts/AppContext";
 import { CpfCaptureSheet } from "@/components/CpfCaptureSheet";
@@ -56,7 +56,6 @@ export const Route = createFileRoute("/")({
 function Index() {
   const [tab, setTab] = useState<TabId>("radar");
   const [funnelOpen, setFunnelOpen] = useState(false);
-  const [actionsOpen, setActionsOpen] = useState(false);
   const [hasScanned, setHasScanned] = useState(false);
   // Hydrated post-mount: reading localStorage during render would break SSR.
   const [signedIn, setSignedIn] = useState(false);
@@ -332,6 +331,7 @@ function Index() {
                 {tab === "radar" && <RadarTab />}
                 {tab === "protecao" && <ProtecaoTab />}
                 {tab === "atividade" && <AtividadeTab />}
+                {tab === "incidente" && <IncidentMode />}
                 {tab === "familia" && <FamiliaTab />}
                 {tab === "perfil" && <PerfilTab />}
               </>
@@ -342,13 +342,8 @@ function Index() {
               (no bottom scan button to point at — the sidebar has its own). */}
           <ScanNudge show={!showEmpty && !isPremium && !scanning && !funnelOpen} onScan={onScan} />
           {!showEmpty && (
-            <BottomNav active={tab} onChange={setTab} onOpenActions={() => setActionsOpen(true)} />
+            <BottomNav active={tab} onChange={setTab} onScan={onScan} scanning={scanning} />
           )}
-          <QuickActionsSheet
-            open={actionsOpen}
-            onClose={() => setActionsOpen(false)}
-            onScan={onScan}
-          />
         </div>
       </div>
 

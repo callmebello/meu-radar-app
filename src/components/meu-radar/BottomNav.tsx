@@ -2,7 +2,7 @@ import { Home, Shield, Activity, User, Plus } from "lucide-react";
 
 // `familia` stays a valid destination (reached from Perfil), it is just no
 // longer a bar item. `atividade` is new. Renamed `seguranca` → `protecao`.
-export type TabId = "radar" | "protecao" | "familia" | "perfil" | "atividade";
+export type TabId = "radar" | "protecao" | "familia" | "perfil" | "atividade" | "incidente";
 
 // The four bar tabs. The center is the `+` action sheet, not a tab.
 const tabs: { id: TabId; label: string; icon: typeof Shield }[] = [
@@ -12,22 +12,28 @@ const tabs: { id: TabId; label: string; icon: typeof Shield }[] = [
   { id: "perfil", label: "Perfil", icon: User },
 ];
 
-function PlusButton({ onClick }: { onClick: () => void }) {
+// Center action = start a scan directly (the old behaviour). No label, no sheet:
+// the scan is the only action for now, so a menu would be one tap of overhead
+// for nothing. When Pix/link/etc. exist, this can grow back into a sheet.
+function ScanButton({ onScan, scanning }: { onScan: () => void; scanning: boolean }) {
   return (
     <li className="flex flex-1 flex-col items-center justify-center">
       <button
-        onClick={onClick}
-        aria-label="Ações rápidas"
-        className="grid h-16 w-16 place-items-center rounded-full transition active:scale-95"
+        onClick={onScan}
+        aria-label="Escanear meus dados"
+        className={`grid h-16 w-16 place-items-center rounded-full transition active:scale-95 ${scanning ? "pointer-events-none" : ""}`}
         style={{
           marginTop: -16,
           background: "radial-gradient(circle at center, #6366F1, #4F46E5)",
           border: "2px solid rgba(255,255,255,0.15)",
         }}
       >
-        <Plus className="h-8 w-8 text-white" strokeWidth={2.4} />
+        {scanning ? (
+          <span className="h-7 w-7 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+        ) : (
+          <Plus className="h-8 w-8 text-white" strokeWidth={2.4} />
+        )}
       </button>
-      <span className="-mt-0.5 text-[10px] font-medium text-foreground">Verificar</span>
     </li>
   );
 }
@@ -35,11 +41,13 @@ function PlusButton({ onClick }: { onClick: () => void }) {
 export function BottomNav({
   active,
   onChange,
-  onOpenActions,
+  onScan,
+  scanning,
 }: {
   active: TabId;
   onChange: (id: TabId) => void;
-  onOpenActions: () => void;
+  onScan: () => void;
+  scanning: boolean;
 }) {
   const left = tabs.slice(0, 2);
   const right = tabs.slice(2);
@@ -78,7 +86,7 @@ export function BottomNav({
     >
       <ul className="flex items-center justify-around" style={{ height: 72 }}>
         {left.map(renderTab)}
-        <PlusButton onClick={onOpenActions} />
+        <ScanButton onScan={onScan} scanning={scanning} />
         {right.map(renderTab)}
       </ul>
     </nav>

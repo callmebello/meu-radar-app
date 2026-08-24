@@ -61,9 +61,9 @@ export function CpfCaptureSheet({
           </button>
         )}
 
-        <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-[var(--color-navy)]/12">
-          <ShieldCheck className="h-7 w-7 text-[var(--color-navy)]" />
-        </div>
+        {/* Brand mark (transparent PNG) — carries identity better than a generic
+            padlock and needs no frame around it. */}
+        <img src="/PRIVA_mark.png" alt="Priva" className="mx-auto h-14 w-14 object-contain" />
         <h2 className="mt-4 text-center text-xl font-bold text-foreground">{c.title}</h2>
         <p className="mt-2 text-center text-sm text-muted-foreground">{c.subtitle}</p>
 
@@ -87,7 +87,10 @@ export function CpfCaptureSheet({
               <input
                 type="email"
                 value={email}
-                onChange={(e) => { setEmail(e.target.value); setEmailFix(null); }}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setEmailFix(null);
+                }}
                 onBlur={() => setEmailFix(suggestEmailFix(email))}
                 onKeyDown={(e) => e.key === "Enter" && submit()}
                 placeholder="seu@email.com"
@@ -96,7 +99,13 @@ export function CpfCaptureSheet({
               <Mail className="pointer-events-none absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
             </div>
             {emailFix && (
-              <EmailTypoHint suggestion={emailFix} onAccept={() => { setEmail(emailFix); setEmailFix(null); }} />
+              <EmailTypoHint
+                suggestion={emailFix}
+                onAccept={() => {
+                  setEmail(emailFix);
+                  setEmailFix(null);
+                }}
+              />
             )}
           </>
         )}
@@ -105,7 +114,10 @@ export function CpfCaptureSheet({
           onClick={submit}
           disabled={!valid}
           className="mt-5 w-full rounded-2xl py-3.5 text-base font-bold text-white transition-all active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40"
-          style={{ background: "linear-gradient(135deg,#4F46E5,#6366F1)", boxShadow: "0 8px 28px rgba(79,70,229,0.4)" }}
+          style={{
+            background: "linear-gradient(135deg,#4F46E5,#6366F1)",
+            boxShadow: "0 8px 28px rgba(79,70,229,0.4)",
+          }}
         >
           {c.confirm}
         </button>
