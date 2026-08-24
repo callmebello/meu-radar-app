@@ -1,10 +1,9 @@
-import { Home, Shield, Activity, User, Plus } from "lucide-react";
+import { Home, Shield, Activity, User } from "lucide-react";
 
-// `familia` stays a valid destination (reached from Perfil), it is just no
-// longer a bar item. `atividade` is new. Renamed `seguranca` → `protecao`.
+// `familia` and `incidente` stay valid destinations (reached from Perfil and
+// Proteção), they are just not bar items.
 export type TabId = "radar" | "protecao" | "familia" | "perfil" | "atividade" | "incidente";
 
-// The four bar tabs. The center is the `+` action sheet, not a tab.
 const tabs: { id: TabId; label: string; icon: typeof Shield }[] = [
   { id: "radar", label: "Início", icon: Home },
   { id: "protecao", label: "Proteção", icon: Shield },
@@ -12,27 +11,34 @@ const tabs: { id: TabId; label: string; icon: typeof Shield }[] = [
   { id: "perfil", label: "Perfil", icon: User },
 ];
 
-// Center action = start a scan directly (the old behaviour). No label, no sheet:
-// the scan is the only action for now, so a menu would be one tap of overhead
-// for nothing. When Pix/link/etc. exist, this can grow back into a sheet.
+/**
+ * Center action: the Priva mark on a raised white disc. While a scan runs,
+ * radar rings expand out of it — the brand doing its one job, instead of a
+ * generic spinner.
+ */
 function ScanButton({ onScan, scanning }: { onScan: () => void; scanning: boolean }) {
   return (
-    <li className="flex flex-1 flex-col items-center justify-center">
+    <li className="relative flex flex-1 flex-col items-center justify-center">
+      {scanning && (
+        <span className="pointer-events-none absolute left-1/2 top-0 -translate-x-1/2" aria-hidden>
+          <span className="nav-ring" />
+          <span className="nav-ring nav-ring-2" />
+          <span className="nav-ring nav-ring-3" />
+        </span>
+      )}
       <button
         onClick={onScan}
         aria-label="Escanear meus dados"
-        className={`grid h-16 w-16 place-items-center rounded-full transition active:scale-95 ${scanning ? "pointer-events-none" : ""}`}
+        className={`relative grid h-16 w-16 place-items-center rounded-full transition active:scale-95 ${scanning ? "pointer-events-none" : ""}`}
         style={{
           marginTop: -16,
-          background: "radial-gradient(circle at center, #6366F1, #4F46E5)",
-          border: "2px solid rgba(255,255,255,0.15)",
+          // White disc in both themes: the mark is indigo-on-light, so it needs
+          // a light ground to stay legible over the dark bar.
+          background: "#FFFFFF",
+          boxShadow: "0 6px 20px rgba(79,70,229,0.28), 0 0 0 6px var(--color-card)",
         }}
       >
-        {scanning ? (
-          <span className="h-7 w-7 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-        ) : (
-          <Plus className="h-8 w-8 text-white" strokeWidth={2.4} />
-        )}
+        <img src="/PRIVA_mark.png" alt="" className="h-11 w-11 object-contain" />
       </button>
     </li>
   );

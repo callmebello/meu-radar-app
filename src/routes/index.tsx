@@ -61,6 +61,9 @@ function Index() {
   const [signedIn, setSignedIn] = useState(false);
   useEffect(() => {
     setSignedIn(localStorage.getItem("priva_signed_in") === "true");
+    // Shared into the app from another app (Web Share Target, Android PWA):
+    // land straight on the verification tools with the content ready.
+    if (new URLSearchParams(window.location.search).get("verificar")) setTab("atividade");
   }, []);
   const [captureOpen, setCaptureOpen] = useState(false);
   const [captureReason, setCaptureReason] = useState<CaptureReason>("scan");

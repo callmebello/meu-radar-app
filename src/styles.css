@@ -315,6 +315,43 @@
   }
 }
 
+/* Bottom-bar scan button: radar rings expanding from the Priva mark while a
+   scan runs. Uses currentColor-free indigo so it reads on light and dark. */
+@keyframes nav-ring {
+  0% {
+    transform: translate(-50%, -50%) scale(0.55);
+    opacity: 0.55;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1.7);
+    opacity: 0;
+  }
+}
+.nav-ring {
+  position: absolute;
+  left: 50%;
+  top: 16px;
+  height: 64px;
+  width: 64px;
+  margin-left: 0;
+  border-radius: 9999px;
+  border: 1.5px solid rgba(99, 102, 241, 0.5);
+  transform: translate(-50%, -50%);
+  animation: nav-ring 2.4s ease-out infinite;
+}
+.nav-ring-2 {
+  animation-delay: 0.8s;
+}
+.nav-ring-3 {
+  animation-delay: 1.6s;
+}
+@media (prefers-reduced-motion: reduce) {
+  .nav-ring {
+    animation: none;
+    opacity: 0.35;
+  }
+}
+
 /* Horizontal filter rows (Atividade) — scrollable without a visible bar. */
 .no-scrollbar {
   -ms-overflow-style: none;

@@ -79,14 +79,88 @@ export function pwnCountLabel(b: Breach): string | null {
 const ts = (b: Breach) => Date.parse(b.BreachDate || b.AddedDate || "") || 0;
 
 /**
- * Order for the lead's eyes: recognisable companies first, biggest first,
- * then everything else by date. Stealer logs always come last — they are the
- * least legible and would otherwise dominate, since they are the most recent.
+ * Brands a Brazilian reader recognises instantly. Raw PwnCount alone favours
+ * huge but abstract global dumps (or B2B names like Speedio) over a site the
+ * person actually used — Habbo lands harder than a data broker they've never
+ * heard of, even with fewer accounts.
+ */
+const BR_FAMILIAR = [
+  "habbo",
+  "netshoes",
+  "serasa",
+  "americanas",
+  "submarino",
+  "magazine",
+  "magalu",
+  "casasbahia",
+  "extra",
+  "pontofrio",
+  "b2w",
+  "olx",
+  "mercadolivre",
+  "mercadolibre",
+  "ifood",
+  "99app",
+  "99taxis",
+  "uber",
+  "rappi",
+  "vakinha",
+  "clubedoricardo",
+  "globo",
+  "uol",
+  "terra",
+  "bol",
+  "ig.com",
+  "record",
+  "sbt",
+  "vivo",
+  "claro",
+  "tim",
+  "oi.com",
+  "nubank",
+  "picpay",
+  "inter",
+  "banco",
+  "correios",
+  "detran",
+  "enel",
+  "cielo",
+  "netflix",
+  "spotify",
+  "linkedin",
+  "canva",
+  "adobe",
+  "dropbox",
+  "twitter",
+  "facebook",
+  "instagram",
+  "myspace",
+  "deezer",
+  "wattpad",
+  "duolingo",
+  "trello",
+  "badoo",
+  "tinder",
+  "ashley",
+];
+
+function brFamiliarity(b: Breach): number {
+  const hay = `${b.Name ?? ""} ${b.Title ?? ""} ${b.Domain ?? ""}`.toLowerCase();
+  if (BR_FAMILIAR.some((n) => hay.includes(n))) return 2;
+  if ((b.Domain ?? "").toLowerCase().endsWith(".br")) return 1;
+  return 0;
+}
+
+/**
+ * Order for the lead's eyes: companies people recognise first — Brazilian
+ * familiarity ahead of raw size — then everything else by date. Stealer logs
+ * always come last: they are the least legible and, being the most recent,
+ * would otherwise dominate the top of the report.
  */
 export function rankForDisplay(breaches: Breach[]): Breach[] {
   const companies = breaches
     .filter(isCompany)
-    .sort((a, b) => (b.PwnCount ?? 0) - (a.PwnCount ?? 0));
+    .sort((a, b) => brFamiliarity(b) - brFamiliarity(a) || (b.PwnCount ?? 0) - (a.PwnCount ?? 0));
   const others = breaches
     .filter((b) => !isCompany(b) && !isStealerLog(b))
     .sort((a, b) => ts(b) - ts(a));
@@ -94,7 +168,9 @@ export function rankForDisplay(breaches: Breach[]): Breach[] {
   return [...companies, ...others, ...stealers];
 }
 
-/** Only the breaches that carry a name a person recognises. */
+/** Only the breaches that carry a name a person recognises, most familiar first. */
 export function recognisableCompanies(breaches: Breach[]): Breach[] {
-  return breaches.filter(isCompany).sort((a, b) => (b.PwnCount ?? 0) - (a.PwnCount ?? 0));
+  return breaches
+    .filter(isCompany)
+    .sort((a, b) => brFamiliarity(b) - brFamiliarity(a) || (b.PwnCount ?? 0) - (a.PwnCount ?? 0));
 }
