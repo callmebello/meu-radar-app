@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import { Home, Shield, Activity, User } from "lucide-react";
 
 // `familia` and `incidente` stay valid destinations (reached from Perfil and
@@ -11,15 +12,37 @@ const tabs: { id: TabId; label: string; icon: typeof Shield }[] = [
   { id: "perfil", label: "Perfil", icon: User },
 ];
 
+/** How long the radar sweeps before the capture sheet rises. */
+const SWEEP_MS = 1100;
+
 /**
- * Center action: the Priva mark on a raised white disc. While a scan runs,
- * radar rings expand out of it — the brand doing its one job, instead of a
- * generic spinner.
+ * Center action: the Priva mark on a raised white disc.
+ *
+ * Tapping it sweeps a radar line a full 360° around the mark first, then hands
+ * off to onScan — the app visibly "looks" before asking for anything, so the
+ * sheet that follows feels like a result of the action rather than a pop-up.
+ * The same rings keep pulsing while a real scan is in flight.
  */
 function ScanButton({ onScan, scanning }: { onScan: () => void; scanning: boolean }) {
+  const [sweeping, setSweeping] = useState(false);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => () => void (timer.current && clearTimeout(timer.current)), []);
+
+  const handleClick = () => {
+    if (sweeping || scanning) return;
+    setSweeping(true);
+    timer.current = setTimeout(() => {
+      setSweeping(false);
+      onScan();
+    }, SWEEP_MS);
+  };
+
+  const busy = sweeping || scanning;
+
   return (
     <li className="relative flex flex-1 flex-col items-center justify-center">
-      {scanning && (
+      {busy && (
         <span className="pointer-events-none absolute left-1/2 top-0 -translate-x-1/2" aria-hidden>
           <span className="nav-ring" />
           <span className="nav-ring nav-ring-2" />
@@ -27,9 +50,9 @@ function ScanButton({ onScan, scanning }: { onScan: () => void; scanning: boolea
         </span>
       )}
       <button
-        onClick={onScan}
+        onClick={handleClick}
         aria-label="Escanear meus dados"
-        className={`relative grid h-16 w-16 place-items-center rounded-full transition active:scale-95 ${scanning ? "pointer-events-none" : ""}`}
+        className={`relative grid h-16 w-16 place-items-center overflow-hidden rounded-full transition active:scale-95 ${busy ? "pointer-events-none" : ""}`}
         style={{
           marginTop: -16,
           // White disc in both themes: the mark is indigo-on-light, so it needs
@@ -38,7 +61,8 @@ function ScanButton({ onScan, scanning }: { onScan: () => void; scanning: boolea
           boxShadow: "0 6px 20px rgba(79,70,229,0.28), 0 0 0 6px var(--color-card)",
         }}
       >
-        <img src="/PRIVA_mark.png" alt="" className="h-11 w-11 object-contain" />
+        {busy && <span className="nav-sweep" aria-hidden />}
+        <img src="/PRIVA_mark.png" alt="" className="relative h-11 w-11 object-contain" />
       </button>
     </li>
   );

@@ -1,27 +1,33 @@
 import { useState } from "react";
-import { ShieldCheck, IdCard, Mail, X } from "lucide-react";
+import { ShieldCheck, IdCard, Mail, X, ArrowRight } from "lucide-react";
 import { formatCPF, isValidCPF, isValidEmail } from "@/lib/funnel";
 import { suggestEmailFix } from "@/lib/emailSuggest";
 import { EmailTypoHint } from "@/components/EmailTypoHint";
 import type { CaptureReason } from "@/contexts/AppContext";
 
-const COPY: Record<CaptureReason, { title: string; subtitle: string; confirm: string }> = {
+const COPY: Record<
+  CaptureReason,
+  { title: string; highlight: string; subtitle: string; confirm: string }
+> = {
   postpay: {
-    title: "Pagamento confirmado!",
-    subtitle: "Para gerar seu relatório, precisamos confirmar seu CPF.",
-    confirm: "Confirmar e gerar relatório",
+    title: "Pagamento ",
+    highlight: "confirmado",
+    subtitle: "Confirme seus dados para gerarmos o seu relatório completo.",
+    confirm: "Gerar relatório",
   },
   scan: {
-    title: "Verificar seus dados",
-    subtitle: "Confirme seu CPF para fazer o scan.",
-    confirm: "Fazer scan",
+    title: "Verifique sua ",
+    highlight: "identidade",
+    subtitle: "Confirme seus dados para iniciarmos a análise da sua exposição digital.",
+    confirm: "Iniciar análise",
   },
 };
 
 /**
  * Minimal CPF (+ e-mail when unknown) capture — NOT the full sales landing.
- * Used as the post-payment "confirm your CPF to generate the report" fallback
- * and as the Scan-button capture for already-unlocked users.
+ * Opens after the bottom-bar radar sweep, so it slides up as the result of that
+ * action. Used post-payment ("confirm your CPF to generate the report") and as
+ * the Scan capture for already-unlocked users.
  */
 export function CpfCaptureSheet({
   reason,
@@ -46,29 +52,43 @@ export function CpfCaptureSheet({
   };
 
   const inputClass =
-    "w-full rounded-xl border border-border bg-secondary py-3.5 pl-4 pr-11 text-foreground outline-none placeholder:text-muted-foreground/60";
+    "w-full rounded-2xl border border-border bg-card py-4 pl-12 pr-12 text-[15px] text-foreground outline-none transition-colors placeholder:text-muted-foreground/50 focus:border-indigo-500";
 
   return (
-    <div className="fixed inset-0 z-[65] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-      <div className="relative w-full max-w-sm rounded-3xl border border-border bg-card p-6 shadow-2xl">
+    <div className="fixed inset-0 z-[65] flex items-end justify-center bg-black/60 p-0 backdrop-blur-sm sm:items-center sm:p-4">
+      <div className="animate-quiz-fade-up relative w-full max-w-md rounded-t-[28px] border border-border bg-background p-7 shadow-2xl sm:rounded-[28px]">
         {onClose && (
           <button
             onClick={onClose}
             aria-label="Fechar"
-            className="absolute right-4 top-4 grid h-8 w-8 place-items-center rounded-full text-muted-foreground hover:bg-secondary/60"
+            className="absolute right-5 top-5 grid h-9 w-9 place-items-center rounded-full text-muted-foreground transition hover:bg-secondary/60"
           >
-            <X className="h-4 w-4" />
+            <X className="h-5 w-5" />
           </button>
         )}
 
-        {/* Brand mark (transparent PNG) — carries identity better than a generic
-            padlock and needs no frame around it. */}
-        <img src="/PRIVA_mark.png" alt="Priva" className="mx-auto h-14 w-14 object-contain" />
-        <h2 className="mt-4 text-center text-xl font-bold text-foreground">{c.title}</h2>
-        <p className="mt-2 text-center text-sm text-muted-foreground">{c.subtitle}</p>
+        {/* Brand mark in a soft halo — the scan that just ran, personified. */}
+        <div
+          className="mx-auto grid h-[86px] w-[86px] place-items-center rounded-full"
+          style={{
+            background:
+              "radial-gradient(circle at center, rgba(99,102,241,0.14) 0%, rgba(99,102,241,0.04) 60%, transparent 72%)",
+          }}
+        >
+          <img src="/PRIVA_mark.png" alt="Priva" className="h-16 w-16 object-contain" />
+        </div>
 
-        <label className="mt-5 block text-sm font-semibold text-foreground">CPF</label>
+        <h2 className="mt-3 text-center text-[26px] font-bold leading-tight tracking-tight text-foreground">
+          {c.title}
+          <span className="text-[var(--color-navy)]">{c.highlight}</span>
+        </h2>
+        <p className="mx-auto mt-2.5 max-w-[19rem] text-center text-[14.5px] leading-relaxed text-muted-foreground">
+          {c.subtitle}
+        </p>
+
+        <label className="mt-7 block text-[14px] font-bold text-foreground">CPF</label>
         <div className="relative mt-2">
+          <IdCard className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[var(--color-navy)]" />
           <input
             value={cpf}
             onChange={(e) => setCpf(formatCPF(e.target.value))}
@@ -77,13 +97,14 @@ export function CpfCaptureSheet({
             placeholder="000.000.000-00"
             className={inputClass}
           />
-          <IdCard className="pointer-events-none absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+          <IdCard className="pointer-events-none absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground/70" />
         </div>
 
         {needEmail && (
           <>
-            <label className="mt-4 block text-sm font-semibold text-foreground">E-mail</label>
+            <label className="mt-5 block text-[14px] font-bold text-foreground">E-mail</label>
             <div className="relative mt-2">
+              <Mail className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[var(--color-navy)]" />
               <input
                 type="email"
                 value={email}
@@ -96,7 +117,7 @@ export function CpfCaptureSheet({
                 placeholder="seu@email.com"
                 className={inputClass}
               />
-              <Mail className="pointer-events-none absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+              <Mail className="pointer-events-none absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground/70" />
             </div>
             {emailFix && (
               <EmailTypoHint
@@ -113,18 +134,23 @@ export function CpfCaptureSheet({
         <button
           onClick={submit}
           disabled={!valid}
-          className="mt-5 w-full rounded-2xl py-3.5 text-base font-bold text-white transition-all active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40"
+          className="mt-7 flex w-full items-center justify-center gap-2.5 rounded-2xl py-4 text-[16px] font-bold text-white transition-all active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40"
           style={{
-            background: "linear-gradient(135deg,#4F46E5,#6366F1)",
-            boxShadow: "0 8px 28px rgba(79,70,229,0.4)",
+            background: "linear-gradient(135deg,#6366F1,#8B7CFF)",
+            boxShadow: "0 10px 30px rgba(99,102,241,0.38)",
           }}
         >
-          {c.confirm}
+          {c.confirm} <ArrowRight className="h-5 w-5" />
         </button>
 
-        <p className="mt-3 flex items-center justify-center gap-1.5 text-center text-[11px] text-muted-foreground">
-          <ShieldCheck className="h-3 w-3" /> Seguro · não armazenamos seu CPF
-        </p>
+        <div className="mt-5 flex items-start justify-center gap-2 px-2">
+          <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[var(--color-navy)]" />
+          <p className="text-center text-[12.5px] leading-relaxed text-muted-foreground">
+            Seus dados são usados apenas para realizar a análise. Sua{" "}
+            <span className="font-bold text-[var(--color-navy)]">privacidade</span> é a nossa
+            prioridade.
+          </p>
+        </div>
       </div>
     </div>
   );
