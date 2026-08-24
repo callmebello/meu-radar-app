@@ -103,7 +103,7 @@ export function RadarTab() {
             <p className="flex-1 text-[11px] font-medium text-foreground">
               CPF verificado · {occurrences} {occurrences === 1 ? "ocorrência encontrada" : "ocorrências encontradas"}
             </p>
-            <button onClick={() => goToTab("seguranca")} className="text-[11px] font-bold text-[var(--color-teal)]">
+            <button onClick={() => goToTab("protecao")} className="text-[11px] font-bold text-[var(--color-teal)]">
               Ver detalhes →
             </button>
             <button onClick={() => setBannerVisible(false)} className="text-muted-foreground">

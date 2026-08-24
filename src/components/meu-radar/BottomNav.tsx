@@ -1,58 +1,33 @@
-import { useState } from "react";
-import { Home, Shield, Users, User } from "lucide-react";
+import { Home, Shield, Activity, User, Plus } from "lucide-react";
 
-export type TabId = "radar" | "seguranca" | "familia" | "perfil";
+// `familia` stays a valid destination (reached from Perfil), it is just no
+// longer a bar item. `atividade` is new. Renamed `seguranca` → `protecao`.
+export type TabId = "radar" | "protecao" | "familia" | "perfil" | "atividade";
 
+// The four bar tabs. The center is the `+` action sheet, not a tab.
 const tabs: { id: TabId; label: string; icon: typeof Shield }[] = [
   { id: "radar", label: "Início", icon: Home },
-  { id: "seguranca", label: "Segurança", icon: Shield },
-  { id: "familia", label: "Família", icon: Users },
+  { id: "protecao", label: "Proteção", icon: Shield },
+  { id: "atividade", label: "Atividade", icon: Activity },
   { id: "perfil", label: "Perfil", icon: User },
 ];
 
-function ScanIcon({ fast }: { fast: boolean }) {
-  return (
-    <svg width="34" height="34" viewBox="0 0 48 48" fill="none" aria-hidden>
-      <circle cx="24" cy="24" r="8" stroke="white" strokeWidth="1.2" fill="none" />
-      <circle cx="24" cy="24" r="16" stroke="white" strokeWidth="1.2" fill="none" opacity="0.7" />
-      <circle cx="24" cy="24" r="22" stroke="white" strokeWidth="1.2" fill="none" opacity="0.4" />
-      {/* sweep arm — STILL when idle, rotates only while scanning */}
-      <g className={fast ? "radar-sweep-fast" : ""}>
-        <line x1="24" y1="24" x2="40" y2="8" stroke="white" strokeWidth="1.4" strokeLinecap="round" />
-      </g>
-      <circle cx="24" cy="24" r="2" fill="white" />
-    </svg>
-  );
-}
-
-function ScanButton({ onScan, scanning }: { onScan: () => void; scanning: boolean }) {
-  const [popped, setPopped] = useState(false);
-
-  const handleClick = () => {
-    setPopped(true);
-    setTimeout(() => setPopped(false), 300);
-    onScan();
-  };
-
+function PlusButton({ onClick }: { onClick: () => void }) {
   return (
     <li className="flex flex-1 flex-col items-center justify-center">
       <button
-        onClick={handleClick}
-        aria-label="Escanear identidade"
-        className={`scan-breathe grid h-16 w-16 place-items-center rounded-full ${popped ? "animate-scan-pop" : ""} ${scanning ? "pointer-events-none" : ""}`}
+        onClick={onClick}
+        aria-label="Ações rápidas"
+        className="grid h-16 w-16 place-items-center rounded-full transition active:scale-95"
         style={{
           marginTop: -16,
           background: "radial-gradient(circle at center, #6366F1, #4F46E5)",
           border: "2px solid rgba(255,255,255,0.15)",
         }}
       >
-        {scanning ? (
-          <span className="h-7 w-7 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-        ) : (
-          <ScanIcon fast={false} />
-        )}
+        <Plus className="h-8 w-8 text-white" strokeWidth={2.4} />
       </button>
-      <span className="-mt-0.5 text-[10px] font-medium text-foreground">Scan Grátis</span>
+      <span className="-mt-0.5 text-[10px] font-medium text-foreground">Verificar</span>
     </li>
   );
 }
@@ -60,13 +35,11 @@ function ScanButton({ onScan, scanning }: { onScan: () => void; scanning: boolea
 export function BottomNav({
   active,
   onChange,
-  onScan,
-  scanning,
+  onOpenActions,
 }: {
   active: TabId;
   onChange: (id: TabId) => void;
-  onScan: () => void;
-  scanning: boolean;
+  onOpenActions: () => void;
 }) {
   const left = tabs.slice(0, 2);
   const right = tabs.slice(2);
@@ -105,7 +78,7 @@ export function BottomNav({
     >
       <ul className="flex items-center justify-around" style={{ height: 72 }}>
         {left.map(renderTab)}
-        <ScanButton onScan={onScan} scanning={scanning} />
+        <PlusButton onClick={onOpenActions} />
         {right.map(renderTab)}
       </ul>
     </nav>

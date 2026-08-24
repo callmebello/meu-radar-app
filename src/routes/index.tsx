@@ -3,9 +3,11 @@ import { useEffect, useState } from "react";
 import { BottomNav, type TabId } from "@/components/meu-radar/BottomNav";
 import { DesktopSidebar } from "@/components/meu-radar/DesktopSidebar";
 import { RadarTab } from "@/components/meu-radar/tabs/RadarTab";
-import { SegurancaTab } from "@/components/meu-radar/tabs/SegurancaTab";
+import { ProtecaoTab } from "@/components/meu-radar/tabs/ProtecaoTab";
+import { AtividadeTab } from "@/components/meu-radar/tabs/AtividadeTab";
 import { FamiliaTab } from "@/components/meu-radar/tabs/FamiliaTab";
 import { PerfilTab } from "@/components/meu-radar/tabs/PerfilTab";
+import { QuickActionsSheet } from "@/components/meu-radar/QuickActionsSheet";
 import { Toaster } from "@/components/ui/sonner";
 import { AppProvider, useApp, type CaptureReason } from "@/contexts/AppContext";
 import { CpfCaptureSheet } from "@/components/CpfCaptureSheet";
@@ -54,6 +56,7 @@ export const Route = createFileRoute("/")({
 function Index() {
   const [tab, setTab] = useState<TabId>("radar");
   const [funnelOpen, setFunnelOpen] = useState(false);
+  const [actionsOpen, setActionsOpen] = useState(false);
   const [hasScanned, setHasScanned] = useState(false);
   // Hydrated post-mount: reading localStorage during render would break SSR.
   const [signedIn, setSignedIn] = useState(false);
@@ -327,7 +330,8 @@ function Index() {
             ) : (
               <>
                 {tab === "radar" && <RadarTab />}
-                {tab === "seguranca" && <SegurancaTab />}
+                {tab === "protecao" && <ProtecaoTab />}
+                {tab === "atividade" && <AtividadeTab />}
                 {tab === "familia" && <FamiliaTab />}
                 {tab === "perfil" && <PerfilTab />}
               </>
@@ -338,8 +342,13 @@ function Index() {
               (no bottom scan button to point at — the sidebar has its own). */}
           <ScanNudge show={!showEmpty && !isPremium && !scanning && !funnelOpen} onScan={onScan} />
           {!showEmpty && (
-            <BottomNav active={tab} onChange={setTab} onScan={onScan} scanning={scanning} />
+            <BottomNav active={tab} onChange={setTab} onOpenActions={() => setActionsOpen(true)} />
           )}
+          <QuickActionsSheet
+            open={actionsOpen}
+            onClose={() => setActionsOpen(false)}
+            onScan={onScan}
+          />
         </div>
       </div>
 

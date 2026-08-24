@@ -315,6 +315,15 @@
   }
 }
 
+/* Horizontal filter rows (Atividade) — scrollable without a visible bar. */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 /* Landing hero radar — idle, ambient motion. Slow on purpose: it should be
    noticed peripherally, never compete with the headline or the CTA. */
 .radar-sweep-idle {
