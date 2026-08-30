@@ -112,3 +112,52 @@ create table if not exists quiz_answers (
   updated_at timestamptz not null default now()
 );
 create index if not exists quiz_answers_user_id_idx on quiz_answers(user_id);
+
+-- ---------------------------------------------------------------------------
+-- Abuse + cost control for the paid scan APIs (HIBP, SerpAPI).
+--
+-- The tools in Atividade cost nothing (they run on the device), but a scan
+-- spends real credits. Without this, one script could burn the whole month's
+-- SerpAPI allowance for every user at once.
+--
+-- The subject is a SALTED HASH of the client IP, never the IP. It is only ever
+-- compared against itself, and the daily rows are disposable — see the cleanup
+-- note at the bottom.
+create table if not exists rate_limits (
+  bucket text not null,
+  subject text not null,
+  day date not null default current_date,
+  count int not null default 0,
+  primary key (bucket, subject, day)
+);
+create index if not exists rate_limits_day_idx on rate_limits(day);
+
+-- Atomic increment. Read-then-write would let concurrent scans slip past the
+-- limit; this returns the count AFTER the call, in one statement.
+create or replace function bump_rate_limit(p_bucket text, p_subject text)
+returns int language plpgsql as $$
+declare c int;
+begin
+  insert into rate_limits (bucket, subject, day, count)
+  values (p_bucket, p_subject, current_date, 1)
+  on conflict (bucket, subject, day)
+  do update set count = rate_limits.count + 1
+  returning count into c;
+  return c;
+end $$;
+
+-- Response cache. The key is a salted hash of the query (CPF, phone, e-mail),
+-- so what someone searched for is never stored in the clear. Re-scanning the
+-- same identity is the most common repeat call by far — legitimately (people
+-- check again) and abusively — and each cache hit costs zero credits.
+create table if not exists api_cache (
+  cache_key text primary key,
+  kind text not null,
+  result jsonb not null,
+  created_at timestamptz not null default now()
+);
+create index if not exists api_cache_created_idx on api_cache(created_at);
+
+-- Housekeeping (optional, via pg_cron or by hand):
+--   delete from rate_limits where day < current_date - 7;
+--   delete from api_cache  where created_at < now() - interval '30 days';

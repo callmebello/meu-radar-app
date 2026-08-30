@@ -2,8 +2,14 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import process from "node:process";
 import { consumeSerpApiBudget } from "./api-usage.server";
+import { cacheKeyFor, readCache, withinRateLimit, writeCache } from "./rate-limit.server";
 
 export type ExposureSource = { title: string; link: string; snippet: string };
+// A real person scans two or three times; this only has to stop enumeration.
+// Kept generous because Brazilian mobile carriers share one CGNAT address
+// across thousands of subscribers.
+const SERPAPI_PER_IP_DAILY = 12;
+
 export type SearchExposureResult = {
   found: boolean;
   count: number;
@@ -22,15 +28,30 @@ export const searchExposure = createServerFn({ method: "POST" })
       return { found: false, count: 0, sources: [] };
     }
 
+    // Cache first: re-scanning the same identity is the most common repeat
+    // call, and a hit costs no credits. Public search results for a CPF or
+    // phone barely move week to week, so a week is a safe window.
+    const cacheKey = cacheKeyFor(`serpapi:${data.type}`, data.query.trim());
+    const cached = await readCache<SearchExposureResult>(cacheKey, 24 * 7);
+    if (cached) return cached;
+
+    // Then the per-caller limit. Without it one script could spend the whole
+    // month's allowance — 240 calls, about 120 scans — for every user at once.
+    if (!(await withinRateLimit("serpapi", SERPAPI_PER_IP_DAILY))) {
+      return { found: false, count: 0, sources: [], skipped: true };
+    }
+
     const hasBudget = await consumeSerpApiBudget();
     if (!hasBudget) return { found: false, count: 0, sources: [], skipped: true };
 
     try {
       const url = `https://serpapi.com/search.json?q=${encodeURIComponent(`"${data.query}"`)}&api_key=${key}&num=5`;
       const res = await fetch(url);
-      const json = (await res.json()) as { organic_results?: Array<{ title?: string; link?: string; snippet?: string }> };
+      const json = (await res.json()) as {
+        organic_results?: Array<{ title?: string; link?: string; snippet?: string }>;
+      };
       const results = Array.isArray(json.organic_results) ? json.organic_results : [];
-      return {
+      const out: SearchExposureResult = {
         found: results.length > 0,
         count: results.length,
         sources: results.slice(0, 3).map((r) => ({
@@ -39,6 +60,8 @@ export const searchExposure = createServerFn({ method: "POST" })
           snippet: r.snippet ?? "",
         })),
       };
+      await writeCache(cacheKey, "serpapi", out);
+      return out;
     } catch {
       return { found: false, count: 0, sources: [] };
     }
