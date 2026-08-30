@@ -22,7 +22,9 @@ import { analyzeLink, type LinkResult } from "@/lib/security/link";
 import { analyzePix, type PixResult } from "@/lib/security/pix";
 import { analyzeMessage, type MessageResult } from "@/lib/security/message";
 import { decodeFromFile } from "@/lib/security/qr";
-import { checksLeft, consumeCheck, FREE_CHECKS_PER_DAY } from "@/lib/security/quota";
+import { checksLeft, consumeCheck, tierOf, CHECKS_PER_DAY } from "@/lib/security/quota";
+import { FreeAccountSheet } from "../FreeAccountSheet";
+import { getUser } from "@/lib/auth";
 
 /**
  * Verification tools: link, Pix and message.
@@ -95,11 +97,25 @@ export function AtividadeTab() {
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [scanning, setScanning] = useState(false);
   const [qrError, setQrError] = useState<string | null>(null);
-  const [left, setLeft] = useState<number>(FREE_CHECKS_PER_DAY);
+  const [hasAccount, setHasAccount] = useState(false);
+  const [accountSheet, setAccountSheet] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
+  const tier = tierOf(hasAccount, isPremium);
+  const [left, setLeft] = useState<number>(CHECKS_PER_DAY.anon);
+
   useEffect(() => setHistory(loadHistory()), []);
-  useEffect(() => setLeft(checksLeft(isPremium)), [isPremium]);
+
+  // An account may exist from a previous device/session, not just from this
+  // one — so trust the live session over the local flag when there is one.
+  useEffect(() => {
+    setHasAccount(localStorage.getItem("priva_has_account") === "true");
+    void getUser()
+      .then((u) => u && setHasAccount(true))
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => setLeft(checksLeft(tier)), [tier]);
 
   // A share/paste can arrive as ?verificar=... (see the share target route).
   useEffect(() => {
@@ -126,13 +142,16 @@ export function AtividadeTab() {
   const run = (override?: string) => {
     const value = (override ?? input).trim();
     if (!value) return;
-    // Free tier: three a day, then the paywall — which is what makes the
-    // Essencial plan's "verificação ilimitada" a real difference.
-    if (!consumeCheck(isPremium)) {
-      openPaywall();
+    // Soft allowance, climbing one step at a time: an anonymous visitor is
+    // asked for a free account (never for money) the first time they run out,
+    // and only someone who already has one sees the plans. Asking to pay
+    // before the tool has proved itself is what kills conversion here.
+    if (!consumeCheck(tier)) {
+      if (tier === "anon") setAccountSheet(true);
+      else openPaywall();
       return;
     }
-    setLeft(checksLeft(isPremium));
+    setLeft(checksLeft(tier));
     if (tool === "link") {
       const r = analyzeLink(value);
       setResult(r);
@@ -199,6 +218,20 @@ export function AtividadeTab() {
     <>
       {scanning && <QrScanner onResult={onQrResult} onClose={() => setScanning(false)} />}
 
+      {accountSheet && (
+        <FreeAccountSheet
+          onClose={() => setAccountSheet(false)}
+          onCreated={() => {
+            setAccountSheet(false);
+            setHasAccount(true);
+          }}
+          onSeePlans={() => {
+            setAccountSheet(false);
+            openPaywall();
+          }}
+        />
+      )}
+
       <AppHeader title="Verificar" showBell />
 
       {/* Same segmented toolbar language as Proteção */}
@@ -235,7 +268,7 @@ export function AtividadeTab() {
             <p className="px-5 pt-1.5 text-[11.5px] text-muted-foreground">
               {left > 0 ? (
                 <>
-                  {left} de {FREE_CHECKS_PER_DAY}{" "}
+                  {left} de {CHECKS_PER_DAY[tier]}{" "}
                   {left === 1 ? "verificação gratuita hoje" : "verificações gratuitas hoje"} ·{" "}
                   <button onClick={openPaywall} className="font-semibold text-[var(--color-navy)]">
                     ilimitado no Essencial
@@ -243,10 +276,22 @@ export function AtividadeTab() {
                 </>
               ) : (
                 <>
-                  Você usou suas {FREE_CHECKS_PER_DAY} verificações de hoje ·{" "}
-                  <button onClick={openPaywall} className="font-semibold text-[var(--color-navy)]">
-                    assine para continuar
-                  </button>
+                  Você usou suas {CHECKS_PER_DAY[tier]} verificações de hoje ·{" "}
+                  {tier === "anon" ? (
+                    <button
+                      onClick={() => setAccountSheet(true)}
+                      className="font-semibold text-[var(--color-navy)]"
+                    >
+                      criar conta grátis
+                    </button>
+                  ) : (
+                    <button
+                      onClick={openPaywall}
+                      className="font-semibold text-[var(--color-navy)]"
+                    >
+                      assine para continuar
+                    </button>
+                  )}
                 </>
               )}
             </p>

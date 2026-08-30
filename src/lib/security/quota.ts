@@ -1,16 +1,35 @@
 /**
- * Free-tier quota for the verification tools.
+ * Free allowance for the verification tools.
  *
- * The Essencial plan advertises "verificação ilimitada", so the free tier has
- * to have a limit or the promise means nothing. Three a day is enough to prove
- * the tool works on the checks people actually make, and the wall lands at the
- * moment of highest intent — someone with a fourth suspicious message.
+ * This is a SOFT LIMIT, never a security control. It lives in localStorage, so
+ * clearing storage resets it — accepted on purpose. Building device
+ * fingerprinting to close that hole would mean identifying people more
+ * aggressively in the one app whose promise is the opposite, and it would buy
+ * nothing: link, Pix and message are analysed entirely on this device (no
+ * network call in lib/security), so an extra check costs us exactly zero.
  *
- * Device-local by design: no account is required to use the tools, so there is
- * nothing to count against server-side. It is a fair-use nudge, not DRM.
+ * The limit exists for two product reasons only: to make the Essencial plan's
+ * "verificação ilimitada" mean something, and to create an honest moment to ask
+ * for an account — after the tool has already proved itself.
+ *
+ * Real abuse protection belongs where money is actually spent: the scan path
+ * (HIBP, SerpAPI), guarded server-side in api-usage.server.ts.
+ *
+ * The ladder: anonymous → small allowance → free account → larger allowance →
+ * subscriber → unlimited. Nobody is asked to sign up before seeing a result.
  */
+export type Tier = "anon" | "conta" | "assinante";
+
+export const CHECKS_PER_DAY: Record<Tier, number> = {
+  anon: 3,
+  conta: 10,
+  assinante: Infinity,
+};
+
+export const tierOf = (hasAccount: boolean, isPremium: boolean): Tier =>
+  isPremium ? "assinante" : hasAccount ? "conta" : "anon";
+
 const KEY = "priva_check_quota";
-export const FREE_CHECKS_PER_DAY = 3;
 
 type Quota = { day: string; used: number };
 
@@ -27,17 +46,19 @@ function read(): Quota {
   }
 }
 
-/** How many checks are left today. Subscribers are never limited. */
-export function checksLeft(isPremium: boolean): number {
-  if (isPremium) return Infinity;
-  return Math.max(0, FREE_CHECKS_PER_DAY - read().used);
+/**
+ * How many checks are left today. The counter is shared across tiers, so
+ * signing up mid-day tops the same day up instead of restarting it.
+ */
+export function checksLeft(tier: Tier): number {
+  return Math.max(0, CHECKS_PER_DAY[tier] - read().used);
 }
 
-/** Records one use. Returns false when the free allowance is already spent. */
-export function consumeCheck(isPremium: boolean): boolean {
-  if (isPremium) return true;
+/** Records one use. Returns false when the allowance is already spent. */
+export function consumeCheck(tier: Tier): boolean {
+  if (tier === "assinante") return true;
   const q = read();
-  if (q.used >= FREE_CHECKS_PER_DAY) return false;
+  if (q.used >= CHECKS_PER_DAY[tier]) return false;
   try {
     localStorage.setItem(KEY, JSON.stringify({ day: q.day, used: q.used + 1 }));
   } catch {
