@@ -1,14 +1,31 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, Check, Globe, Lock, ShieldCheck } from "lucide-react";
-import { getScore } from "@/lib/funnel";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Bell,
+  Calendar,
+  Check,
+  ChevronRight,
+  Globe,
+  IdCard,
+  KeyRound,
+  Lock,
+  Mail,
+  Phone,
+  ShieldAlert,
+  Share2,
+  ShieldCheck,
+  Trash2,
+} from "lucide-react";
 import { highlightedReportLabels, readQuizAnswers } from "@/lib/quiz";
 import { startCheckout, type CheckoutPlan } from "@/lib/checkout";
 import { track, gaEvent } from "@/lib/analytics";
 import { useIsDark } from "@/hooks/use-is-dark";
+import { ShareResultSheet } from "@/components/meu-radar/ShareResultSheet";
+import { computeScore, riskLevel } from "@/lib/riskScore";
 import {
   displayName,
-  displaySubtitle,
   logoOf,
   pwnCountLabel,
   rankForDisplay,
@@ -69,6 +86,14 @@ function clarityTag(key: string, value: string) {
   if (typeof c === "function") c("set", key, value);
 }
 
+/** The four data types we can state something about, with their own icon. */
+const DATA_TYPES = [
+  { label: "E-mail", Icon: Mail },
+  { label: "Senha", Icon: KeyRound },
+  { label: "CPF", Icon: IdCard },
+  { label: "Telefone", Icon: Phone },
+] as const;
+
 function RelatorioPage() {
   const navigate = useNavigate();
   const isDark = useIsDark();
@@ -78,8 +103,8 @@ function RelatorioPage() {
   const evidenceRef = useRef<HTMLDivElement | null>(null);
   const [redirecting, setRedirecting] = useState(false);
   const [showSticky, setShowSticky] = useState(false);
-  const [mounted, setMounted] = useState(false); // drives bar-width + count animations
-  const [countDays, setCountDays] = useState(0);
+  const [showAll, setShowAll] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
 
   // Scan is read from localStorage AND re-read for a few seconds: the HIBP
   // result can land right after the scan navigation, so poll until breaches
@@ -100,6 +125,7 @@ function RelatorioPage() {
     }, 500);
     return () => clearInterval(id);
   }, [scan]);
+
   const exposure = readJSON<Exposure>("priva_exposure");
   const cpf = typeof window !== "undefined" ? sessionStorage.getItem("priva_cpf") || "" : "";
   const isPaid = typeof window !== "undefined" && localStorage.getItem("priva_is_paid") === "true";
@@ -107,104 +133,61 @@ function RelatorioPage() {
   const breaches = useMemo(() => (scan?.hibp?.breaches ?? []).filter(Boolean), [scan]);
   const breachCount = scan?.hibp?.count ?? breaches.length;
 
-  // Chronology
-  // Recognisable companies lead; stealer logs sink. Sorting by date alone put
-  // "June2026StealerLogs" at the top, which reads as noise to a lead.
-  const byNewest = useMemo(() => rankForDisplay(breaches), [breaches]);
-  // Named companies drive the interest; if the account only has malware dumps
-  // we still show something, but under an honest heading.
+  // Recognisable companies lead; stealer logs sink.
+  const ranked = useMemo(() => rankForDisplay(breaches), [breaches]);
   const companies = useMemo(() => recognisableCompanies(breaches), [breaches]);
   const firstBreach = useMemo(
     () => [...breaches].filter(tsOf).sort((a, b) => tsOf(a) - tsOf(b))[0],
     [breaches],
   );
   const firstTs = firstBreach ? tsOf(firstBreach) : 0;
-  const daysExposed = firstTs ? Math.max(1, Math.floor((Date.now() - firstTs) / 86_400_000)) : 0;
 
-  // Data types the user flagged in the pre-scan quiz — their own words come back
-  // as highlighted rows in the exposure map ("you told us X; here is X").
+  // What the person told us in the quiz comes back as "você indicou".
   const flagged = useMemo(() => new Set(highlightedReportLabels(readQuizAnswers().q2)), []);
 
-  // Exposure map — count breaches per data type (+ public exposure signals)
-  const emailN = breaches.filter((b) => has(b, /email/)).length;
-  const passN = breaches.filter((b) => has(b, /password/)).length;
-  const phoneN = breaches.filter((b) => has(b, /phone/)).length + (exposure?.phone?.count ?? 0);
-  const cpfN =
-    breaches.filter((b) => has(b, /government|credit card|national id/)).length +
-    (exposure?.cpf?.count ?? 0);
-  const bars = [
-    { label: "E-mail", n: emailN, always: true },
-    { label: "Senha", n: passN, always: true },
-    { label: "Telefone", n: phoneN, always: false },
-    { label: "CPF", n: cpfN, always: false },
-  ].filter((b) => b.always || b.n > 0 || flagged.has(b.label));
-  const maxBar = Math.max(1, ...bars.map((b) => b.n));
-  const anyFlagged = bars.some((b) => flagged.has(b.label));
-
-  // Public exposure (SerpAPI/GitHub)
-  const publicHits =
-    (exposure?.cpf?.count ?? 0) + (exposure?.phone?.count ?? 0) + (exposure?.github?.count ?? 0);
-
-  // Broken, session-varied score (authority verdict AFTER the evidence)
-  const [score, setScore] = useState(() => (cpf ? getScore(cpf, breachCount) : 20));
-  useEffect(() => {
-    const KEY = "priva_report_score";
-    let v = Number(sessionStorage.getItem(KEY));
-    if (!v) {
-      const [lo, hi] = breachCount >= 5 ? [12, 31] : breachCount >= 2 ? [28, 47] : [54, 72];
-      v = lo + Math.floor(Math.random() * (hi - lo + 1));
-      try {
-        sessionStorage.setItem(KEY, String(v));
-      } catch {
-        /* ignore */
-      }
-    }
-    setScore(v);
-  }, [breachCount]);
-
-  const risk =
-    score < 40
-      ? { color: "#DC2626", label: "RISCO ALTO", badge: "bg-red-500/10 text-red-600" }
-      : score < 70
-        ? { color: "#D97706", label: "RISCO MÉDIO", badge: "bg-amber-500/10 text-amber-600" }
-        : { color: "#059669", label: "RISCO BAIXO", badge: "bg-emerald-500/10 text-emerald-600" };
-
+  // Per-type findings. Memoised: it feeds the score memo below, and a fresh
+  // object each render would recompute (and re-animate) on every state change.
+  const phoneHits = exposure?.phone?.count ?? 0;
+  const cpfHits = exposure?.cpf?.count ?? 0;
+  const githubHits = exposure?.github?.count ?? 0;
+  const counts: Record<string, number> = useMemo(
+    () => ({
+      "E-mail": breaches.filter((b) => has(b, /email/)).length,
+      Senha: breaches.filter((b) => has(b, /password/)).length,
+      Telefone: breaches.filter((b) => has(b, /phone/)).length + phoneHits,
+      CPF: breaches.filter((b) => has(b, /government|credit card|national id/)).length + cpfHits,
+    }),
+    [breaches, phoneHits, cpfHits],
+  );
+  const publicHits = cpfHits + phoneHits + githubHits;
   const recent = breaches.some((b) => tsOf(b) && Date.now() - tsOf(b) < 365 * 86_400_000);
-  const factors = [
-    `${breachCount} vazamentos encontrados`,
-    ...(passN > 0 ? ["Senhas comprometidas"] : []),
-    ...(recent ? ["Exposição recente (últimos 12 meses)"] : []),
-    ...(publicHits > 0 ? ["Dados públicos detectados"] : []),
-  ];
+
+  // Deterministic score from the evidence — see lib/riskScore.
+  const { score, factors } = useMemo(
+    () =>
+      computeScore({
+        breachCount,
+        passwordExposed: counts["Senha"] > 0,
+        recent,
+        publicHits,
+      }),
+    [breachCount, counts, recent, publicHits],
+  );
+  const risk = riskLevel(score);
+
+  // The types actually worth showing: always e-mail and senha, plus anything
+  // found or flagged by the user.
+  const shownTypes = DATA_TYPES.filter(
+    (t) =>
+      t.label === "E-mail" || t.label === "Senha" || counts[t.label] > 0 || flagged.has(t.label),
+  );
+  const exposedTypes = shownTypes.filter((t) => counts[t.label] > 0).map((t) => t.label);
 
   // No scan on file → back to the funnel start.
   useEffect(() => {
     if (!scan && !cpf) navigate({ to: "/" });
   }, [scan, cpf, navigate]);
 
-  // Trigger CSS animations after mount.
-  useEffect(() => {
-    const t = requestAnimationFrame(() => setMounted(true));
-    return () => cancelAnimationFrame(t);
-  }, []);
-
-  // Days counter — count up on load.
-  useEffect(() => {
-    if (!daysExposed) return;
-    const dur = 1400;
-    const start = performance.now();
-    let raf = 0;
-    const tick = (now: number) => {
-      const t = Math.min(1, (now - start) / dur);
-      const eased = 1 - Math.pow(1 - t, 3);
-      setCountDays(Math.round(eased * daysExposed));
-      if (t < 1) raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [daysExposed]);
-
-  // Pixel/GA/Clarity on load.
   useEffect(() => {
     if (firedView.current) return;
     firedView.current = true;
@@ -213,7 +196,6 @@ function RelatorioPage() {
     clarityTag("breach_count", String(breachCount));
   }, [breachCount, risk.label]);
 
-  // Deeper-funnel signal: fired once when the evidence (past the timeline) is seen.
   useEffect(() => {
     const el = evidenceRef.current;
     if (!el) return;
@@ -243,394 +225,419 @@ function RelatorioPage() {
   }, [isPaid]);
 
   const checkout = async (plan: CheckoutPlan) => {
-    // InitiateCheckout (Pixel) + begin_checkout (GA4) fire inside startCheckout.
     setRedirecting(true);
     await startCheckout(plan);
     setRedirecting(false);
   };
 
+  const goPlans = () => plansRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+
   const logo = isDark ? "/PRIVA_logo_dark_theme.png" : "/PRIVA_logo_light_theme.png";
-  const visible = byNewest.slice(0, 3);
-  const hidden = byNewest.slice(3);
-  // Prefer named companies in the cards; fall back to whatever we have.
-  const cardBreaches = (companies.length > 0 ? companies : byNewest).slice(0, 3);
-  const sev = (b: RawBreach) =>
-    has(b, /password/)
-      ? { l: "ALTO", c: "text-red-600 bg-red-500/10", dot: "#DC2626" }
-      : { l: "MÉDIO", c: "text-amber-600 bg-amber-500/10", dot: "#D97706" };
+  const listSource = companies.length > 0 ? companies : ranked;
+  const visible = showAll ? listSource : listSource.slice(0, 3);
+  const restCount = listSource.length - visible.length;
+
+  const headlineTypes =
+    exposedTypes.length === 0
+      ? "Seus dados"
+      : exposedTypes.length === 1
+        ? `Seu ${exposedTypes[0].toLowerCase()}`
+        : `Seu ${exposedTypes[0].toLowerCase()} e ${exposedTypes[1].toLowerCase()}`;
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="animate-report-drop mx-auto max-w-md pb-16">
+      <div className="animate-report-drop mx-auto max-w-md pb-40">
         {/* Header */}
         <header className="sticky top-0 z-10 flex items-center justify-between bg-background px-5 py-4">
           <button
             onClick={() => navigate({ to: "/" })}
             aria-label="Voltar"
-            className="grid h-9 w-9 place-items-center rounded-full bg-secondary text-foreground hover:opacity-80"
+            className="grid h-10 w-10 place-items-center rounded-full bg-secondary text-foreground"
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
           <img src={logo} alt="PRIVA" className="h-5 w-auto object-contain" />
-          <span className="h-9 w-9" />
+          <button
+            onClick={() => {
+              setShareOpen(true);
+              gaEvent("share_opened");
+            }}
+            aria-label="Compartilhar resultado"
+            className="grid h-10 w-10 place-items-center rounded-full bg-secondary text-foreground"
+          >
+            <Share2 className="h-5 w-5" />
+          </button>
         </header>
 
-        {/* ── HERO — days-exposed counter (fear/urgency) ── */}
+        {/* ── 1. VERDICT — the value, first ────────────────────────── */}
         <section className="px-5">
           <div
-            className="rounded-3xl px-6 py-7 text-center text-white"
-            style={{ background: "linear-gradient(160deg,#7f1d1d,#b91c1c)" }}
+            className="relative overflow-hidden rounded-3xl border p-6"
+            style={{ borderColor: `${risk.color}33`, backgroundColor: risk.bg }}
           >
-            <p className="text-sm font-medium text-red-100/90">Seus dados estão expostos há</p>
-            <p className="mt-1 text-6xl font-extrabold tabular-nums leading-none tracking-tight">
-              {countDays.toLocaleString("pt-BR")}
+            <span
+              className="pointer-events-none absolute -right-8 -top-8 h-44 w-44 rounded-full opacity-20"
+              style={{ backgroundColor: risk.color, filter: "blur(48px)" }}
+              aria-hidden
+            />
+            <span
+              className="relative inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold"
+              style={{ backgroundColor: `${risk.color}1f`, color: risk.color }}
+            >
+              <ShieldAlert className="h-3.5 w-3.5" />
+              {risk.label}
+            </span>
+
+            <h1 className="relative mt-3 text-[27px] font-bold leading-tight tracking-tight text-foreground">
+              Encontramos dados
+              <br />
+              seus <span style={{ color: risk.color }}>expostos</span>.
+            </h1>
+
+            <p className="relative mt-3 max-w-[17rem] text-[14.5px] leading-relaxed text-muted-foreground">
+              {headlineTypes} {exposedTypes.length > 1 ? "apareceram" : "apareceu"} em{" "}
+              <span className="font-bold text-foreground">
+                {breachCount} {breachCount === 1 ? "vazamento" : "vazamentos"}
+              </span>{" "}
+              identificados pela Priva.
             </p>
-            <p className="mt-1 text-xl font-bold text-red-50">
-              {daysExposed === 1 ? "dia" : "dias"}
-            </p>
-            {firstBreach && (
-              <p className="mt-3 text-sm text-red-200/90">
-                Primeiro registro: {monthYear(firstTs)} — {displayName(firstBreach)}
+
+            {firstTs > 0 && (
+              <p className="relative mt-4 flex items-center gap-1.5 text-[12.5px] text-muted-foreground">
+                <Calendar className="h-3.5 w-3.5" />
+                Primeiro registro: {monthYear(firstTs)}
               </p>
             )}
           </div>
         </section>
 
-        {/* ── Exposure map (bar chart) ── */}
-        <section className="mt-8 px-5">
-          <h2 className="mb-3 text-lg font-bold text-foreground">
-            {anyFlagged ? "Encontramos os dados que você indicou" : "Seus dados comprometidos"}
-          </h2>
-          <div className="space-y-3 rounded-2xl border border-border bg-card p-4 shadow-sm">
-            {bars.map((b, i) => {
-              const isFlagged = flagged.has(b.label);
+        {/* ── 2. WHAT WE FOUND — per data type ─────────────────────── */}
+        <section className="mt-7 px-5">
+          <div className="mb-3 flex items-center gap-2">
+            <h2 className="text-[17px] font-bold text-foreground">O que encontramos</h2>
+            <span className="rounded-full bg-[var(--color-navy)]/10 px-2 py-0.5 text-[11px] font-semibold text-[var(--color-navy)]">
+              {breachCount} {breachCount === 1 ? "exposição" : "exposições"}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-3 gap-px overflow-hidden rounded-2xl border border-border bg-border">
+            {shownTypes.map((t) => {
+              const n = counts[t.label];
+              const exposed = n > 0;
               return (
                 <div
-                  key={b.label}
-                  className={
-                    isFlagged ? "-mx-2 rounded-xl px-2 py-2 ring-1 ring-indigo-500/40" : undefined
-                  }
+                  key={t.label}
+                  className="flex flex-col items-center gap-2 bg-card px-2 py-5 text-center"
                 >
-                  <div className="mb-1 flex items-center justify-between">
-                    <span className="flex items-center gap-2 text-sm font-medium text-foreground">
-                      {b.label}
-                      {isFlagged && (
-                        <span className="rounded-full bg-indigo-500/15 px-1.5 py-0.5 text-[10px] font-semibold text-indigo-400">
-                          você indicou
-                        </span>
-                      )}
-                    </span>
-                    <span className="text-xs font-semibold text-red-500">
-                      {b.n} {b.n === 1 ? "exposição" : "exposições"}
-                    </span>
-                  </div>
-                  <div className="h-2.5 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-800">
-                    <div
-                      className="h-full rounded-full bg-red-500"
-                      style={{
-                        width: mounted ? `${Math.max(6, (b.n / maxBar) * 100)}%` : "0%",
-                        transition: `width 900ms cubic-bezier(0.22,1,0.36,1) ${i * 120}ms`,
-                      }}
+                  <span
+                    className="grid h-11 w-11 place-items-center rounded-xl"
+                    style={{
+                      backgroundColor: exposed ? "rgba(220,38,38,0.10)" : "rgba(15,169,104,0.10)",
+                    }}
+                  >
+                    <t.Icon
+                      className="h-5 w-5"
+                      strokeWidth={1.9}
+                      style={{ color: exposed ? "#DC2626" : "#0FA968" }}
                     />
+                  </span>
+                  <div className="flex flex-col items-center gap-1">
+                    <span className="text-[13.5px] font-bold text-foreground">{t.label}</span>
+                    {flagged.has(t.label) && (
+                      <span className="rounded-full bg-[var(--color-navy)]/10 px-1.5 py-0.5 text-[9.5px] font-semibold text-[var(--color-navy)]">
+                        você indicou
+                      </span>
+                    )}
                   </div>
+                  <span
+                    className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10.5px] font-bold"
+                    style={{
+                      backgroundColor: exposed ? "rgba(220,38,38,0.10)" : "rgba(15,169,104,0.10)",
+                      color: exposed ? "#DC2626" : "#0FA968",
+                    }}
+                  >
+                    {exposed ? (
+                      <>
+                        <ShieldAlert className="h-3 w-3" /> EXPOSTO
+                      </>
+                    ) : (
+                      <>
+                        <ShieldCheck className="h-3 w-3" /> NÃO ENCONTRADO
+                      </>
+                    )}
+                  </span>
                 </div>
               );
             })}
           </div>
         </section>
 
-        {/* ── Timeline (all breaches; 3 visible, rest blurred) ── */}
-        {byNewest.length > 0 && (
-          <section className="mt-8 px-5">
-            <h2 className="mb-3 text-lg font-bold text-foreground">Histórico de exposição</h2>
-            <div className="relative pl-4">
-              <span className="absolute bottom-2 left-[5px] top-2 w-px bg-border" />
+        {/* ── 3. WHERE — the companies, with their logos ───────────── */}
+        {listSource.length > 0 && (
+          <section className="mt-7 px-5">
+            <h2 className="mb-3 text-[17px] font-bold text-foreground">
+              {companies.length > 0 ? "Onde seus dados apareceram" : "Onde seus dados foram vistos"}
+            </h2>
+            <div className="overflow-hidden rounded-2xl border border-border bg-card">
               {visible.map((b, i) => {
-                const s = sev(b);
+                const dcs = (b.DataClasses ?? []).map(translateDC).slice(0, 3);
+                const logo = logoOf(b);
+                const scale = pwnCountLabel(b);
                 return (
                   <div
                     key={i}
-                    className="animate-fade-in relative mb-4 pl-4"
-                    style={{
-                      animationDelay: `${i * 90}ms`,
-                      animationDuration: "220ms",
-                      animationFillMode: "backwards",
-                    }}
+                    className={`flex items-center gap-3 px-4 py-3.5 ${i > 0 ? "border-t border-border" : ""}`}
                   >
-                    <span
-                      className="absolute left-[-8px] top-1 h-3 w-3 rounded-full border-2 border-background"
-                      style={{ backgroundColor: s.dot }}
-                    />
-                    <p className="text-xs text-muted-foreground">{monthYear(tsOf(b))}</p>
-                    <p className="text-sm font-bold text-foreground">{displayName(b)}</p>
-                    {displaySubtitle(b) && (
-                      <p className="text-xs text-muted-foreground">{displaySubtitle(b)}</p>
-                    )}
-                    <p className="text-xs text-muted-foreground">
-                      {b.DataClasses?.length ?? 0} tipos de dados expostos
-                      <span className={`ml-2 rounded px-1.5 py-0.5 text-[10px] font-bold ${s.c}`}>
-                        {s.l}
+                    {logo ? (
+                      <img
+                        src={logo}
+                        alt=""
+                        loading="lazy"
+                        className="h-10 w-10 shrink-0 rounded-full bg-white object-contain p-1"
+                      />
+                    ) : (
+                      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-secondary text-sm font-bold text-muted-foreground">
+                        {displayName(b)[0]?.toUpperCase()}
                       </span>
-                    </p>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-[15px] font-bold text-foreground">
+                        {displayName(b)}
+                      </p>
+                      <p className="truncate text-[12px] text-muted-foreground">
+                        {dcs.length > 0 ? dcs.join(" · ") : "Dados pessoais"}
+                        {scale ? ` · ${scale}` : ""}
+                      </p>
+                    </div>
+                    <span className="shrink-0 text-[12px] text-muted-foreground">
+                      {monthYear(tsOf(b)) || "—"}
+                    </span>
                   </div>
                 );
               })}
-              {hidden.length > 0 && (
-                <div className="relative">
-                  <div style={{ filter: "blur(4px)", pointerEvents: "none" }} aria-hidden>
-                    {hidden.slice(0, 4).map((b, i) => (
-                      <div key={i} className="relative mb-4 pl-4">
-                        <span className="absolute left-[-8px] top-1 h-3 w-3 rounded-full border-2 border-background bg-gray-400" />
-                        <p className="text-xs text-muted-foreground">
-                          {monthYear(tsOf(b)) || "20••"}
-                        </p>
-                        <p className="text-sm font-bold text-foreground">{displayName(b)}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {b.DataClasses?.length ?? 2} tipos de dados expostos
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                  <button
-                    onClick={() =>
-                      plansRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })
-                    }
-                    className="absolute inset-0 flex items-center justify-center"
-                  >
-                    <span className="flex items-center gap-2 rounded-full bg-[var(--color-navy)] px-4 py-2 text-sm font-bold text-white shadow-lg">
-                      <Lock className="h-4 w-4" /> +{hidden.length} exposições bloqueadas
-                    </span>
-                  </button>
-                </div>
+
+              {restCount > 0 && (
+                <button
+                  onClick={() => setShowAll(true)}
+                  className="flex w-full items-center justify-center gap-1 border-t border-border py-3.5 text-[13.5px] font-bold text-[var(--color-navy)]"
+                >
+                  Ver todas as exposições ({restCount}) <ChevronRight className="h-4 w-4" />
+                </button>
               )}
             </div>
           </section>
         )}
 
-        {/* evidence sentinel — fires the deeper-funnel event once seen */}
         <div ref={evidenceRef} className="h-px" />
 
-        {/* ── Company cards (recognizable authority) ── */}
-        {cardBreaches.length > 0 && (
-          <section className="mt-8 px-5">
-            <h2 className="mb-3 text-lg font-bold text-foreground">
-              {companies.length > 0
-                ? "Empresas onde seus dados vazaram"
-                : "Onde seus dados apareceram"}
-            </h2>
-            {cardBreaches.map((b, i) => {
-              const s = sev(b);
-              const dcs = (b.DataClasses ?? []).map(translateDC);
-              const logo = logoOf(b);
-              const scale = pwnCountLabel(b);
-              return (
-                <div
-                  key={i}
-                  className="mb-3 flex gap-3 rounded-xl border border-red-500/20 bg-card p-4 shadow-sm"
-                  style={{ backgroundColor: isDark ? "#12121A" : undefined }}
-                >
-                  {/* The brand's own logo is what makes this land — a lead skims
-                      logos, not names. Falls back to the initial when HIBP has
-                      no logo (stealer logs never do). */}
-                  {logo ? (
-                    <img
-                      src={logo}
-                      alt=""
-                      loading="lazy"
-                      className="h-12 w-12 shrink-0 rounded-xl bg-white object-contain p-1.5"
-                    />
-                  ) : (
-                    <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-red-500/10 text-xl font-bold text-red-500">
-                      {displayName(b)[0]?.toUpperCase()}
-                    </span>
-                  )}
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <p className="truncate text-base font-bold text-foreground">
-                          {displayName(b)}
-                        </p>
-                        <p className="truncate text-sm text-muted-foreground">
-                          {monthYear(tsOf(b))}
-                          {scale ? ` · ${scale}` : ""}
-                        </p>
-                      </div>
-                      <span
-                        className={`shrink-0 rounded-md px-2 py-0.5 text-[11px] font-bold ${s.c}`}
-                      >
-                        {s.l}
-                      </span>
-                    </div>
-                    <div className="mt-2 flex flex-wrap gap-1.5">
-                      {dcs.slice(0, 3).map((d) => (
-                        <span
-                          key={d}
-                          className="rounded-full bg-red-500/15 px-2 py-0.5 text-xs text-red-500"
-                        >
-                          {d}
-                        </span>
-                      ))}
-                      {dcs.length > 3 && (
-                        <button
-                          onClick={() =>
-                            plansRef.current?.scrollIntoView({
-                              behavior: "smooth",
-                              block: "center",
-                            })
-                          }
-                          className="rounded-full bg-red-500/15 px-2 py-0.5 text-xs font-semibold text-red-500"
-                        >
-                          +{dcs.length - 3} mais →
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </section>
-        )}
-
-        {/* ── Public exposure (only when found) ── */}
-        {publicHits > 0 && (
-          <section className="mt-8 px-5">
-            <h2 className="mb-3 text-lg font-bold text-foreground">
-              Encontrado em pesquisas públicas
-            </h2>
-            <div className="flex gap-3 rounded-xl border border-amber-500/20 bg-amber-500/10 p-4">
-              <Globe className="h-6 w-6 shrink-0 text-amber-500" />
+        {/* ── 4. SCORE — verdict after the evidence ────────────────── */}
+        <section className="mt-7 px-5">
+          <div className="rounded-2xl border border-border bg-card p-5">
+            <div className="flex items-center justify-between gap-4">
               <div>
-                <p className="text-sm text-amber-600">
-                  Seus dados aparecem em {publicHits}{" "}
-                  {publicHits === 1 ? "resultado" : "resultados"} público(s) na internet
+                <p className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Sua pontuação de exposição
                 </p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Qualquer pessoa pode encontrar seus dados pesquisando no Google.
+                <p
+                  className="mt-1 text-[40px] font-extrabold leading-none"
+                  style={{ color: risk.color }}
+                >
+                  {score}
+                  <span className="text-[18px] text-muted-foreground">/100</span>
                 </p>
               </div>
+              <span
+                className="rounded-full px-3 py-1.5 text-[11px] font-bold"
+                style={{ backgroundColor: `${risk.color}1f`, color: risk.color }}
+              >
+                {risk.label}
+              </span>
             </div>
-          </section>
-        )}
 
-        {/* ── Score card (verdict AFTER the evidence) ── */}
-        <section className="mt-8 px-5">
-          <div className="rounded-2xl border border-border bg-card p-5 text-center shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Sua pontuação de risco
-            </p>
-            <p className="mt-2 text-6xl font-extrabold leading-none" style={{ color: risk.color }}>
-              {score}
-              <span className="text-2xl text-muted-foreground">/100</span>
-            </p>
-            <span
-              className={`mt-3 inline-block rounded-full px-3 py-1 text-xs font-bold ${risk.badge}`}
-            >
-              {risk.label}
-            </span>
-            <p className="mt-2 text-xs text-muted-foreground">
-              Baseado em {factors.length} fatores analisados
-            </p>
-            <ul className="mt-4 space-y-1.5 text-left">
+            <ul className="mt-4 space-y-2 border-t border-border pt-4">
               {factors.map((f) => (
-                <li key={f} className="flex gap-2 text-sm text-muted-foreground">
-                  <span className="font-bold text-red-500">+</span> {f}
+                <li key={f.label} className="flex items-center justify-between gap-3 text-[13px]">
+                  <span className="text-muted-foreground">{f.label}</span>
+                  <span className="shrink-0 font-bold" style={{ color: risk.color }}>
+                    −{f.weight}
+                  </span>
                 </li>
               ))}
             </ul>
           </div>
         </section>
 
-        {/* ── CTA / paid ── */}
+        {/* ── 5. RECOMMENDATIONS — things they can do themselves ───── */}
+        <section className="mt-7 px-5">
+          <h2 className="mb-3 text-[17px] font-bold text-foreground">
+            O que recomendamos para você
+          </h2>
+          <div className="grid gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-3">
+            {[
+              {
+                Icon: KeyRound,
+                title: "Troque a senha comprometida",
+                text: "Use uma senha forte e única em cada conta importante.",
+              },
+              {
+                Icon: Lock,
+                title: "Ative a verificação em duas etapas",
+                text: "Mesmo com a senha vazada, ninguém entra sem o segundo fator.",
+              },
+              {
+                Icon: Bell,
+                title: "Continue monitorando",
+                text: "Novos vazamentos acontecem. Acompanhar é o que protege.",
+              },
+            ].map((r) => (
+              <div key={r.title} className="flex gap-3 bg-card px-4 py-4 sm:flex-col sm:gap-2">
+                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[var(--color-navy)]/10">
+                  <r.Icon className="h-4 w-4 text-[var(--color-navy)]" strokeWidth={1.9} />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-[13.5px] font-bold leading-snug text-foreground">{r.title}</p>
+                  <p className="mt-1 text-[12px] leading-snug text-muted-foreground">{r.text}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ── 6. THE OFFER — how do you want to solve it ───────────── */}
         {isPaid ? (
           <section className="mt-8 px-5 text-center">
-            <p className="text-lg font-bold text-emerald-600">Você já está protegido ✓</p>
+            <p className="flex items-center justify-center gap-2 text-[17px] font-bold text-[var(--color-success)]">
+              <ShieldCheck className="h-5 w-5" /> Você já está protegido
+            </p>
             <button
               onClick={() => navigate({ to: "/" })}
-              className="mt-4 w-full rounded-2xl bg-[var(--color-navy)] py-4 font-bold text-white transition active:scale-[0.99]"
+              className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-[var(--color-navy)] py-4 font-bold text-white transition active:scale-[0.99]"
             >
-              Ver relatório completo →
+              Voltar ao app <ArrowRight className="h-4 w-4" />
             </button>
           </section>
         ) : (
           <section className="mt-8 px-5">
-            <p className="mb-4 text-center text-lg font-bold text-foreground">
-              O que você pode fazer agora
-            </p>
-            <div ref={plansRef} className="grid grid-cols-2 gap-3">
-              {/* Essencial */}
-              <div className="self-center rounded-2xl border border-indigo-500/30 bg-card p-4 shadow-sm">
-                <p className="mb-2 text-xs font-bold text-indigo-600">Essencial</p>
-                <p className="text-2xl font-extrabold text-foreground">
-                  R$9,90<span className="text-sm font-normal text-muted-foreground">/mês</span>
+            <h2 className="mb-4 text-[19px] font-bold text-foreground">Como você quer resolver?</h2>
+
+            <div ref={plansRef} className="space-y-3">
+              {/* Acompanhar */}
+              <div className="rounded-2xl border border-border bg-card p-5">
+                <span className="inline-block rounded-full bg-secondary px-2.5 py-1 text-[10.5px] font-bold uppercase tracking-wide text-muted-foreground">
+                  Eu acompanho
+                </span>
+                <p className="mt-3 text-[28px] font-extrabold leading-none text-foreground">
+                  R$ 9,90
+                  <span className="text-[14px] font-normal text-muted-foreground">/mês</span>
                 </p>
-                <ul className="mt-3 space-y-2">
+                <p className="mt-1.5 text-[13.5px] font-semibold text-foreground">
+                  Você fica sabendo de tudo
+                </p>
+                <ul className="mt-3.5 space-y-2">
                   {[
-                    `Ver todos os ${breachCount} vazamentos completos`,
-                    "Monitoramento contínuo",
-                    "Alertas em tempo real",
+                    `Relatório completo dos ${breachCount} vazamentos`,
+                    "Monitoramento contínuo dos seus dados",
+                    "Alerta quando aparecer vazamento novo",
+                    "Verificação ilimitada de link, Pix e mensagem",
                   ].map((f) => (
-                    <li key={f} className="flex gap-2 text-xs text-muted-foreground">
-                      <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-500" /> {f}
+                    <li key={f} className="flex gap-2 text-[13px] text-foreground">
+                      <Check
+                        className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[var(--color-navy)]"
+                        strokeWidth={3}
+                      />
+                      {f}
                     </li>
                   ))}
                 </ul>
                 <button
                   onClick={() => checkout("essencial")}
                   disabled={redirecting}
-                  className="mt-4 w-full rounded-xl bg-indigo-600 py-3 text-sm font-bold text-white transition active:scale-[0.99] disabled:opacity-60"
+                  className="mt-4 w-full rounded-xl border-[1.5px] border-[var(--color-navy)] py-3 text-[14px] font-bold text-[var(--color-navy)] transition active:scale-[0.99] disabled:opacity-60"
                 >
-                  Assinar Essencial →
+                  Assinar Essencial
                 </button>
               </div>
 
-              {/* Proteção Total */}
-              <div className="relative z-10 scale-[1.05] rounded-2xl border-2 border-purple-500/50 bg-card p-4 shadow-lg">
-                <p className="mb-2 text-xs font-bold text-purple-600">Proteção Total</p>
-                <p className="text-2xl font-extrabold text-foreground">
-                  R$24,90<span className="text-sm font-normal text-muted-foreground">/mês</span>
+              {/* Resolver — recommended */}
+              <div
+                className="relative rounded-2xl bg-card p-5"
+                style={{
+                  border: "1.5px solid #4F46E5",
+                  boxShadow: "0 12px 34px rgba(79,70,229,0.16)",
+                }}
+              >
+                <span className="absolute -top-2.5 left-5 rounded-full bg-[#4F46E5] px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
+                  Recomendado
+                </span>
+                <span className="inline-block rounded-full bg-[var(--color-navy)]/10 px-2.5 py-1 text-[10.5px] font-bold uppercase tracking-wide text-[var(--color-navy)]">
+                  A Priva resolve por você
+                </span>
+                <p className="mt-3 text-[28px] font-extrabold leading-none text-foreground">
+                  R$ 24,90
+                  <span className="text-[14px] font-normal text-muted-foreground">/mês</span>
                 </p>
-                <ul className="mt-3 space-y-2">
+                <p className="mt-1.5 text-[13.5px] font-semibold text-foreground">
+                  Nossa equipe pede a remoção
+                </p>
+                <ul className="mt-3.5 space-y-2">
                   {[
-                    "Tudo do Essencial +",
-                    "Remoção dos seus dados via LGPD",
-                    "Nossa equipe cuida por você",
-                    "Acompanhamento por e-mail",
+                    "Tudo do plano ao lado",
+                    "Solicitações de remoção feitas pela nossa equipe",
+                    "Carta LGPD enviada às fontes em até 48h",
+                    "Acompanhamento do caso até a resposta",
                   ].map((f) => (
-                    <li key={f} className="flex gap-2 text-xs text-muted-foreground">
-                      <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-purple-500" /> {f}
+                    <li key={f} className="flex gap-2 text-[13px] text-foreground">
+                      <Check
+                        className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#4F46E5]"
+                        strokeWidth={3}
+                      />
+                      {f}
                     </li>
                   ))}
                 </ul>
                 <button
                   onClick={() => checkout("protecao_total")}
                   disabled={redirecting}
-                  className="mt-4 w-full rounded-xl py-3 text-sm font-bold text-white transition active:scale-[0.99] disabled:opacity-60"
+                  className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl py-3.5 text-[14.5px] font-bold text-white transition active:scale-[0.99] disabled:opacity-60"
                   style={{
-                    background: "linear-gradient(135deg,#7C3AED,#4F46E5)",
-                    boxShadow: "0 0 16px rgba(124,58,237,0.3)",
+                    background: "linear-gradient(135deg,#4F46E5,#6366F1)",
+                    boxShadow: "0 8px 24px rgba(79,70,229,0.35)",
                   }}
                 >
-                  Remover meus dados →
+                  <Trash2 className="h-4 w-4" /> Cuidar disso por mim
                 </button>
-                <span className="absolute -bottom-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-purple-600 px-3 py-1 text-[10px] font-bold text-white shadow-md">
-                  MAIS ESCOLHIDO
-                </span>
               </div>
             </div>
 
-            {redirecting && (
-              <p className="mt-3 text-center text-xs text-indigo-500">
-                Redirecionando para pagamento seguro...
-              </p>
-            )}
+            <p className="mt-4 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center text-[11.5px] text-muted-foreground">
+              <span className="inline-flex items-center gap-1">
+                <Lock className="h-3 w-3" /> Pagamento seguro via Stripe
+              </span>
+              <span aria-hidden>·</span>
+              <span>Cancele quando quiser</span>
+            </p>
+          </section>
+        )}
 
-            <div className="mt-8 space-y-1 text-center text-[11px] text-muted-foreground">
-              <p>🔒 Pagamento seguro via Stripe</p>
-              <p>⭐ Satisfação garantida — cancele quando quiser</p>
-            </div>
+        {/* Public exposure note — factual, low emphasis */}
+        {publicHits > 0 && (
+          <section className="mt-6 px-5">
+            <p className="flex items-start gap-2 text-[12px] leading-snug text-muted-foreground">
+              <Globe className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+              Também encontramos {publicHits} {publicHits === 1 ? "ocorrência" : "ocorrências"} dos
+              seus dados em fontes públicas da internet.
+            </p>
           </section>
         )}
       </div>
+
+      {shareOpen && (
+        <ShareResultSheet
+          breachCount={breachCount}
+          score={score}
+          onClose={() => setShareOpen(false)}
+        />
+      )}
 
       {/* Sticky conversion CTA */}
       {!isPaid && (
@@ -642,16 +649,14 @@ function RelatorioPage() {
           }}
         >
           <button
-            onClick={() =>
-              plansRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })
-            }
-            className="w-full rounded-2xl py-4 text-base font-bold text-white transition active:scale-[0.99]"
+            onClick={goPlans}
+            className="flex w-full items-center justify-center gap-2 rounded-2xl py-4 text-base font-bold text-white transition active:scale-[0.99]"
             style={{
               background: "linear-gradient(135deg,#4F46E5,#6366F1)",
               boxShadow: "0 8px 28px rgba(79,70,229,0.45)",
             }}
           >
-            Proteger meus dados agora →
+            Resolver minha exposição <ArrowRight className="h-4 w-4" />
           </button>
         </div>
       )}
