@@ -18,7 +18,10 @@ export type ScoreInput = {
   publicHits: number;
 };
 
-export type ScoreFactor = { label: string; weight: number };
+/** `icon` names the lucide component the report renders for this factor. */
+export type ScoreFactorIcon = "eye" | "key" | "clock" | "globe";
+
+export type ScoreFactor = { label: string; weight: number; icon: ScoreFactorIcon };
 
 export type ScoreResult = {
   score: number;
@@ -35,21 +38,23 @@ export function computeScore(input: ScoreInput): ScoreResult {
     factors.push({
       label: `${input.breachCount} ${input.breachCount === 1 ? "vazamento encontrado" : "vazamentos encontrados"}`,
       weight: w,
+      icon: "eye",
     });
   }
 
   if (input.passwordExposed) {
-    factors.push({ label: "Senhas comprometidas", weight: 20 });
+    factors.push({ label: "Senhas comprometidas", weight: 20, icon: "key" });
   }
 
   if (input.recent) {
-    factors.push({ label: "Exposição recente (últimos 12 meses)", weight: 12 });
+    factors.push({ label: "Exposição recente (últimos 12 meses)", weight: 12, icon: "clock" });
   }
 
   if (input.publicHits > 0) {
     factors.push({
       label: `Dados públicos detectados (${input.publicHits})`,
       weight: Math.min(15, 6 + input.publicHits * 3),
+      icon: "globe",
     });
   }
 

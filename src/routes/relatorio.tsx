@@ -6,7 +6,10 @@ import {
   Bell,
   Calendar,
   Check,
+  ChevronDown,
   ChevronRight,
+  Clock,
+  Eye,
   Globe,
   IdCard,
   KeyRound,
@@ -86,6 +89,9 @@ function clarityTag(key: string, value: string) {
   if (typeof c === "function") c("set", key, value);
 }
 
+/** Maps a score factor to its icon, keeping lib/riskScore free of UI imports. */
+const FACTOR_ICON = { eye: Eye, key: KeyRound, clock: Clock, globe: Globe } as const;
+
 /** The four data types we can state something about, with their own icon. */
 const DATA_TYPES = [
   { label: "E-mail", Icon: Mail },
@@ -105,6 +111,8 @@ function RelatorioPage() {
   const [showSticky, setShowSticky] = useState(false);
   const [showAll, setShowAll] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
+  const [expandedType, setExpandedType] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
 
   // Scan is read from localStorage AND re-read for a few seconds: the HIBP
   // result can land right after the scan navigation, so poll until breaches
@@ -183,10 +191,28 @@ function RelatorioPage() {
   );
   const exposedTypes = shownTypes.filter((t) => counts[t.label] > 0).map((t) => t.label);
 
+  /** Which breaches carried a given data type — powers the expanded row. */
+  const breachesWithType = (label: string) => {
+    const re =
+      label === "E-mail"
+        ? /email/
+        : label === "Senha"
+          ? /password/
+          : label === "Telefone"
+            ? /phone/
+            : /government|credit card|national id/;
+    return ranked.filter((b) => has(b, re)).slice(0, 6);
+  };
+
   // No scan on file → back to the funnel start.
   useEffect(() => {
     if (!scan && !cpf) navigate({ to: "/" });
   }, [scan, cpf, navigate]);
+
+  useEffect(() => {
+    const t = requestAnimationFrame(() => setMounted(true));
+    return () => cancelAnimationFrame(t);
+  }, []);
 
   useEffect(() => {
     if (firedView.current) return;
@@ -311,7 +337,7 @@ function RelatorioPage() {
           </div>
         </section>
 
-        {/* ── 2. WHAT WE FOUND — per data type ─────────────────────── */}
+        {/* ── 2. WHAT WE FOUND — one row per data type ─────────── */}
         <section className="mt-7 px-5">
           <div className="mb-3 flex items-center gap-2">
             <h2 className="text-[17px] font-bold text-foreground">O que encontramos</h2>
@@ -320,52 +346,97 @@ function RelatorioPage() {
             </span>
           </div>
 
-          <div className="grid grid-cols-3 gap-px overflow-hidden rounded-2xl border border-border bg-border">
-            {shownTypes.map((t) => {
+          <div className="overflow-hidden rounded-2xl border border-border bg-card">
+            {shownTypes.map((t, i) => {
               const n = counts[t.label];
               const exposed = n > 0;
+              const open = expandedType === t.label;
+              const where = exposed ? breachesWithType(t.label) : [];
               return (
-                <div
-                  key={t.label}
-                  className="flex flex-col items-center gap-2 bg-card px-2 py-5 text-center"
-                >
-                  <span
-                    className="grid h-11 w-11 place-items-center rounded-xl"
-                    style={{
-                      backgroundColor: exposed ? "rgba(220,38,38,0.10)" : "rgba(15,169,104,0.10)",
-                    }}
+                <div key={t.label} className={i > 0 ? "border-t border-border" : undefined}>
+                  <button
+                    type="button"
+                    // Nothing to open when there is nothing to show.
+                    onClick={() => exposed && setExpandedType(open ? null : t.label)}
+                    className={`flex w-full items-center gap-3 px-4 py-3.5 text-left ${exposed ? "" : "cursor-default"}`}
                   >
-                    <t.Icon
-                      className="h-5 w-5"
-                      strokeWidth={1.9}
-                      style={{ color: exposed ? "#DC2626" : "#0FA968" }}
-                    />
-                  </span>
-                  <div className="flex flex-col items-center gap-1">
-                    <span className="text-[13.5px] font-bold text-foreground">{t.label}</span>
-                    {flagged.has(t.label) && (
-                      <span className="rounded-full bg-[var(--color-navy)]/10 px-1.5 py-0.5 text-[9.5px] font-semibold text-[var(--color-navy)]">
-                        você indicou
+                    <span
+                      className="grid h-10 w-10 shrink-0 place-items-center rounded-xl"
+                      style={{
+                        backgroundColor: exposed ? "rgba(220,38,38,0.10)" : "rgba(15,169,104,0.10)",
+                      }}
+                    >
+                      <t.Icon
+                        className="h-[18px] w-[18px]"
+                        strokeWidth={1.9}
+                        style={{ color: exposed ? "#DC2626" : "#0FA968" }}
+                      />
+                    </span>
+
+                    <span className="min-w-0 flex-1">
+                      <span className="flex flex-wrap items-center gap-2">
+                        <span className="text-[14.5px] font-bold text-foreground">{t.label}</span>
+                        <span
+                          className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold"
+                          style={{
+                            backgroundColor: exposed
+                              ? "rgba(220,38,38,0.10)"
+                              : "rgba(15,169,104,0.10)",
+                            color: exposed ? "#DC2626" : "#0FA968",
+                          }}
+                        >
+                          {exposed ? (
+                            <>
+                              <ShieldAlert className="h-3 w-3" /> EXPOSTO
+                            </>
+                          ) : (
+                            <>
+                              <ShieldCheck className="h-3 w-3" /> NÃO ENCONTRADO
+                            </>
+                          )}
+                        </span>
+                        {flagged.has(t.label) && (
+                          <span className="rounded-full bg-[var(--color-navy)]/10 px-1.5 py-0.5 text-[9.5px] font-semibold text-[var(--color-navy)]">
+                            você indicou
+                          </span>
+                        )}
                       </span>
+                      <span className="mt-0.5 block text-[12.5px] text-muted-foreground">
+                        {exposed
+                          ? `Encontrado em ${n} ${n === 1 ? "vazamento" : "vazamentos"}`
+                          : "Nenhum vazamento encontrado"}
+                      </span>
+                    </span>
+
+                    {exposed && (
+                      <ChevronDown
+                        className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-300"
+                        style={{ transform: open ? "rotate(180deg)" : "none" }}
+                      />
                     )}
-                  </div>
-                  <span
-                    className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10.5px] font-bold"
-                    style={{
-                      backgroundColor: exposed ? "rgba(220,38,38,0.10)" : "rgba(15,169,104,0.10)",
-                      color: exposed ? "#DC2626" : "#0FA968",
-                    }}
+                  </button>
+
+                  {/* Grid-rows trick: animates open without knowing the height. */}
+                  <div
+                    className="grid transition-all duration-300 ease-out"
+                    style={{ gridTemplateRows: open ? "1fr" : "0fr" }}
                   >
-                    {exposed ? (
-                      <>
-                        <ShieldAlert className="h-3 w-3" /> EXPOSTO
-                      </>
-                    ) : (
-                      <>
-                        <ShieldCheck className="h-3 w-3" /> NÃO ENCONTRADO
-                      </>
-                    )}
-                  </span>
+                    <div className="overflow-hidden">
+                      <ul className="space-y-1.5 px-4 pb-3.5 pl-[68px]">
+                        {where.map((b, j) => (
+                          <li
+                            key={j}
+                            className="flex items-center justify-between gap-3 text-[12.5px]"
+                          >
+                            <span className="truncate text-foreground">{displayName(b)}</span>
+                            <span className="shrink-0 text-muted-foreground">
+                              {monthYear(tsOf(b)) || "—"}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
                 </div>
               );
             })}
@@ -418,10 +489,22 @@ function RelatorioPage() {
 
               {restCount > 0 && (
                 <button
-                  onClick={() => setShowAll(true)}
-                  className="flex w-full items-center justify-center gap-1 border-t border-border py-3.5 text-[13.5px] font-bold text-[var(--color-navy)]"
+                  // Free users get the count, not the list: seeing everything is
+                  // what the subscription buys, so this sends them to the plans.
+                  onClick={() => (isPaid ? setShowAll(true) : goPlans())}
+                  className="flex w-full items-center justify-center gap-1.5 border-t border-border py-3.5 text-[13.5px] font-bold text-[var(--color-navy)]"
                 >
-                  Ver todas as exposições ({restCount}) <ChevronRight className="h-4 w-4" />
+                  {isPaid ? (
+                    <>
+                      Ver todas as exposições ({restCount}) <ChevronDown className="h-4 w-4" />
+                    </>
+                  ) : (
+                    <>
+                      <Lock className="h-3.5 w-3.5" />
+                      Ver mais {restCount} {restCount === 1 ? "exposição" : "exposições"}
+                      <ChevronRight className="h-4 w-4" />
+                    </>
+                  )}
                 </button>
               )}
             </div>
@@ -432,33 +515,81 @@ function RelatorioPage() {
 
         {/* ── 4. SCORE — verdict after the evidence ────────────────── */}
         <section className="mt-7 px-5">
-          <div className="rounded-2xl border border-border bg-card p-5">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <p className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Sua pontuação de exposição
-                </p>
+          <div className="overflow-hidden rounded-2xl border border-border bg-card">
+            <div className="flex items-start gap-4 p-5">
+              <span className="hidden h-12 w-12 shrink-0 place-items-center rounded-full bg-[var(--color-navy)]/10 sm:grid">
+                <ShieldCheck className="h-6 w-6 text-[var(--color-navy)]" strokeWidth={1.9} />
+              </span>
+
+              <div className="min-w-0 flex-1">
+                <p className="text-[15px] font-bold text-foreground">Sua pontuação de exposição</p>
                 <p
-                  className="mt-1 text-[40px] font-extrabold leading-none"
+                  className="mt-2 text-[44px] font-extrabold leading-none"
                   style={{ color: risk.color }}
                 >
                   {score}
-                  <span className="text-[18px] text-muted-foreground">/100</span>
+                  <span className="text-[20px] font-semibold text-muted-foreground">/100</span>
+                </p>
+                <p className="mt-2 text-[12.5px] leading-snug text-muted-foreground">
+                  Quanto menor a pontuação, maior o risco
+                  <br className="hidden sm:block" /> de exposição dos seus dados.
                 </p>
               </div>
-              <span
-                className="rounded-full px-3 py-1.5 text-[11px] font-bold"
-                style={{ backgroundColor: `${risk.color}1f`, color: risk.color }}
-              >
-                {risk.label}
-              </span>
+
+              {/* Gauge — fills with the score, coloured by risk band. */}
+              <div className="relative h-[104px] w-[104px] shrink-0">
+                <svg viewBox="0 0 100 100" className="h-full w-full -rotate-90">
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="42"
+                    fill="none"
+                    stroke="var(--color-border)"
+                    strokeWidth="9"
+                  />
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="42"
+                    fill="none"
+                    stroke={risk.color}
+                    strokeWidth="9"
+                    strokeLinecap="round"
+                    strokeDasharray={2 * Math.PI * 42}
+                    strokeDashoffset={2 * Math.PI * 42 * (1 - (mounted ? score : 0) / 100)}
+                    style={{ transition: "stroke-dashoffset 1s cubic-bezier(0.22,1,0.36,1)" }}
+                  />
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center px-2 text-center">
+                  <span className="text-[9.5px] font-semibold uppercase tracking-wide text-muted-foreground">
+                    Risco
+                  </span>
+                  <span
+                    className="text-[15px] font-extrabold uppercase leading-none"
+                    style={{ color: risk.color }}
+                  >
+                    {risk.label.replace("RISCO ", "")}
+                  </span>
+                </div>
+              </div>
             </div>
 
-            <ul className="mt-4 space-y-2 border-t border-border pt-4">
+            <ul className="border-t border-border">
               {factors.map((f) => (
-                <li key={f.label} className="flex items-center justify-between gap-3 text-[13px]">
-                  <span className="text-muted-foreground">{f.label}</span>
-                  <span className="shrink-0 font-bold" style={{ color: risk.color }}>
+                <li
+                  key={f.label}
+                  className="flex items-center gap-3 border-b border-border px-5 py-3.5 last:border-b-0"
+                >
+                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[var(--color-navy)]/10">
+                    {(() => {
+                      const FIcon = FACTOR_ICON[f.icon];
+                      return (
+                        <FIcon className="h-4 w-4 text-[var(--color-navy)]" strokeWidth={1.9} />
+                      );
+                    })()}
+                  </span>
+                  <span className="min-w-0 flex-1 text-[13.5px] text-foreground">{f.label}</span>
+                  <span className="shrink-0 text-[15px] font-bold" style={{ color: risk.color }}>
                     −{f.weight}
                   </span>
                 </li>
@@ -485,9 +616,9 @@ function RelatorioPage() {
                 text: "Mesmo com a senha vazada, ninguém entra sem o segundo fator.",
               },
               {
-                Icon: Bell,
-                title: "Continue monitorando",
-                text: "Novos vazamentos acontecem. Acompanhar é o que protege.",
+                Icon: ShieldCheck,
+                title: "Assine a Priva",
+                text: "Pedimos a remoção dos seus dados nas fontes e seguimos monitorando para avisar de vazamentos novos.",
               },
             ].map((r) => (
               <div key={r.title} className="flex gap-3 bg-card px-4 py-4 sm:flex-col sm:gap-2">
@@ -524,7 +655,7 @@ function RelatorioPage() {
               {/* Acompanhar */}
               <div className="rounded-2xl border border-border bg-card p-5">
                 <span className="inline-block rounded-full bg-secondary px-2.5 py-1 text-[10.5px] font-bold uppercase tracking-wide text-muted-foreground">
-                  Eu acompanho
+                  Priva Essencial
                 </span>
                 <p className="mt-3 text-[28px] font-extrabold leading-none text-foreground">
                   R$ 9,90
@@ -570,7 +701,7 @@ function RelatorioPage() {
                   Recomendado
                 </span>
                 <span className="inline-block rounded-full bg-[var(--color-navy)]/10 px-2.5 py-1 text-[10.5px] font-bold uppercase tracking-wide text-[var(--color-navy)]">
-                  A Priva resolve por você
+                  Priva Protege
                 </span>
                 <p className="mt-3 text-[28px] font-extrabold leading-none text-foreground">
                   R$ 24,90
@@ -604,7 +735,7 @@ function RelatorioPage() {
                     boxShadow: "0 8px 24px rgba(79,70,229,0.35)",
                   }}
                 >
-                  <Trash2 className="h-4 w-4" /> Cuidar disso por mim
+                  <Trash2 className="h-4 w-4" /> Remover dados vazados
                 </button>
               </div>
             </div>
@@ -614,7 +745,9 @@ function RelatorioPage() {
                 <Lock className="h-3 w-3" /> Pagamento seguro via Stripe
               </span>
               <span aria-hidden>·</span>
-              <span>Cancele quando quiser</span>
+              <span className="inline-flex items-center gap-1">
+                <ShieldCheck className="h-3 w-3" /> Conforme a LGPD
+              </span>
             </p>
           </section>
         )}
