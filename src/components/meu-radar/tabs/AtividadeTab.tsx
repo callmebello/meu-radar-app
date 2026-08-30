@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Link2,
   QrCode,
@@ -9,11 +9,17 @@ import {
   Share2,
   Clipboard,
   Trash2,
+  Camera,
+  Image as ImageIcon,
+  Lock,
 } from "lucide-react";
 import { AppHeader } from "../Header";
+import { QrScanner } from "../QrScanner";
+import { useApp } from "@/contexts/AppContext";
 import { analyzeLink, type LinkResult } from "@/lib/security/link";
 import { analyzePix, type PixResult } from "@/lib/security/pix";
 import { analyzeMessage, type MessageResult } from "@/lib/security/message";
+import { decodeFromFile } from "@/lib/security/qr";
 
 /**
  * Verification tools: link, Pix and message.
@@ -71,15 +77,19 @@ const PLACEHOLDER: Record<Tool, string> = {
 
 const HELP: Record<Tool, string> = {
   link: "Analisamos o endereço: domínios que imitam bancos, encurtadores, caracteres disfarçados.",
-  pix: "Lemos o código antes de você pagar: integridade, valor, recebedor e tipo de chave.",
+  pix: "Escaneie o QR ou cole o código antes de pagar: integridade, valor, recebedor e tipo de chave.",
   mensagem: "Procuramos padrões de golpe no texto e verificamos os links que vierem junto.",
 };
 
 export function AtividadeTab() {
+  const { isPremium, openPaywall } = useApp();
   const [tool, setTool] = useState<Tool>("link");
   const [input, setInput] = useState("");
   const [result, setResult] = useState<LinkResult | PixResult | MessageResult | null>(null);
   const [history, setHistory] = useState<HistoryItem[]>([]);
+  const [scanning, setScanning] = useState(false);
+  const [qrError, setQrError] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => setHistory(loadHistory()), []);
 
@@ -103,8 +113,10 @@ export function AtividadeTab() {
     setHistory(next);
   };
 
-  const run = () => {
-    const value = input.trim();
+  // Accepts an override so a freshly decoded QR can be analysed immediately,
+  // without waiting for the input state to flush.
+  const run = (override?: string) => {
+    const value = (override ?? input).trim();
     if (!value) return;
     if (tool === "link") {
       const r = analyzeLink(value);
@@ -130,10 +142,29 @@ export function AtividadeTab() {
     }
   };
 
+  /** A decoded QR is just a payload string — same path as a pasted code. */
+  const onQrResult = (value: string) => {
+    setScanning(false);
+    setQrError(null);
+    setInput(value);
+    run(value);
+  };
+
+  const onPickImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // let the same file be picked again after a failure
+    if (!file) return;
+    setQrError(null);
+    const value = await decodeFromFile(file);
+    if (value) onQrResult(value);
+    else setQrError("Não encontramos um QR code nessa imagem. Tente uma foto mais nítida.");
+  };
+
   const switchTool = (t: Tool) => {
     setTool(t);
     setResult(null);
     setInput("");
+    setQrError(null);
   };
 
   const clearHistory = () => {
@@ -151,6 +182,8 @@ export function AtividadeTab() {
 
   return (
     <>
+      {scanning && <QrScanner onResult={onQrResult} onClose={() => setScanning(false)} />}
+
       <AppHeader title="Verificar" showBell />
 
       {/* Same segmented toolbar language as Proteção */}
@@ -192,7 +225,7 @@ export function AtividadeTab() {
             <Clipboard className="h-3.5 w-3.5" /> Colar
           </button>
           <button
-            onClick={run}
+            onClick={() => run()}
             disabled={!input.trim()}
             className="flex-1 rounded-xl py-2.5 text-[14px] font-bold text-white transition active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40"
             style={{ background: "linear-gradient(135deg,#4F46E5,#6366F1)" }}
@@ -200,6 +233,47 @@ export function AtividadeTab() {
             Verificar
           </button>
         </div>
+
+        {/* QR reading — subscriber feature. Free users can still paste the
+            copia-e-cola, so the tool stays useful and the upgrade has a reason. */}
+        {tool === "pix" && (
+          <div className="mt-3">
+            <div className="flex gap-2">
+              <button
+                onClick={() => (isPremium ? setScanning(true) : openPaywall())}
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-card py-2.5 text-[13px] font-semibold text-foreground transition active:scale-[0.99]"
+              >
+                <Camera className="h-4 w-4" style={{ color: "#4F46E5" }} /> Escanear QR
+                {!isPremium && <Lock className="h-3.5 w-3.5 text-muted-foreground" />}
+              </button>
+              <button
+                onClick={() => (isPremium ? fileRef.current?.click() : openPaywall())}
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-card py-2.5 text-[13px] font-semibold text-foreground transition active:scale-[0.99]"
+              >
+                <ImageIcon className="h-4 w-4" style={{ color: "#4F46E5" }} /> Enviar foto
+                {!isPremium && <Lock className="h-3.5 w-3.5 text-muted-foreground" />}
+              </button>
+            </div>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={onPickImage}
+            />
+            {qrError && (
+              <p className="mt-2 text-[12px] font-medium" style={{ color: "#D97706" }}>
+                {qrError}
+              </p>
+            )}
+            {!isPremium && (
+              <p className="mt-2 text-[11.5px] leading-snug text-muted-foreground">
+                Ler QR pela câmera ou por foto faz parte da assinatura. Colar o código copia-e-cola
+                continua livre.
+              </p>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Result */}
