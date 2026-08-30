@@ -22,6 +22,7 @@ import { analyzeLink, type LinkResult } from "@/lib/security/link";
 import { analyzePix, type PixResult } from "@/lib/security/pix";
 import { analyzeMessage, type MessageResult } from "@/lib/security/message";
 import { decodeFromFile } from "@/lib/security/qr";
+import { checksLeft, consumeCheck, FREE_CHECKS_PER_DAY } from "@/lib/security/quota";
 
 /**
  * Verification tools: link, Pix and message.
@@ -94,9 +95,11 @@ export function AtividadeTab() {
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [scanning, setScanning] = useState(false);
   const [qrError, setQrError] = useState<string | null>(null);
+  const [left, setLeft] = useState<number>(FREE_CHECKS_PER_DAY);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => setHistory(loadHistory()), []);
+  useEffect(() => setLeft(checksLeft(isPremium)), [isPremium]);
 
   // A share/paste can arrive as ?verificar=... (see the share target route).
   useEffect(() => {
@@ -123,6 +126,13 @@ export function AtividadeTab() {
   const run = (override?: string) => {
     const value = (override ?? input).trim();
     if (!value) return;
+    // Free tier: three a day, then the paywall — which is what makes the
+    // Essencial plan's "verificação ilimitada" a real difference.
+    if (!consumeCheck(isPremium)) {
+      openPaywall();
+      return;
+    }
+    setLeft(checksLeft(isPremium));
     if (tool === "link") {
       const r = analyzeLink(value);
       setResult(r);
@@ -218,6 +228,29 @@ export function AtividadeTab() {
           <p className="px-5 pt-3 text-[12.5px] leading-relaxed text-muted-foreground">
             {HELP[tool]}
           </p>
+
+          {/* Say the limit up front — a wall that appears without warning reads
+              as a bug; announced, it reads as the reason to subscribe. */}
+          {!isPremium && (
+            <p className="px-5 pt-1.5 text-[11.5px] text-muted-foreground">
+              {left > 0 ? (
+                <>
+                  {left} de {FREE_CHECKS_PER_DAY}{" "}
+                  {left === 1 ? "verificação gratuita hoje" : "verificações gratuitas hoje"} ·{" "}
+                  <button onClick={openPaywall} className="font-semibold text-[var(--color-navy)]">
+                    ilimitado no Essencial
+                  </button>
+                </>
+              ) : (
+                <>
+                  Você usou suas {FREE_CHECKS_PER_DAY} verificações de hoje ·{" "}
+                  <button onClick={openPaywall} className="font-semibold text-[var(--color-navy)]">
+                    assine para continuar
+                  </button>
+                </>
+              )}
+            </p>
+          )}
 
           {/* Input */}
           <div className="px-5 pt-3">
