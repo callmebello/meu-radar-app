@@ -69,7 +69,9 @@ export function computeScore(input: ScoreInput): ScoreResult {
 export function riskLevel(score: number) {
   if (score < 40)
     return { label: "RISCO ALTO", color: "#DC2626", bg: "rgba(220,38,38,0.10)" } as const;
+  // Warmer amber than the old #D97706, which read as earthy/muddy next to the
+  // indigo brand colour.
   if (score < 70)
-    return { label: "RISCO MÉDIO", color: "#D97706", bg: "rgba(217,119,6,0.10)" } as const;
+    return { label: "RISCO MÉDIO", color: "#F59E0B", bg: "rgba(245,158,11,0.10)" } as const;
   return { label: "RISCO BAIXO", color: "#0FA968", bg: "rgba(15,169,104,0.10)" } as const;
 }

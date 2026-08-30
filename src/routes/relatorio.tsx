@@ -95,8 +95,8 @@ const FACTOR_ICON = { eye: Eye, key: KeyRound, clock: Clock, globe: Globe } as c
 /** The four data types we can state something about, with their own icon. */
 const DATA_TYPES = [
   { label: "E-mail", Icon: Mail },
-  { label: "Senha", Icon: KeyRound },
   { label: "CPF", Icon: IdCard },
+  { label: "Senha", Icon: KeyRound },
   { label: "Telefone", Icon: Phone },
 ] as const;
 
@@ -112,6 +112,8 @@ function RelatorioPage() {
   const [showAll, setShowAll] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [expandedType, setExpandedType] = useState<string | null>(null);
+  const [whereOpen, setWhereOpen] = useState(false);
+  const [failedLogos, setFailedLogos] = useState<Set<string>>(new Set());
   const [mounted, setMounted] = useState(false);
 
   // Scan is read from localStorage AND re-read for a few seconds: the HIBP
@@ -183,11 +185,22 @@ function RelatorioPage() {
   );
   const risk = riskLevel(score);
 
-  // The types actually worth showing: always e-mail and senha, plus anything
-  // found or flagged by the user.
-  const shownTypes = DATA_TYPES.filter(
-    (t) =>
-      t.label === "E-mail" || t.label === "Senha" || counts[t.label] > 0 || flagged.has(t.label),
+  // The person hands us e-mail and CPF, so those two are always answered — and
+  // "NÃO ENCONTRADO" is a real, reassuring answer. Senha is always relevant
+  // because it is what a breach usually leaks. Telefone only appears when they
+  // actually gave one (or we found something), so the list stays truthful
+  // rather than padded with rows we never looked into.
+  const hasPhone = useMemo(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      const prof = JSON.parse(localStorage.getItem("priva_profile") || "{}");
+      return Boolean(prof.extraPhone);
+    } catch {
+      return false;
+    }
+  }, []);
+  const shownTypes = DATA_TYPES.filter((t) =>
+    t.label === "Telefone" ? hasPhone || counts[t.label] > 0 || flagged.has(t.label) : true,
   );
   const exposedTypes = shownTypes.filter((t) => counts[t.label] > 0).map((t) => t.label);
 
@@ -260,8 +273,52 @@ function RelatorioPage() {
 
   const logo = isDark ? "/PRIVA_logo_dark_theme.png" : "/PRIVA_logo_light_theme.png";
   const listSource = companies.length > 0 ? companies : ranked;
-  const visible = showAll ? listSource : listSource.slice(0, 3);
-  const restCount = listSource.length - visible.length;
+  // One source, then up to three, then the rest behind the plan.
+  const openRows = isPaid
+    ? listSource
+    : whereOpen
+      ? listSource.slice(0, 3)
+      : listSource.slice(0, 1);
+  const lockedRows = isPaid ? [] : listSource.slice(3, 6);
+  const lockedCount = Math.max(0, listSource.length - 3);
+
+  /** One source line. Falls back to the initial when the logo can't load. */
+  const SourceRow = ({ b, first }: { b: RawBreach; first: boolean }) => {
+    const name = displayName(b);
+    const src = logoOf(b);
+    const broken = !src || failedLogos.has(name);
+    const dcs = (b.DataClasses ?? []).map(translateDC).slice(0, 3);
+    const scale = pwnCountLabel(b);
+    return (
+      <div
+        className={`flex items-center gap-3 px-4 py-3.5 ${first ? "" : "border-t border-border"}`}
+      >
+        {broken ? (
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[var(--color-navy)]/10 text-[15px] font-bold text-[var(--color-navy)]">
+            {name[0]?.toUpperCase() ?? "?"}
+          </span>
+        ) : (
+          <img
+            src={src}
+            alt=""
+            loading="lazy"
+            onError={() => setFailedLogos((prev) => new Set(prev).add(name))}
+            className="h-10 w-10 shrink-0 rounded-full bg-white object-contain p-1"
+          />
+        )}
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-[15px] font-bold text-foreground">{name}</p>
+          <p className="truncate text-[12px] text-muted-foreground">
+            {dcs.length > 0 ? dcs.join(" · ") : "Dados pessoais"}
+            {scale ? ` · ${scale}` : ""}
+          </p>
+        </div>
+        <span className="shrink-0 text-[12px] text-muted-foreground">
+          {monthYear(tsOf(b)) || "—"}
+        </span>
+      </div>
+    );
+  };
 
   const headlineTypes =
     exposedTypes.length === 0
@@ -360,16 +417,13 @@ function RelatorioPage() {
                     onClick={() => exposed && setExpandedType(open ? null : t.label)}
                     className={`flex w-full items-center gap-3 px-4 py-3.5 text-left ${exposed ? "" : "cursor-default"}`}
                   >
-                    <span
-                      className="grid h-10 w-10 shrink-0 place-items-center rounded-xl"
-                      style={{
-                        backgroundColor: exposed ? "rgba(220,38,38,0.10)" : "rgba(15,169,104,0.10)",
-                      }}
-                    >
+                    {/* The icon stays brand indigo whatever the finding — the badge
+                        carries the verdict. Red icons made the whole list read as
+                        alarm, which is not what "não encontrado" means. */}
+                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[var(--color-navy)]/10">
                       <t.Icon
-                        className="h-[18px] w-[18px]"
+                        className="h-[18px] w-[18px] text-[var(--color-navy)]"
                         strokeWidth={1.9}
-                        style={{ color: exposed ? "#DC2626" : "#0FA968" }}
                       />
                     </span>
 
@@ -443,69 +497,52 @@ function RelatorioPage() {
           </div>
         </section>
 
-        {/* ── 3. WHERE — the companies, with their logos ───────────── */}
+        {/* ── 3. WHERE — one source, then three, then the locked rest ── */}
         {listSource.length > 0 && (
           <section className="mt-7 px-5">
             <h2 className="mb-3 text-[17px] font-bold text-foreground">
               {companies.length > 0 ? "Onde seus dados apareceram" : "Onde seus dados foram vistos"}
             </h2>
             <div className="overflow-hidden rounded-2xl border border-border bg-card">
-              {visible.map((b, i) => {
-                const dcs = (b.DataClasses ?? []).map(translateDC).slice(0, 3);
-                const logo = logoOf(b);
-                const scale = pwnCountLabel(b);
-                return (
-                  <div
-                    key={i}
-                    className={`flex items-center gap-3 px-4 py-3.5 ${i > 0 ? "border-t border-border" : ""}`}
-                  >
-                    {logo ? (
-                      <img
-                        src={logo}
-                        alt=""
-                        loading="lazy"
-                        className="h-10 w-10 shrink-0 rounded-full bg-white object-contain p-1"
-                      />
-                    ) : (
-                      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-secondary text-sm font-bold text-muted-foreground">
-                        {displayName(b)[0]?.toUpperCase()}
-                      </span>
-                    )}
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-[15px] font-bold text-foreground">
-                        {displayName(b)}
-                      </p>
-                      <p className="truncate text-[12px] text-muted-foreground">
-                        {dcs.length > 0 ? dcs.join(" · ") : "Dados pessoais"}
-                        {scale ? ` · ${scale}` : ""}
-                      </p>
-                    </div>
-                    <span className="shrink-0 text-[12px] text-muted-foreground">
-                      {monthYear(tsOf(b)) || "—"}
-                    </span>
-                  </div>
-                );
-              })}
+              {openRows.map((b, i) => (
+                <SourceRow key={i} b={b} first={i === 0} />
+              ))}
 
-              {restCount > 0 && (
+              {/* Collapsed: a single source and the invitation to see the rest. */}
+              {!whereOpen && listSource.length > 1 && (
                 <button
-                  // Free users get the count, not the list: seeing everything is
-                  // what the subscription buys, so this sends them to the plans.
-                  onClick={() => (isPaid ? setShowAll(true) : goPlans())}
+                  onClick={() => setWhereOpen(true)}
                   className="flex w-full items-center justify-center gap-1.5 border-t border-border py-3.5 text-[13.5px] font-bold text-[var(--color-navy)]"
                 >
-                  {isPaid ? (
-                    <>
-                      Ver todas as exposições ({restCount}) <ChevronDown className="h-4 w-4" />
-                    </>
-                  ) : (
-                    <>
-                      <Lock className="h-3.5 w-3.5" />
-                      Ver mais {restCount} {restCount === 1 ? "exposição" : "exposições"}
-                      <ChevronRight className="h-4 w-4" />
-                    </>
-                  )}
+                  Ver onde mais apareceram <ChevronDown className="h-4 w-4" />
                 </button>
+              )}
+
+              {/* Expanded and unpaid: the next sources are there, blurred, so the
+                  value of subscribing is visible rather than described. */}
+              {whereOpen && !isPaid && lockedRows.length > 0 && (
+                <div className="relative border-t border-border">
+                  <div aria-hidden style={{ filter: "blur(5px)" }} className="pointer-events-none">
+                    {lockedRows.map((b, i) => (
+                      <SourceRow key={i} b={b} first={i === 0} />
+                    ))}
+                  </div>
+                  <button
+                    onClick={goPlans}
+                    className="absolute inset-0 flex flex-col items-center justify-center gap-2 px-6"
+                    style={{ background: "color-mix(in srgb, var(--color-card) 55%, transparent)" }}
+                  >
+                    <span className="grid h-10 w-10 place-items-center rounded-full bg-[var(--color-navy)]/12">
+                      <Lock className="h-4 w-4 text-[var(--color-navy)]" />
+                    </span>
+                    <span className="text-center text-[13.5px] font-bold text-foreground">
+                      Mais {lockedCount} {lockedCount === 1 ? "fonte" : "fontes"} encontradas
+                    </span>
+                    <span className="rounded-full bg-[var(--color-navy)] px-3.5 py-1.5 text-[12px] font-bold text-white">
+                      Ver relatório completo
+                    </span>
+                  </button>
+                </div>
               )}
             </div>
           </section>
@@ -529,10 +566,6 @@ function RelatorioPage() {
                 >
                   {score}
                   <span className="text-[20px] font-semibold text-muted-foreground">/100</span>
-                </p>
-                <p className="mt-2 text-[12.5px] leading-snug text-muted-foreground">
-                  Quanto menor a pontuação, maior o risco
-                  <br className="hidden sm:block" /> de exposição dos seus dados.
                 </p>
               </div>
 
