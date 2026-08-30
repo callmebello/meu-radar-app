@@ -1,11 +1,11 @@
-import { Home, Shield, Activity, User, Target } from "lucide-react";
+import { Home, Shield, ScanSearch, User, Target } from "lucide-react";
 import type { TabId } from "./BottomNav";
 import { useIsDark } from "@/hooks/use-is-dark";
 
 const NAV: { id: TabId; label: string; icon: typeof Home }[] = [
   { id: "radar", label: "Início", icon: Home },
   { id: "protecao", label: "Proteção", icon: Shield },
-  { id: "atividade", label: "Atividade", icon: Activity },
+  { id: "atividade", label: "Atividade", icon: ScanSearch },
   { id: "perfil", label: "Perfil", icon: User },
 ];
 

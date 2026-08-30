@@ -26,7 +26,16 @@ import { checkHibp } from "@/lib/api/hibp.functions";
 import { searchExposure } from "@/lib/api/serpapi.functions";
 import { searchGithubExposure } from "@/lib/api/github.functions";
 import { getUser } from "@/lib/auth";
+import {
+  getCpf,
+  getEmail,
+  hasCompletedQuiz,
+  markQuizCompleted,
+  rememberIdentity,
+} from "@/lib/identity";
 import { getUserPlan } from "@/lib/api/account.functions";
+import { saveQuizAnswers } from "@/lib/api/quiz.functions";
+import { readQuizAnswers } from "@/lib/quiz";
 
 import { AppHeader } from "@/components/meu-radar/Header";
 
@@ -76,6 +85,7 @@ function Index() {
     setOpenCapture,
     scanning,
     setScanning,
+    scanResult,
     setScanResult,
     setExposure,
   } = useApp();
@@ -244,12 +254,11 @@ function Index() {
   // leads that got to the form — firing it again on submit would double it.
   const beginScan = (cpf: string, email: string) => {
     setQuizOpen(false);
-    try {
-      sessionStorage.setItem("priva_cpf", cpf);
-      if (email) sessionStorage.setItem("priva_email", email);
-    } catch {
-      /* ignore */
-    }
+    rememberIdentity(cpf, email);
+    markQuizCompleted();
+    // Tie the quiz answers to the identity now that we have it — this is what
+    // makes segmented e-mail/remarketing possible later. Best-effort.
+    void saveQuizAnswers({ data: { email, ...readQuizAnswers() } }).catch(() => null);
     runScan(cpf, email);
   };
 
@@ -257,12 +266,7 @@ function Index() {
   // already-unlocked users). Paid users scan silently (no sales funnel).
   const confirmCapture = (cpf: string, email: string) => {
     setCaptureOpen(false);
-    try {
-      sessionStorage.setItem("priva_cpf", cpf);
-      if (email) sessionStorage.setItem("priva_email", email);
-    } catch {
-      /* ignore */
-    }
+    rememberIdentity(cpf, email);
     track("Lead");
     runScan(cpf, email, { silent: isPremium });
   };
@@ -271,15 +275,31 @@ function Index() {
   // leads go through the pre-scan quiz (the sales flow); paid users skip it and
   // get the bare CPF sheet — they've already converted, don't re-sell them.
   const onScan = () => {
-    const c = typeof window !== "undefined" ? sessionStorage.getItem("priva_cpf") : null;
-    const e = (typeof window !== "undefined" ? sessionStorage.getItem("priva_email") : null) ?? "";
-    if (c && isValidCPF(c)) runScan(c, e, { silent: isPremium });
-    else if (isPremium) {
+    const c = getCpf();
+    const e = getEmail();
+
+    // Already scanned → show what we found instead of re-running it. Tapping the
+    // mark when there's a result should answer "what did you find?", not start
+    // the whole thing over.
+    if (hasScanned && scanResult) {
+      navigate({ to: "/relatorio" });
+      return;
+    }
+
+    if (c && isValidCPF(c)) {
+      runScan(c, e, { silent: isPremium });
+      return;
+    }
+
+    // No CPF on file. Someone who already answered the quiz never sees it
+    // again — they just get the short capture sheet.
+    if (isPremium || hasCompletedQuiz()) {
       setCaptureReason("scan");
       setCaptureOpen(true);
-    } else {
-      setQuizOpen(true);
+      return;
     }
+
+    setQuizOpen(true);
   };
 
   useEffect(() => {
@@ -289,8 +309,7 @@ function Index() {
       setCaptureReason(reason);
       setCaptureOpen(true);
     });
-    const storedCpf = typeof window !== "undefined" ? sessionStorage.getItem("priva_cpf") : null;
-    if (storedCpf) setHasScanned(true);
+    if (getCpf()) setHasScanned(true);
     // The landing page is the entry — no auto CPF modal pop-up. The modal only
     // opens as a fallback if the user taps Scan without a stored CPF (onScan).
     // eslint-disable-next-line react-hooks/exhaustive-deps

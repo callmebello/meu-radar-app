@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Home, Shield, Activity, User } from "lucide-react";
+import { Home, Shield, ScanSearch, User } from "lucide-react";
 
 // `familia` and `incidente` stay valid destinations (reached from Perfil and
 // Proteção), they are just not bar items.
@@ -8,12 +8,12 @@ export type TabId = "radar" | "protecao" | "familia" | "perfil" | "atividade" | 
 const tabs: { id: TabId; label: string; icon: typeof Shield }[] = [
   { id: "radar", label: "Início", icon: Home },
   { id: "protecao", label: "Proteção", icon: Shield },
-  { id: "atividade", label: "Atividade", icon: Activity },
+  { id: "atividade", label: "Atividade", icon: ScanSearch },
   { id: "perfil", label: "Perfil", icon: User },
 ];
 
-/** How long the radar sweeps before the capture sheet rises. */
-const SWEEP_MS = 1100;
+/** Length of the 1.5-turn sweep. Must match the nav-sweep keyframe in styles.css. */
+const SWEEP_MS = 750;
 
 /**
  * Center action: the Priva mark on a raised white disc.

@@ -95,3 +95,16 @@ create index if not exists removal_requests_status_idx on removal_requests(statu
 -- serves time-limited signed URLs (7 days):
 --   'relatorios'   -> {userId}/relatorio.pdf   (plano Essencial)
 --   'cartas-lgpd'  -> {userId}/carta-lgpd.pdf  (plano Proteção Total)
+
+-- Pre-scan quiz answers, tied to the lead's e-mail. Feeds segmented e-mail and
+-- remarketing: what they fear, which data they believe is exposed, how long
+-- since they last checked. Written best-effort by saveQuizAnswers — the funnel
+-- works with or without this table.
+create table if not exists quiz_answers (
+  email text primary key,
+  q1 text,
+  q2 text[] default '{}',
+  q3 text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
