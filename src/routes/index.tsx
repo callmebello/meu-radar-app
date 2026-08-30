@@ -34,7 +34,7 @@ import {
   rememberIdentity,
 } from "@/lib/identity";
 import { getUserPlan } from "@/lib/api/account.functions";
-import { saveQuizAnswers } from "@/lib/api/quiz.functions";
+import { syncLeadProfile } from "@/lib/api/quiz.functions";
 import { readQuizAnswers } from "@/lib/quiz";
 
 import { AppHeader } from "@/components/meu-radar/Header";
@@ -195,6 +195,23 @@ function Index() {
       });
     });
 
+    // Marketing profile — fired here because this is the first moment where the
+    // user id and the hashed CPF exist alongside the quiz answers and the real
+    // breach count. Joining them is what makes segmented remarketing possible.
+    void Promise.all([userP, hibpP]).then(([u, h]) => {
+      if (!email) return;
+      const count = h && typeof h.count === "number" ? h.count : undefined;
+      void syncLeadProfile({
+        data: {
+          email,
+          userId: u?.userId ?? null,
+          cpfHash: u?.cpfHash,
+          breachCount: count,
+          ...readQuizAnswers(),
+        },
+      }).catch(() => null);
+    });
+
     // Persist the rich scan (HIBP breach list + public exposure) for PDFs.
     void Promise.all([userP, hibpP, ghP, cpfP, phoneP]).then(([u, h, gh, cpfRes, phoneRes]) => {
       const finalBreaches = h && typeof h.count === "number" && h.count > 0 ? h.count : breachCount;
@@ -256,9 +273,6 @@ function Index() {
     setQuizOpen(false);
     rememberIdentity(cpf, email);
     markQuizCompleted();
-    // Tie the quiz answers to the identity now that we have it — this is what
-    // makes segmented e-mail/remarketing possible later. Best-effort.
-    void saveQuizAnswers({ data: { email, ...readQuizAnswers() } }).catch(() => null);
     runScan(cpf, email);
   };
 

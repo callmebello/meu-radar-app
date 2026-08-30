@@ -96,15 +96,19 @@ create index if not exists removal_requests_status_idx on removal_requests(statu
 --   'relatorios'   -> {userId}/relatorio.pdf   (plano Essencial)
 --   'cartas-lgpd'  -> {userId}/carta-lgpd.pdf  (plano Proteção Total)
 
--- Pre-scan quiz answers, tied to the lead's e-mail. Feeds segmented e-mail and
--- remarketing: what they fear, which data they believe is exposed, how long
--- since they last checked. Written best-effort by saveQuizAnswers — the funnel
--- works with or without this table.
+-- Lead profile: the pre-scan quiz answers joined to the user, the hashed
+-- identity and the scan outcome. This is what powers segmented e-mail and
+-- remarketing ("said their passwords are exposed", "never checked before").
+-- Written best-effort by syncLeadProfile — the funnel works without it.
 create table if not exists quiz_answers (
   email text primary key,
+  user_id uuid references users(id) on delete set null,
+  cpf_hash text,
   q1 text,
   q2 text[] default '{}',
   q3 text,
+  breach_count int,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+create index if not exists quiz_answers_user_id_idx on quiz_answers(user_id);
