@@ -161,3 +161,43 @@ create index if not exists api_cache_created_idx on api_cache(created_at);
 -- Housekeeping (optional, via pg_cron or by hand):
 --   delete from rate_limits where day < current_date - 7;
 --   delete from api_cache  where created_at < now() - interval '30 days';
+
+-- ---------------------------------------------------------------------------
+-- Attribution: which narrative actually sold Priva.
+--
+-- TikTok reports views and Stripe reports revenue; nothing joins them unless
+-- the origin is carried from the click to the sale. Written by saveUser at
+-- scan time, when the e-mail first exists.
+--
+-- first_* is written ONCE and never overwritten: someone who sees the UGC
+-- video, comes back three days later by typing the domain, and buys — that
+-- sale belongs to the video, not to the direct visit. last_* is the footnote.
+--
+-- Link convention (utm_content is the asset id from the asset bank):
+--   ?utm_source=tiktok_creator_01&utm_medium=organic
+--   &utm_campaign=cpf_exposto&utm_content=042
+alter table users add column if not exists first_source text;
+alter table users add column if not exists first_medium text;
+alter table users add column if not exists first_campaign text;
+alter table users add column if not exists first_content text;
+alter table users add column if not exists first_referrer text;
+alter table users add column if not exists first_landing text;
+alter table users add column if not exists first_seen_at timestamptz;
+alter table users add column if not exists last_source text;
+alter table users add column if not exists last_campaign text;
+alter table users add column if not exists last_content text;
+
+create index if not exists users_first_campaign_idx on users(first_campaign);
+create index if not exists users_first_content_idx on users(first_content);
+
+-- Revenue by narrative (the weekly question):
+--   select first_campaign as narrativa,
+--          count(*) as leads,
+--          count(*) filter (where is_paid) as vendas,
+--          round(100.0 * count(*) filter (where is_paid) / nullif(count(*),0), 1) as conv_pct
+--   from users
+--   where first_campaign is not null and first_campaign <> ''
+--   group by 1 order by vendas desc;
+--
+-- Same query with first_content instead of first_campaign ranks individual
+-- assets inside a winning narrative.

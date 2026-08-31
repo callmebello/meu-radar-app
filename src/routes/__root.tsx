@@ -1,4 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { captureAttribution } from "@/lib/attribution";
 import {
   Outlet,
   Link,
@@ -18,7 +19,12 @@ function NotFoundComponent() {
       <div className="max-w-md text-center">
         <h1 className="text-7xl font-bold text-foreground">404</h1>
         <p className="mt-2 text-sm text-muted-foreground">Página não encontrada.</p>
-        <Link to="/" className="mt-6 inline-flex rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">Voltar</Link>
+        <Link
+          to="/"
+          className="mt-6 inline-flex rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
+        >
+          Voltar
+        </Link>
       </div>
     </div>
   );
@@ -26,12 +32,22 @@ function NotFoundComponent() {
 
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   const router = useRouter();
-  useEffect(() => { reportLovableError(error, { boundary: "tanstack_root_error_component" }); }, [error]);
+  useEffect(() => {
+    reportLovableError(error, { boundary: "tanstack_root_error_component" });
+  }, [error]);
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
         <h1 className="text-xl font-semibold text-foreground">Algo deu errado</h1>
-        <button onClick={() => { router.invalidate(); reset(); }} className="mt-6 rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground">Tentar novamente</button>
+        <button
+          onClick={() => {
+            router.invalidate();
+            reset();
+          }}
+          className="mt-6 rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground"
+        >
+          Tentar novamente
+        </button>
       </div>
     </div>
   );
@@ -43,13 +59,31 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       { title: "Priva — Proteção de Identidade Digital com IA" },
-      { name: "description", content: "Priva monitora vazamentos, senhas comprometidas e exposição na dark web. Inteligência invisível para proteger sua identidade digital." },
+      {
+        name: "description",
+        content:
+          "Priva monitora vazamentos, senhas comprometidas e exposição na dark web. Inteligência invisível para proteger sua identidade digital.",
+      },
       { property: "og:title", content: "Priva — Proteção de Identidade Digital" },
       { name: "twitter:title", content: "Priva — Proteção de Identidade Digital" },
-      { property: "og:description", content: "Priva monitora vazamentos, senhas e exposição na dark web." },
-      { name: "twitter:description", content: "Priva monitora vazamentos, senhas e exposição na dark web." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/c313cb51-4924-4f97-a974-6757b1f48628/id-preview-8cd77834--4fe910ac-619d-422b-aeac-ed3911e3acee.lovable.app-1780242031092.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/c313cb51-4924-4f97-a974-6757b1f48628/id-preview-8cd77834--4fe910ac-619d-422b-aeac-ed3911e3acee.lovable.app-1780242031092.png" },
+      {
+        property: "og:description",
+        content: "Priva monitora vazamentos, senhas e exposição na dark web.",
+      },
+      {
+        name: "twitter:description",
+        content: "Priva monitora vazamentos, senhas e exposição na dark web.",
+      },
+      {
+        property: "og:image",
+        content:
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/c313cb51-4924-4f97-a974-6757b1f48628/id-preview-8cd77834--4fe910ac-619d-422b-aeac-ed3911e3acee.lovable.app-1780242031092.png",
+      },
+      {
+        name: "twitter:image",
+        content:
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/c313cb51-4924-4f97-a974-6757b1f48628/id-preview-8cd77834--4fe910ac-619d-422b-aeac-ed3911e3acee.lovable.app-1780242031092.png",
+      },
       { name: "twitter:card", content: "summary_large_image" },
       { property: "og:type", content: "website" },
       { name: "theme-color", content: "#4F46E5" },
@@ -63,7 +97,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "stylesheet", href: appCss },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" },
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap",
+      },
       // Favicon / app icons (?v=2 busts cached copies of the old icon in prod)
       { rel: "icon", href: "/favicon.ico?v=2", sizes: "any" },
       { rel: "icon", type: "image/png", sizes: "32x32", href: "/favicon-32x32.png?v=2" },
@@ -127,13 +164,19 @@ function RootShell({ children }: { children: ReactNode }) {
           }}
         />
       </head>
-      <body>{children}<Scripts /></body>
+      <body>
+        {children}
+        <Scripts />
+      </body>
     </html>
   );
 }
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  // Recorded on the first render of any route, so a link that lands on the
+  // institutional LP is captured exactly like one that lands on the app.
+  useEffect(() => captureAttribution(), []);
   return (
     <QueryClientProvider client={queryClient}>
       <Outlet />

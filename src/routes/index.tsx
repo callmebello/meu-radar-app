@@ -21,6 +21,7 @@ import { PaymentReturn } from "@/components/PaymentReturn";
 import { isValidCPF, generateResult, getScore } from "@/lib/funnel";
 import { track } from "@/lib/analytics";
 import { saveUser } from "@/lib/api/saveUser";
+import { attributionParams, getFirstTouch } from "@/lib/attribution";
 import { saveScan } from "@/lib/api/saveScan";
 import { checkHibp } from "@/lib/api/hibp.functions";
 import { searchExposure } from "@/lib/api/serpapi.functions";
@@ -147,7 +148,9 @@ function Index() {
     // Fire user + all sources in parallel (best-effort, guarded). The dashboard
     // cards + result sheet update as each resolves; the full scan is persisted
     // once everything settles so the PDF generators have real data.
-    const userP = saveUser({ data: { email, cpf } }).catch(() => null);
+    const userP = saveUser({
+      data: { email, cpf, attribution: getFirstTouch() ?? undefined },
+    }).catch(() => null);
     const hibpP = email ? checkHibp({ data: { email } }).catch(() => null) : Promise.resolve(null);
     const ghP = email
       ? searchGithubExposure({ data: { email } }).catch(() => null)
@@ -281,7 +284,7 @@ function Index() {
   const confirmCapture = (cpf: string, email: string) => {
     setCaptureOpen(false);
     rememberIdentity(cpf, email);
-    track("Lead");
+    track("Lead", attributionParams());
     runScan(cpf, email, { silent: isPremium });
   };
 
