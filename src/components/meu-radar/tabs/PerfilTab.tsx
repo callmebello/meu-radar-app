@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { AppHeader } from "../Header";
+import { AvatarPicker } from "../AvatarPicker";
 import {
   Check,
   ChevronRight,
@@ -135,6 +136,14 @@ export function PerfilTab() {
     setLoginBusy(false);
   };
 
+  const profileName = (() => {
+    try {
+      return (getProfile().cpfName as string) || authedEmail || "";
+    } catch {
+      return authedEmail || "";
+    }
+  })();
+
   const logout = async () => {
     await signOut();
     setAuthedEmail(null);
@@ -144,6 +153,11 @@ export function PerfilTab() {
     <>
       <AppHeader title="Perfil" showBell />
       <div className="space-y-5 px-5 py-5">
+        {/* Photo — feeds the Priva ID on the home. */}
+        <div className="rounded-2xl border border-border/60 bg-card p-4 shadow-sm">
+          <AvatarPicker name={profileName} />
+        </div>
+
         {/* Account / auth */}
         {authedEmail ? (
           <div className="flex items-center justify-between rounded-2xl border border-border/60 bg-card p-4 shadow-sm">

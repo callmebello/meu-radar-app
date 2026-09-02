@@ -40,28 +40,28 @@ export function NextActionsCard() {
     <section className="overflow-hidden rounded-2xl border border-border/60 bg-card shadow-[0_2px_20px_-8px_rgba(30,45,90,0.15)]">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center gap-2.5 px-4 py-3.5 text-left"
+        className="flex w-full items-center gap-2.5 px-3.5 py-3.5 text-left"
         aria-expanded={open}
       >
         <span
-          className="grid h-10 w-10 shrink-0 place-items-center rounded-xl"
+          className="grid h-11 w-11 shrink-0 place-items-center rounded-xl"
           style={{ backgroundColor: "rgba(79,70,229,0.10)" }}
         >
-          <img src="/PRIVA_mark.png" alt="" className="h-5 w-5 object-contain" />
+          <img src="/PRIVA_mark.png" alt="" className="h-7 w-7 object-contain" />
         </span>
 
         <span className="min-w-0 flex-1">
           <span className="block truncate text-[13.5px] font-bold leading-tight text-foreground">
             Melhore sua proteção
           </span>
-          <span className="block text-[12px] leading-tight text-muted-foreground">
+          <span className="block text-[11.5px] leading-tight text-muted-foreground">
             {actions.length} {actions.length === 1 ? "ação disponível" : "ações disponíveis"}
           </span>
         </span>
 
         {headroom > 0 && (
           <span
-            className="inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-1 text-[10.5px] font-bold"
+            className="inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[10px] font-bold"
             style={{ backgroundColor: "rgba(15,169,104,0.12)", color: "#0FA968" }}
           >
             +{headroom} {headroom === 1 ? "ponto" : "pontos"}

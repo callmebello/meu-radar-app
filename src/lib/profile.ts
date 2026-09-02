@@ -2,6 +2,8 @@
 // survives reloads (real user data). Cross-device sync can later be added by
 // mirroring this to Supabase.
 export type ProfileData = {
+  /** Square photo as a data URL, downscaled before saving (see AvatarPicker). */
+  avatar?: string;
   cpfName?: string;
   cpfBirth?: string;
   extraEmail?: string;

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   BadgeCheck,
+  CheckCircle2,
   ChevronLeft,
   CircleDashed,
   Eye,
@@ -13,6 +14,8 @@ import { useApp } from "@/contexts/AppContext";
 import { getUser } from "@/lib/auth";
 import { getCpf, getEmail } from "@/lib/identity";
 import { getProfile } from "@/lib/profile";
+import { readAvatar } from "./AvatarPicker";
+import { useIsDark } from "@/hooks/use-is-dark";
 import { computeScore } from "@/lib/riskScore";
 import { scoreInputsFrom } from "@/lib/scoreInputs";
 
@@ -68,25 +71,29 @@ function cpfDigitsValid(cpf: string): boolean {
  * The state is carried by colour — green when we hold proof, amber when the
  * person merely told us — which is also the only honest distinction here.
  */
-function Seal({ label, verified }: { label: string; verified: boolean }) {
-  // Brand purple for what we actually verified, green for what the person
-  // told us. The strongest colour on the card marks the strongest claim; the
-  // word underneath is what states which is which, since green on its own
-  // would read as confirmed.
-  const color = verified ? "#4F46E5" : "#0FA968";
+/**
+ * Three states, because there are three:
+ *   verified — we hold proof (only e-mail can claim this today) → brand purple
+ *   filled   — the person gave it to us                          → green check
+ *   empty    — nothing here yet                                  → blank ring
+ *
+ * A green check on an empty field would be the one lie this card cannot afford.
+ */
+function Seal({ label, filled, verified }: { label: string; filled: boolean; verified: boolean }) {
+  const color = verified ? "#4F46E5" : filled ? "#0FA968" : "var(--color-muted-foreground)";
+  const Icon = verified ? BadgeCheck : filled ? CheckCircle2 : CircleDashed;
   return (
     <div className="flex min-w-0 flex-1 items-center gap-1.5">
-      {verified ? (
-        <BadgeCheck className="h-4 w-4 shrink-0" style={{ color }} />
-      ) : (
-        <CircleDashed className="h-4 w-4 shrink-0" style={{ color }} />
-      )}
+      <Icon className="h-4 w-4 shrink-0" style={{ color }} />
       <span className="min-w-0">
         <span className="block truncate text-[12.5px] font-semibold leading-tight text-foreground">
           {label}
         </span>
-        <span className="block text-[10.5px] leading-tight" style={{ color }}>
-          {verified ? "Verificado" : "Informado"}
+        <span
+          className="block truncate text-[10.5px] leading-tight"
+          style={{ color: filled || verified ? color : "var(--color-muted-foreground)" }}
+        >
+          {verified ? "Verificado" : filled ? "Informado" : "Vazio"}
         </span>
       </span>
     </div>
@@ -98,6 +105,8 @@ export function PrivaIdCard({ onShare, onBack }: { onShare?: () => void; onBack?
   const [emailVerified, setEmailVerified] = useState(false);
   const [authEmail, setAuthEmail] = useState("");
   const [revealed, setRevealed] = useState(false);
+  const isDark = useIsDark();
+  const avatar = readAvatar();
 
   useEffect(() => {
     void getUser()
@@ -158,11 +167,15 @@ export function PrivaIdCard({ onShare, onBack }: { onShare?: () => void; onBack?
       </span>
 
       <div className="relative flex items-center justify-between gap-3">
-        {/* The mark the rest of the app already ships — one asset to keep in
-            sync instead of two, and at this size a symbol reads faster than a
-            wordmark. */}
-        <span className="flex items-center gap-2">
-          <img src="/PRIVA_mark.png" alt="Priva" className="h-7 w-7 object-contain" />
+        {/* The same wordmark the header carries, so the card is unmistakably
+            the same product — sized down to sit under the name, not compete
+            with it. */}
+        <span className="flex items-baseline gap-1.5">
+          <img
+            src={isDark ? "/PRIVA_logo_dark_theme.png" : "/PRIVA_logo_light_theme.png"}
+            alt="Priva"
+            className="h-[15px] w-auto object-contain"
+          />
           <span className="text-[13px] font-bold tracking-[0.14em] text-muted-foreground">ID</span>
         </span>
         <span
@@ -180,16 +193,25 @@ export function PrivaIdCard({ onShare, onBack }: { onShare?: () => void; onBack?
 
       {/* The identity block gets the room the card has to spare. */}
       <div className="relative flex flex-1 items-center gap-3 py-1">
-        <span
-          className="grid h-[58px] w-[58px] shrink-0 place-items-center rounded-full text-[18px] font-bold"
-          style={{
-            backgroundColor: "rgba(79,70,229,0.10)",
-            color: "#4F46E5",
-            boxShadow: "0 0 0 3px rgba(79,70,229,0.14)",
-          }}
-        >
-          {initials(name)}
-        </span>
+        {avatar ? (
+          <img
+            src={avatar}
+            alt=""
+            className="h-[58px] w-[58px] shrink-0 rounded-full object-cover"
+            style={{ boxShadow: "0 0 0 3px rgba(79,70,229,0.14)" }}
+          />
+        ) : (
+          <span
+            className="grid h-[58px] w-[58px] shrink-0 place-items-center rounded-full text-[18px] font-bold"
+            style={{
+              backgroundColor: "rgba(79,70,229,0.10)",
+              color: "#4F46E5",
+              boxShadow: "0 0 0 3px rgba(79,70,229,0.14)",
+            }}
+          >
+            {initials(name)}
+          </span>
+        )}
 
         <div className="min-w-0 flex-1">
           <p className="truncate text-[20px] font-extrabold leading-tight text-foreground">
@@ -219,9 +241,9 @@ export function PrivaIdCard({ onShare, onBack }: { onShare?: () => void; onBack?
       </div>
 
       <div className="relative flex gap-2">
-        <Seal label="E-mail" verified={emailVerified} />
-        <Seal label="Telefone" verified={false} />
-        <Seal label="CPF" verified={false} />
+        <Seal label="E-mail" filled={!!email} verified={emailVerified} />
+        <Seal label="Telefone" filled={!!phone} verified={false} />
+        <Seal label="CPF" filled={!!cpf} verified={false} />
       </div>
 
       {cpf && !cpfDigitsValid(cpf) && (
