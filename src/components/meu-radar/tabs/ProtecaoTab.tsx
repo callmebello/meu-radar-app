@@ -6,7 +6,6 @@ import { ContasTab } from "./ContasTab";
 import { ExposicaoTab } from "./ExposicaoTab";
 import { VazamentosTab } from "./VazamentosTab";
 import { RemocaoTab } from "./RemocaoTab";
-import { UpsellBanner, shouldShowUpsell } from "../UpsellBanner";
 import { useApp } from "@/contexts/AppContext";
 
 type Pill = "credenciais" | "contas" | "vazamentos" | "exposicao" | "remocao";
@@ -41,12 +40,6 @@ export function ProtecaoTab({ initial = "credenciais" }: { initial?: Pill }) {
   return (
     <>
       <AppHeader title="Proteção" showBell />
-
-      {shouldShowUpsell(isPremium) && (
-        <div className="px-5 pt-4">
-          <UpsellBanner />
-        </div>
-      )}
 
       {/* Segmented control — the everyday tools sit in the noble area, up top. */}
       {/* Scrolls instead of shrinking: five labels squeezed into 375px would

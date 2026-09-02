@@ -23,7 +23,6 @@ import { generateRelatorioPdf } from "@/lib/api/generateRelatorio.functions";
 import { track } from "@/lib/analytics";
 import { computeScore } from "@/lib/riskScore";
 import { scoreInputsFrom } from "@/lib/scoreInputs";
-import { UpsellBanner, shouldShowUpsell } from "../UpsellBanner";
 import { ProtecaoTrackingCard } from "../ProtecaoTrackingCard";
 import { NextActionsCard } from "../NextActionsCard";
 import { PrivaIdCard } from "../PrivaIdCard";
@@ -311,8 +310,6 @@ export function RadarTab() {
             )}
           </button>
         )}
-
-        {shouldShowUpsell(isPremium) && <UpsellBanner />}
 
         {/* Identity radar grid */}
         <section>
