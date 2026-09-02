@@ -59,8 +59,6 @@ export function RadarTab() {
   const inputs = useMemo(() => scoreInputsFrom(scanResult, exposure), [scanResult, exposure]);
   const result = useMemo(() => (inputs ? computeScore(inputs) : null), [inputs]);
   const score = result?.score ?? null;
-  const lastScan =
-    typeof window !== "undefined" ? localStorage.getItem("priva_last_scan_at") : null;
   const [bannerVisible, setBannerVisible] = useState(true);
   const [showId, setShowId] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
@@ -247,17 +245,12 @@ export function RadarTab() {
                         +{result.credit} pelas ações que você concluiu
                       </p>
                     )}
-                    <p className="mt-4 text-xs text-muted-foreground">
-                      {lastScan
-                        ? `Última verificação: ${new Date(lastScan).toLocaleDateString("pt-BR")}`
-                        : "Verificação concluída"}
-                    </p>
                     <button
                       onClick={() => setShowId(true)}
                       className="mt-4 flex items-center justify-center gap-1.5 text-[12.5px] font-semibold"
                       style={{ color: "#4F46E5" }}
                     >
-                      Ver meu Priva ID <ChevronRight className="h-3.5 w-3.5" />
+                      Meu Priva ID <ChevronRight className="h-3.5 w-3.5" />
                     </button>
                   </>
                 )}

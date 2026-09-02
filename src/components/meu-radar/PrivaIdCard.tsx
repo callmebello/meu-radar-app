@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import {
+  AlertCircle,
   BadgeCheck,
   ChevronLeft,
-  CircleDashed,
   Eye,
   EyeOff,
   Fingerprint,
@@ -13,7 +13,7 @@ import { useApp } from "@/contexts/AppContext";
 import { getUser } from "@/lib/auth";
 import { getCpf, getEmail } from "@/lib/identity";
 import { getProfile } from "@/lib/profile";
-import { computeScore, riskLevel } from "@/lib/riskScore";
+import { computeScore } from "@/lib/riskScore";
 import { scoreInputsFrom } from "@/lib/scoreInputs";
 
 /**
@@ -63,19 +63,27 @@ function cpfDigitsValid(cpf: string): boolean {
   return calc(9) === Number(d[9]) && calc(10) === Number(d[10]);
 }
 
+/**
+ * No box: three bordered cards ate a third of the card's height for six words.
+ * The state is carried by colour — green when we hold proof, amber when the
+ * person merely told us — which is also the only honest distinction here.
+ */
 function Seal({ label, verified }: { label: string; verified: boolean }) {
+  const color = verified ? "#0FA968" : "#F59E0B";
   return (
-    <div className="flex min-w-0 flex-1 flex-col items-center gap-1 rounded-2xl border border-border bg-background/70 px-2 py-2.5">
+    <div className="flex min-w-0 flex-1 items-center gap-1.5">
       {verified ? (
-        <BadgeCheck className="h-4 w-4 shrink-0" style={{ color: "#4F46E5" }} />
+        <BadgeCheck className="h-4 w-4 shrink-0" style={{ color }} />
       ) : (
-        <CircleDashed className="h-4 w-4 shrink-0 text-muted-foreground" />
+        <AlertCircle className="h-4 w-4 shrink-0" style={{ color }} />
       )}
-      <span className="max-w-full truncate text-[12px] font-semibold leading-none text-foreground">
-        {label}
-      </span>
-      <span className="text-[10px] leading-none text-muted-foreground">
-        {verified ? "Verificado" : "Informado"}
+      <span className="min-w-0">
+        <span className="block truncate text-[12.5px] font-semibold leading-tight text-foreground">
+          {label}
+        </span>
+        <span className="block text-[10.5px] leading-tight" style={{ color }}>
+          {verified ? "Verificado" : "Informado"}
+        </span>
       </span>
     </div>
   );
@@ -86,6 +94,7 @@ export function PrivaIdCard({ onShare, onBack }: { onShare?: () => void; onBack?
   const [emailVerified, setEmailVerified] = useState(false);
   const [authEmail, setAuthEmail] = useState("");
   const [revealed, setRevealed] = useState(false);
+  const [logoFailed, setLogoFailed] = useState(false);
 
   useEffect(() => {
     void getUser()
@@ -118,15 +127,6 @@ export function PrivaIdCard({ onShare, onBack }: { onShare?: () => void; onBack?
 
   const inputs = scoreInputsFrom(scanResult, exposure);
   const score = inputs ? computeScore(inputs).score : null;
-  const risk = score !== null ? riskLevel(score) : null;
-  const lastScan =
-    typeof window !== "undefined" ? localStorage.getItem("priva_last_scan_at") : null;
-  const updated = lastScan
-    ? new Date(lastScan).toDateString() === new Date().toDateString()
-      ? "Atualizado hoje"
-      : `Atualizado em ${new Date(lastScan).toLocaleDateString("pt-BR")}`
-    : "Sem verificação ainda";
-
   return (
     <div
       className="relative flex h-full flex-col overflow-hidden rounded-2xl border border-border/60 bg-card p-5 shadow-[0_2px_20px_-8px_rgba(30,45,90,0.15)]"
@@ -143,10 +143,21 @@ export function PrivaIdCard({ onShare, onBack }: { onShare?: () => void; onBack?
       />
 
       <div className="relative flex items-center justify-between gap-3">
-        <p className="text-[15px] font-extrabold tracking-tight">
-          <span style={{ color: "#4F46E5" }}>PRIVA</span>{" "}
-          <span className="text-muted-foreground">ID</span>
-        </p>
+        {/* The wordmark as artwork. Falls back to the type lockup so the card
+            never renders a broken image if the asset is missing. */}
+        {logoFailed ? (
+          <p className="text-[15px] font-extrabold tracking-tight">
+            <span style={{ color: "#4F46E5" }}>PRIVA</span>{" "}
+            <span className="text-muted-foreground">ID</span>
+          </p>
+        ) : (
+          <img
+            src="/priva-id-logo.png"
+            alt="Priva ID"
+            onError={() => setLogoFailed(true)}
+            className="h-[18px] w-auto"
+          />
+        )}
         <span
           className="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[10.5px] font-bold tracking-wide"
           style={
@@ -190,18 +201,12 @@ export function PrivaIdCard({ onShare, onBack }: { onShare?: () => void; onBack?
           </p>
         </div>
 
-        {score !== null && risk && (
-          <div className="shrink-0 self-stretch border-l border-border pl-3 text-right">
+        {score !== null && (
+          <div className="shrink-0 pl-2 text-right">
             <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Score</p>
-            <p className="text-[30px] font-extrabold leading-none" style={{ color: "#4F46E5" }}>
+            <p className="text-[32px] font-extrabold leading-none" style={{ color: "#4F46E5" }}>
               {score}
             </p>
-            <span
-              className="mt-1.5 inline-block rounded-full px-2 py-0.5 text-[9px] font-bold"
-              style={{ backgroundColor: risk.bg, color: risk.color }}
-            >
-              {risk.label}
-            </span>
           </div>
         )}
       </div>
@@ -218,10 +223,20 @@ export function PrivaIdCard({ onShare, onBack }: { onShare?: () => void; onBack?
         </p>
       )}
 
-      <div className="relative mt-3 flex items-center justify-between gap-3">
-        <span className="inline-flex items-center gap-1.5 text-[11.5px] text-muted-foreground">
-          <BadgeCheck className="h-3.5 w-3.5" /> {updated}
-        </span>
+      {/* One row instead of two: the "last checked" line lived on the score
+          face already, and repeating it here cost a line on both cards. */}
+      <div className="relative mt-3 flex items-center justify-between gap-3 border-t border-border pt-3">
+        {onBack ? (
+          <button
+            onClick={onBack}
+            className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold"
+            style={{ color: "#4F46E5" }}
+          >
+            <ChevronLeft className="h-3.5 w-3.5" /> Voltar ao score
+          </button>
+        ) : (
+          <span />
+        )}
         {onShare && (
           <button
             onClick={onShare}
@@ -232,16 +247,6 @@ export function PrivaIdCard({ onShare, onBack }: { onShare?: () => void; onBack?
           </button>
         )}
       </div>
-
-      {onBack && (
-        <button
-          onClick={onBack}
-          className="relative mt-3 flex items-center justify-center gap-1.5 border-t border-border pt-3 text-[12.5px] font-semibold"
-          style={{ color: "#4F46E5" }}
-        >
-          <ChevronLeft className="h-3.5 w-3.5" /> Voltar ao score
-        </button>
-      )}
     </div>
   );
 }
