@@ -44,6 +44,8 @@ export type ExposureResult = {
   github?: { found: boolean; count: number; repos: GithubRepo[] };
   cpf?: { found: boolean; count: number; sources: ExposureSource[] };
   phone?: { found: boolean; count: number; sources: ExposureSource[] } | null;
+  /** Name / username search — see FootprintCheck. */
+  footprint?: { found: boolean; count: number; sources: ExposureSource[] } | null;
 };
 
 const AppCtx = createContext<Ctx | null>(null);

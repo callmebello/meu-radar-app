@@ -51,6 +51,7 @@ type Exposure = {
   github?: { found?: boolean; count?: number } | null;
   cpf?: { found?: boolean; count?: number } | null;
   phone?: { found?: boolean; count?: number } | null;
+  footprint?: { found?: boolean; count?: number } | null;
 };
 
 function readJSON<T>(key: string): T | null {
@@ -170,7 +171,8 @@ function RelatorioPage() {
     }),
     [breaches, phoneHits, cpfHits],
   );
-  const publicHits = cpfHits + phoneHits + githubHits;
+  const footprintHits = exposure?.footprint?.count ?? 0;
+  const publicHits = cpfHits + phoneHits + githubHits + footprintHits;
   const recent = breaches.some((b) => tsOf(b) && Date.now() - tsOf(b) < 365 * 86_400_000);
 
   // Deterministic score from the evidence — see lib/riskScore.

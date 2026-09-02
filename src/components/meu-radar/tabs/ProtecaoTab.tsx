@@ -3,7 +3,7 @@ import { LifeBuoy, ChevronRight } from "lucide-react";
 import { AppHeader } from "../Header";
 import { CredenciaisTab } from "./CredenciaisTab";
 import { ContasTab } from "./ContasTab";
-import { DarkWebTab } from "./DarkWebTab";
+import { ExposicaoTab } from "./ExposicaoTab";
 import { VazamentosTab } from "./VazamentosTab";
 import { RemocaoTab } from "./RemocaoTab";
 import { UpsellBanner, shouldShowUpsell } from "../UpsellBanner";
@@ -73,7 +73,7 @@ export function ProtecaoTab({ initial = "credenciais" }: { initial?: Pill }) {
       {pill === "credenciais" && <CredenciaisTab />}
       {pill === "contas" && <ContasTab />}
       {pill === "vazamentos" && <VazamentosTab />}
-      {pill === "exposicao" && <DarkWebTab />}
+      {pill === "exposicao" && <ExposicaoTab />}
       {pill === "remocao" && <RemocaoTab />}
 
       {/* Incident Mode entry — pushed to the bottom: it's the "if something bad

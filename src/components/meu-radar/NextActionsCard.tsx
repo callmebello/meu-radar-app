@@ -1,4 +1,5 @@
-import { ChevronRight, TrendingUp } from "lucide-react";
+import { useState } from "react";
+import { ChevronDown, ChevronRight, TrendingUp } from "lucide-react";
 import { useApp } from "@/contexts/AppContext";
 import { nextActions } from "@/lib/nextActions";
 import { track, gaEvent } from "@/lib/analytics";
@@ -18,6 +19,10 @@ import { track, gaEvent } from "@/lib/analytics";
 export function NextActionsCard() {
   const { scanResult, exposure, goToTab, setProtecaoPill } = useApp();
   const { actions, headroom } = nextActions(scanResult, exposure);
+  // Collapsed by default: the home should fit on a screen, and the header
+  // already carries the only thing that has to be seen — that there is
+  // something to do, and what it is worth.
+  const [open, setOpen] = useState(false);
 
   if (actions.length === 0) return null;
 
@@ -33,46 +38,65 @@ export function NextActionsCard() {
 
   return (
     <section className="overflow-hidden rounded-2xl border border-border/60 bg-card shadow-[0_2px_20px_-8px_rgba(30,45,90,0.15)]">
-      <div className="flex items-center justify-between gap-3 px-5 pb-2.5 pt-4">
-        <p className="text-[14.5px] font-bold text-foreground">Próximos passos</p>
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center justify-between gap-3 px-5 py-4 text-left"
+        aria-expanded={open}
+      >
+        <span className="min-w-0">
+          <span className="block text-[14.5px] font-bold text-foreground">
+            Próximos passos
+            <span className="ml-1.5 font-semibold text-muted-foreground">({actions.length})</span>
+          </span>
+        </span>
         {headroom > 0 && (
           <span
             className="inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold"
             style={{ backgroundColor: "rgba(15,169,104,0.12)", color: "#0FA968" }}
           >
-            <TrendingUp className="h-3 w-3" /> até +{headroom} pontos
+            <TrendingUp className="h-3 w-3" /> até +{headroom}
           </span>
         )}
-      </div>
+        <ChevronDown
+          className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`}
+        />
+      </button>
 
-      <ul>
-        {shown.map((a) => (
-          <li key={a.id}>
+      <div
+        className="grid transition-all duration-300"
+        style={{ gridTemplateRows: open ? "1fr" : "0fr" }}
+      >
+        <div className="overflow-hidden">
+          <ul>
+            {shown.map((a) => (
+              <li key={a.id}>
+                <button
+                  onClick={() => go(a.pill, a.id)}
+                  className="flex w-full items-center gap-3 border-t border-border px-5 py-3.5 text-left transition active:bg-secondary/50"
+                >
+                  <span className="min-w-0 flex-1 text-[13.5px] text-foreground">{a.label}</span>
+                  <span
+                    className="shrink-0 text-[12.5px] font-bold"
+                    style={{ color: "var(--color-success)" }}
+                  >
+                    +{a.points}
+                  </span>
+                  <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+                </button>
+              </li>
+            ))}
+          </ul>
+
+          {actions.length > shown.length && (
             <button
-              onClick={() => go(a.pill, a.id)}
-              className="flex w-full items-center gap-3 border-t border-border px-5 py-3.5 text-left transition active:bg-secondary/50"
+              onClick={() => go(shown[0].pill, "ver_todas")}
+              className="w-full border-t border-border px-5 py-3 text-[12.5px] font-semibold text-[var(--color-navy)]"
             >
-              <span className="min-w-0 flex-1 text-[13.5px] text-foreground">{a.label}</span>
-              <span
-                className="shrink-0 text-[12.5px] font-bold"
-                style={{ color: "var(--color-success)" }}
-              >
-                +{a.points}
-              </span>
-              <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+              Ver todas as {actions.length} ações
             </button>
-          </li>
-        ))}
-      </ul>
-
-      {actions.length > shown.length && (
-        <button
-          onClick={() => go(shown[0].pill, "ver_todas")}
-          className="w-full border-t border-border px-5 py-3 text-[12.5px] font-semibold text-[var(--color-navy)]"
-        >
-          Ver todas as {actions.length} ações
-        </button>
-      )}
+          )}
+        </div>
+      </div>
     </section>
   );
 }

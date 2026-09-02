@@ -21,7 +21,12 @@ export type SearchExposureResult = {
 // (reads SERPAPI_KEY). Guarded + budget-limited so it degrades to an empty
 // (not-found) result instead of throwing when unconfigured or over budget.
 export const searchExposure = createServerFn({ method: "POST" })
-  .inputValidator(z.object({ query: z.string(), type: z.enum(["phone", "email", "cpf"]) }))
+  .inputValidator(
+    z.object({
+      query: z.string(),
+      type: z.enum(["phone", "email", "cpf", "name", "username"]),
+    }),
+  )
   .handler(async ({ data }): Promise<SearchExposureResult> => {
     const key = process.env.SERPAPI_KEY;
     if (!data.query.trim() || !key || key.includes("your_key")) {
@@ -45,7 +50,12 @@ export const searchExposure = createServerFn({ method: "POST" })
     if (!hasBudget) return { found: false, count: 0, sources: [], skipped: true };
 
     try {
-      const url = `https://serpapi.com/search.json?q=${encodeURIComponent(`"${data.query}"`)}&api_key=${key}&num=5`;
+      // Identifiers are searched as an exact phrase — a CPF or phone split
+      // across words matches nothing useful. A name or username comes with
+      // context terms (city, platform) that must stay outside the quotes, or
+      // the whole string becomes one phrase that exists nowhere.
+      const q = data.type === "name" || data.type === "username" ? data.query : `"${data.query}"`;
+      const url = `https://serpapi.com/search.json?q=${encodeURIComponent(q)}&api_key=${key}&num=5`;
       const res = await fetch(url);
       const json = (await res.json()) as {
         organic_results?: Array<{ title?: string; link?: string; snippet?: string }>;

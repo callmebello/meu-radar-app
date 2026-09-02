@@ -31,7 +31,10 @@ export function scoreInputsFrom(
   if (!scan) return null;
   const breaches = (scan.hibp?.breaches ?? []) as Breach[];
   const publicHits =
-    (exposure?.cpf?.count ?? 0) + (exposure?.phone?.count ?? 0) + (exposure?.github?.count ?? 0);
+    (exposure?.cpf?.count ?? 0) +
+    (exposure?.phone?.count ?? 0) +
+    (exposure?.github?.count ?? 0) +
+    (exposure?.footprint?.count ?? 0);
 
   return {
     breachCount: scan.breachCount ?? 0,

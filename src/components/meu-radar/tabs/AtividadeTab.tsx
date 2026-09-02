@@ -13,11 +13,9 @@ import {
   Image as ImageIcon,
   Lock,
   Users,
-  Phone,
 } from "lucide-react";
 import { AppHeader } from "../Header";
 import { QrScanner } from "../QrScanner";
-import { PhoneCheck } from "../PhoneCheck";
 import { FamiliaTab } from "./FamiliaTab";
 import { useApp } from "@/contexts/AppContext";
 import { analyzeLink, type LinkResult } from "@/lib/security/link";
@@ -39,15 +37,13 @@ import { getUser } from "@/lib/auth";
  * All three analyses run locally (see lib/security). Nothing typed here is
  * sent anywhere; the history below lives only on this device.
  */
-type Tool = "link" | "pix" | "mensagem" | "telefone" | "familia";
+type Tool = "link" | "pix" | "mensagem" | "familia";
 type Level = "seguro" | "atencao" | "alto";
 
 const TOOLS: { id: Tool; label: string; Icon: typeof Link2 }[] = [
   { id: "link", label: "Link", Icon: Link2 },
   { id: "pix", label: "Pix", Icon: QrCode },
   { id: "mensagem", label: "Mensagem", Icon: MessageSquareText },
-  // The only tool here that costs a paid API call per use — see PhoneCheck.
-  { id: "telefone", label: "Telefone", Icon: Phone },
   { id: "familia", label: "Família", Icon: Users },
 ];
 
@@ -80,7 +76,6 @@ function loadHistory(): HistoryItem[] {
 }
 
 const PLACEHOLDER: Record<Tool, string> = {
-  telefone: "",
   link: "Cole o link aqui (ex: site.com/promocao)",
   pix: "Cole o Pix copia-e-cola aqui",
   mensagem: "Cole a mensagem suspeita aqui",
@@ -88,7 +83,6 @@ const PLACEHOLDER: Record<Tool, string> = {
 };
 
 const HELP: Record<Tool, string> = {
-  telefone: "",
   link: "Analisamos o endereço: domínios que imitam bancos, encurtadores, caracteres disfarçados.",
   pix: "Escaneie o QR ou cole o código antes de pagar: integridade, valor, recebedor e tipo de chave.",
   mensagem: "Procuramos padrões de golpe no texto e verificamos os links que vierem junto.",
@@ -260,9 +254,7 @@ export function AtividadeTab() {
         })}
       </div>
 
-      {tool === "telefone" ? (
-        <PhoneCheck />
-      ) : tool === "familia" ? (
+      {tool === "familia" ? (
         <FamiliaTab embedded />
       ) : (
         <>

@@ -3,6 +3,8 @@ import { AppHeader } from "../Header";
 import { AnimatedScoreGauge } from "../AnimatedScoreGauge";
 import { PaywallLock } from "../PaywallLock";
 import {
+  ChevronRight,
+  ChevronLeft,
   ShieldCheck,
   Fingerprint,
   Mail,
@@ -24,6 +26,8 @@ import { scoreInputsFrom } from "@/lib/scoreInputs";
 import { UpsellBanner, shouldShowUpsell } from "../UpsellBanner";
 import { ProtecaoTrackingCard } from "../ProtecaoTrackingCard";
 import { NextActionsCard } from "../NextActionsCard";
+import { PrivaIdCard } from "../PrivaIdCard";
+import { ShareResultSheet } from "../ShareResultSheet";
 import { IdentityCardSheet, type CardType } from "../IdentityCardSheet";
 
 const levelColor = (l: string) =>
@@ -59,6 +63,8 @@ export function RadarTab() {
   const lastScan =
     typeof window !== "undefined" ? localStorage.getItem("priva_last_scan_at") : null;
   const [bannerVisible, setBannerVisible] = useState(true);
+  const [showId, setShowId] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
   const [cardSheet, setCardSheet] = useState<CardType | null>(null);
   const [pdfBusy, setPdfBusy] = useState(false);
 
@@ -167,60 +173,109 @@ export function RadarTab() {
           </div>
         )}
 
-        {/* Score card */}
-        <section className="rounded-2xl border border-border/60 bg-card p-6 shadow-[0_2px_20px_-8px_rgba(30,45,90,0.15)]">
-          <div
-            className={`flex flex-col items-center text-center ${scanning ? "animate-pulse" : ""}`}
-          >
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Identity Score
-            </p>
-            {scanning ? (
-              <>
-                <p className="mt-6 text-5xl font-extrabold text-muted-foreground">—</p>
-                <p className="mt-6 text-xs text-muted-foreground">verificando...</p>
-              </>
-            ) : score === null ? (
-              /* Never measured. A number here would be a guess, and this is the
-                 one place the whole app is judged on being honest. */
-              <>
-                <p className="mt-6 text-5xl font-extrabold text-muted-foreground">—</p>
-                <p className="mt-4 max-w-[15rem] text-[13px] leading-relaxed text-muted-foreground">
-                  Seu score aparece depois da primeira verificação.
+        {/* Score ⇄ Priva ID. Both live in the same grid cell, so the frame
+            takes the height of the taller one and the two slide across it
+            without the page jumping. */}
+        <div className="relative overflow-hidden rounded-2xl">
+          <div className="grid">
+            <section
+              className="rounded-2xl border border-border/60 bg-card p-6 shadow-[0_2px_20px_-8px_rgba(30,45,90,0.15)] transition-all duration-500 ease-out"
+              style={{
+                gridArea: "1 / 1",
+                transform: showId ? "translateX(-102%)" : "translateX(0)",
+                opacity: showId ? 0 : 1,
+                pointerEvents: showId ? "none" : undefined,
+              }}
+              aria-hidden={showId}
+            >
+              <div
+                className={`flex flex-col items-center text-center ${scanning ? "animate-pulse" : ""}`}
+              >
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Identity Score
                 </p>
-                <button
-                  onClick={openScan}
-                  className="mt-4 rounded-full px-5 py-2.5 text-[13.5px] font-bold text-white transition active:scale-[0.99]"
-                  style={{ background: "linear-gradient(135deg,#4F46E5,#6366F1)" }}
-                >
-                  Fazer scan grátis
-                </button>
-              </>
-            ) : (
-              <>
-                <div className="mt-3 w-full">
-                  <AnimatedScoreGauge score={score} max={100} />
-                </div>
-                {/* The loop made visible: what they did is worth points, and the
+                {scanning ? (
+                  <>
+                    <p className="mt-6 text-5xl font-extrabold text-muted-foreground">—</p>
+                    <p className="mt-6 text-xs text-muted-foreground">verificando...</p>
+                  </>
+                ) : score === null ? (
+                  /* Never measured. A number here would be a guess, and this is the
+                 one place the whole app is judged on being honest. */
+                  <>
+                    <p className="mt-6 text-5xl font-extrabold text-muted-foreground">—</p>
+                    <p className="mt-4 max-w-[15rem] text-[13px] leading-relaxed text-muted-foreground">
+                      Seu score aparece depois da primeira verificação.
+                    </p>
+                    <button
+                      onClick={openScan}
+                      className="mt-4 rounded-full px-5 py-2.5 text-[13.5px] font-bold text-white transition active:scale-[0.99]"
+                      style={{ background: "linear-gradient(135deg,#4F46E5,#6366F1)" }}
+                    >
+                      Fazer scan grátis
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <div className="mt-3 w-full">
+                      <AnimatedScoreGauge score={score} max={100} />
+                    </div>
+                    {/* The loop made visible: what they did is worth points, and the
                     card says how many. Without this the score never moves and
                     there is no reason to resolve anything. */}
-                {result && result.credit > 0 && (
-                  <p
-                    className="mt-3 text-[12.5px] font-semibold"
-                    style={{ color: "var(--color-success)" }}
-                  >
-                    +{result.credit} pelas ações que você concluiu
-                  </p>
+                    {result && result.credit > 0 && (
+                      <p
+                        className="mt-3 text-[12.5px] font-semibold"
+                        style={{ color: "var(--color-success)" }}
+                      >
+                        +{result.credit} pelas ações que você concluiu
+                      </p>
+                    )}
+                    <p className="mt-4 text-xs text-muted-foreground">
+                      {lastScan
+                        ? `Última verificação: ${new Date(lastScan).toLocaleDateString("pt-BR")}`
+                        : "Verificação concluída"}
+                    </p>
+                  </>
                 )}
-                <p className="mt-4 text-xs text-muted-foreground">
-                  {lastScan
-                    ? `Última verificação: ${new Date(lastScan).toLocaleDateString("pt-BR")}`
-                    : "Verificação concluída"}
-                </p>
-              </>
-            )}
+              </div>
+
+              {score !== null && (
+                <button
+                  onClick={() => setShowId(true)}
+                  className="mt-4 flex w-full items-center justify-center gap-1.5 text-[12.5px] font-semibold"
+                  style={{ color: "#4F46E5" }}
+                >
+                  Ver meu Priva ID <ChevronRight className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </section>
+
+            <div
+              className="flex flex-col transition-all duration-500 ease-out"
+              style={{
+                gridArea: "1 / 1",
+                transform: showId ? "translateX(0)" : "translateX(102%)",
+                opacity: showId ? 1 : 0,
+                pointerEvents: showId ? undefined : "none",
+              }}
+              aria-hidden={!showId}
+            >
+              {/* flex-1 so the card fills the frame the score card defines —
+                  the two faces are the same size, as a card should be. */}
+              <div className="flex-1">
+                <PrivaIdCard onShare={() => setShareOpen(true)} />
+              </div>
+              <button
+                onClick={() => setShowId(false)}
+                className="mt-3 flex w-full shrink-0 items-center justify-center gap-1.5 text-[12.5px] font-semibold"
+                style={{ color: "#4F46E5" }}
+              >
+                <ChevronLeft className="h-3.5 w-3.5" /> Voltar ao score
+              </button>
+            </div>
           </div>
-        </section>
+        </div>
 
         {/* The loop, made walkable: score first, then the shortest path to a
             better one. Renders nothing when there is nothing to do. */}
@@ -345,6 +400,15 @@ export function RadarTab() {
       </div>
 
       {cardSheet && <IdentityCardSheet type={cardSheet} onClose={() => setCardSheet(null)} />}
+
+      {/* Shares the headline only — no name, no e-mail, no company names. */}
+      {shareOpen && score !== null && (
+        <ShareResultSheet
+          breachCount={breachCount}
+          score={score}
+          onClose={() => setShareOpen(false)}
+        />
+      )}
     </>
   );
 }
