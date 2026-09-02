@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  AlertCircle,
   BadgeCheck,
   ChevronLeft,
+  CircleDashed,
   Eye,
   EyeOff,
   Fingerprint,
@@ -69,13 +69,16 @@ function cpfDigitsValid(cpf: string): boolean {
  * person merely told us — which is also the only honest distinction here.
  */
 function Seal({ label, verified }: { label: string; verified: boolean }) {
-  const color = verified ? "#0FA968" : "#F59E0B";
+  // Grey, not amber: "informado" is the normal state for most people, and
+  // painting three warnings on a card meant to reassure was noise. Colour now
+  // marks only what we can actually vouch for.
+  const color = verified ? "#0FA968" : "var(--color-muted-foreground)";
   return (
     <div className="flex min-w-0 flex-1 items-center gap-1.5">
       {verified ? (
         <BadgeCheck className="h-4 w-4 shrink-0" style={{ color }} />
       ) : (
-        <AlertCircle className="h-4 w-4 shrink-0" style={{ color }} />
+        <CircleDashed className="h-4 w-4 shrink-0" style={{ color }} />
       )}
       <span className="min-w-0">
         <span className="block truncate text-[12.5px] font-semibold leading-tight text-foreground">
@@ -135,12 +138,24 @@ export function PrivaIdCard({ onShare, onBack }: { onShare?: () => void; onBack?
           "radial-gradient(120% 90% at 88% 16%, rgba(99,102,241,0.11) 0%, rgba(99,102,241,0) 55%), radial-gradient(90% 70% at 10% 94%, rgba(79,70,229,0.07) 0%, rgba(79,70,229,0) 60%)",
       }}
     >
-      {/* Watermark — the app's own icon set, so it reads as ours, not as stock. */}
-      <Fingerprint
-        aria-hidden
-        className="pointer-events-none absolute -right-8 top-4 h-48 w-48 text-[var(--color-navy)] opacity-[0.05]"
-        strokeWidth={0.7}
-      />
+      {/* Watermark — the app's own icon set, so it reads as ours, not as stock.
+          A soft violet streak passes over it, the way light catches a card held
+          at an angle. Kept faint: it should be noticed only on second look. */}
+      <span aria-hidden className="pointer-events-none absolute -right-8 top-4 h-48 w-48">
+        <Fingerprint
+          className="h-full w-full opacity-[0.07]"
+          style={{ color: "#4F46E5" }}
+          strokeWidth={0.7}
+        />
+        <span
+          className="absolute inset-0"
+          style={{
+            background:
+              "linear-gradient(118deg, rgba(139,92,246,0) 26%, rgba(139,92,246,0.20) 44%, rgba(99,102,241,0.10) 53%, rgba(139,92,246,0) 68%)",
+            mixBlendMode: "plus-lighter",
+          }}
+        />
+      </span>
 
       <div className="relative flex items-center justify-between gap-3">
         {/* The wordmark as artwork. Falls back to the type lockup so the card
@@ -223,10 +238,12 @@ export function PrivaIdCard({ onShare, onBack }: { onShare?: () => void; onBack?
         </p>
       )}
 
-      {/* One row instead of two: the "last checked" line lived on the score
-          face already, and repeating it here cost a line on both cards. */}
-      <div className="relative mt-3 flex items-center justify-between gap-3 border-t border-border pt-3">
-        {onBack ? (
+      {/* The flip control sits where its twin sits on the score face — same
+          place, same size — so tapping back feels like undoing the tap that
+          brought you here rather than hunting for a second button. Share is
+          pinned to the right of the same row so it costs no extra line. */}
+      <div className="relative mt-3 flex items-center justify-center">
+        {onBack && (
           <button
             onClick={onBack}
             className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold"
@@ -234,16 +251,15 @@ export function PrivaIdCard({ onShare, onBack }: { onShare?: () => void; onBack?
           >
             <ChevronLeft className="h-3.5 w-3.5" /> Voltar ao score
           </button>
-        ) : (
-          <span />
         )}
         {onShare && (
           <button
             onClick={onShare}
-            className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold"
+            aria-label="Compartilhar"
+            className="absolute right-0 inline-flex items-center gap-1.5 text-[12.5px] font-semibold"
             style={{ color: "#4F46E5" }}
           >
-            Compartilhar <Share2 className="h-3.5 w-3.5" />
+            <Share2 className="h-4 w-4" />
           </button>
         )}
       </div>
