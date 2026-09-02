@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronRight, Target, TrendingUp } from "lucide-react";
+import { ChevronRight, TrendingUp } from "lucide-react";
 import { useApp } from "@/contexts/AppContext";
 import { nextActions } from "@/lib/nextActions";
 import { track, gaEvent } from "@/lib/analytics";
@@ -16,6 +16,33 @@ import { track, gaEvent } from "@/lib/analytics";
  * under the recovery cap, so this never advertises gains the score will refuse
  * to hand over.
  */
+/**
+ * Target with a dart in the bullseye. Lucide has the rings (Target) and a flag
+ * in a circle (Goal), but nothing hitting the mark — so it is drawn here, to
+ * the same 24-grid and 2px round stroke as the rest of the icon set, and it
+ * sits beside them without looking borrowed.
+ */
+function TargetDart({ className, style }: { className?: string; style?: React.CSSProperties }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      style={style}
+      aria-hidden
+    >
+      <circle cx="10.5" cy="13.5" r="8" />
+      <circle cx="10.5" cy="13.5" r="4" />
+      <path d="M10.5 13.5 21 3" />
+      <path d="M16.5 3H21v4.5" />
+    </svg>
+  );
+}
+
 export function NextActionsCard() {
   const { scanResult, exposure, goToTab, setProtecaoPill } = useApp();
   const { actions, headroom } = nextActions(scanResult, exposure);
@@ -47,7 +74,7 @@ export function NextActionsCard() {
           className="grid h-10 w-10 shrink-0 place-items-center rounded-xl"
           style={{ backgroundColor: "rgba(79,70,229,0.10)" }}
         >
-          <Target className="h-[18px] w-[18px]" style={{ color: "#4F46E5" }} />
+          <TargetDart className="h-[18px] w-[18px]" style={{ color: "#4F46E5" }} />
         </span>
 
         <span className="min-w-0 flex-1">
