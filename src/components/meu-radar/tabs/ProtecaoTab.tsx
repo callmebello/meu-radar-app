@@ -4,11 +4,11 @@ import { AppHeader } from "../Header";
 import { CredenciaisTab } from "./CredenciaisTab";
 import { ContasTab } from "./ContasTab";
 import { DarkWebTab } from "./DarkWebTab";
-import { DarkWebScanTab } from "./DarkWebScanTab";
+import { VazamentosTab } from "./VazamentosTab";
 import { UpsellBanner, shouldShowUpsell } from "../UpsellBanner";
 import { useApp } from "@/contexts/AppContext";
 
-type Pill = "credenciais" | "contas" | "exposicao" | "darkweb";
+type Pill = "credenciais" | "contas" | "vazamentos" | "exposicao";
 
 const pills: { id: Pill; label: string }[] = [
   { id: "credenciais", label: "Senhas" },
@@ -16,8 +16,12 @@ const pills: { id: Pill; label: string }[] = [
   // "em breve" occupying a quarter of the navigation. This slot now holds
   // something built from data we already have.
   { id: "contas", label: "Contas" },
-  { id: "exposicao", label: "Vazamentos" },
-  { id: "darkweb", label: "Dark Web" },
+  // Renamed to match what each panel actually holds. "Vazamentos" used to show
+  // public web results while the real breach list sat behind the paywall in
+  // "Dark Web" — someone looking for their leaks found the wrong panel, and was
+  // then asked to pay for data their free scan had already fetched.
+  { id: "vazamentos", label: "Vazamentos" },
+  { id: "exposicao", label: "Exposição" },
 ];
 
 export function ProtecaoTab({ initial = "credenciais" }: { initial?: Pill }) {
@@ -56,8 +60,8 @@ export function ProtecaoTab({ initial = "credenciais" }: { initial?: Pill }) {
       {/* Content */}
       {pill === "credenciais" && <CredenciaisTab />}
       {pill === "contas" && <ContasTab />}
+      {pill === "vazamentos" && <VazamentosTab />}
       {pill === "exposicao" && <DarkWebTab />}
-      {pill === "darkweb" && <DarkWebScanTab />}
 
       {/* Incident Mode entry — pushed to the bottom: it's the "if something bad
           happened" escape hatch, rarely used, so it stays out of the noble area
