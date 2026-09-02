@@ -27,6 +27,7 @@ import { track, gaEvent } from "@/lib/analytics";
 import { useIsDark } from "@/hooks/use-is-dark";
 import { ShareResultSheet } from "@/components/meu-radar/ShareResultSheet";
 import { computeScore, riskLevel } from "@/lib/riskScore";
+import { resolvedCounts } from "@/lib/actions";
 import {
   displayName,
   logoOf,
@@ -90,7 +91,7 @@ function clarityTag(key: string, value: string) {
 }
 
 /** Maps a score factor to its icon, keeping lib/riskScore free of UI imports. */
-const FACTOR_ICON = { eye: Eye, key: KeyRound, clock: Clock, globe: Globe } as const;
+const FACTOR_ICON = { eye: Eye, key: KeyRound, clock: Clock, globe: Globe, check: Check } as const;
 
 /** The four data types we can state something about, with their own icon. */
 const DATA_TYPES = [
@@ -180,6 +181,9 @@ function RelatorioPage() {
         passwordExposed: counts["Senha"] > 0,
         recent,
         publicHits,
+        // Same ledger the dashboard reads, so the two screens never show
+        // different scores for the same person.
+        resolved: resolvedCounts(),
       }),
     [breachCount, counts, recent, publicHits],
   );
@@ -622,8 +626,13 @@ function RelatorioPage() {
                     })()}
                   </span>
                   <span className="min-w-0 flex-1 text-[13.5px] text-foreground">{f.label}</span>
-                  <span className="shrink-0 text-[15px] font-bold" style={{ color: risk.color }}>
-                    −{f.weight}
+                  {/* A negative weight is a credit — points the person earned
+                      back by resolving something, shown as a gain, not a loss. */}
+                  <span
+                    className="shrink-0 text-[15px] font-bold"
+                    style={{ color: f.weight < 0 ? "var(--color-success)" : risk.color }}
+                  >
+                    {f.weight < 0 ? `+${-f.weight}` : `−${f.weight}`}
                   </span>
                 </li>
               ))}

@@ -2,17 +2,20 @@ import { useState } from "react";
 import { LifeBuoy, ChevronRight } from "lucide-react";
 import { AppHeader } from "../Header";
 import { CredenciaisTab } from "./CredenciaisTab";
-import { ScoreTab } from "./ScoreTab";
+import { ContasTab } from "./ContasTab";
 import { DarkWebTab } from "./DarkWebTab";
 import { DarkWebScanTab } from "./DarkWebScanTab";
 import { UpsellBanner, shouldShowUpsell } from "../UpsellBanner";
 import { useApp } from "@/contexts/AppContext";
 
-type Pill = "credenciais" | "score" | "exposicao" | "darkweb";
+type Pill = "credenciais" | "contas" | "exposicao" | "darkweb";
 
 const pills: { id: Pill; label: string }[] = [
   { id: "credenciais", label: "Senhas" },
-  { id: "score", label: "Score" },
+  // "Contas" replaced the credit-score panel, which was an honest but empty
+  // "em breve" occupying a quarter of the navigation. This slot now holds
+  // something built from data we already have.
+  { id: "contas", label: "Contas" },
   { id: "exposicao", label: "Vazamentos" },
   { id: "darkweb", label: "Dark Web" },
 ];
@@ -52,7 +55,7 @@ export function ProtecaoTab({ initial = "credenciais" }: { initial?: Pill }) {
 
       {/* Content */}
       {pill === "credenciais" && <CredenciaisTab />}
-      {pill === "score" && <ScoreTab />}
+      {pill === "contas" && <ContasTab />}
       {pill === "exposicao" && <DarkWebTab />}
       {pill === "darkweb" && <DarkWebScanTab />}
 

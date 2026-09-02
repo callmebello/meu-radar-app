@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as VerificarLinkRouteImport } from './routes/verificar-link'
 import { Route as TermosRouteImport } from './routes/termos'
 import { Route as RelatorioRouteImport } from './routes/relatorio'
 import { Route as PrivacidadeRouteImport } from './routes/privacidade'
@@ -17,6 +18,11 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
 import { Route as AdminRemovalRouteImport } from './routes/admin/removal'
 
+const VerificarLinkRoute = VerificarLinkRouteImport.update({
+  id: '/verificar-link',
+  path: '/verificar-link',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TermosRoute = TermosRouteImport.update({
   id: '/termos',
   path: '/termos',
@@ -59,6 +65,7 @@ export interface FileRoutesByFullPath {
   '/privacidade': typeof PrivacidadeRoute
   '/relatorio': typeof RelatorioRoute
   '/termos': typeof TermosRoute
+  '/verificar-link': typeof VerificarLinkRoute
   '/admin/removal': typeof AdminRemovalRoute
   '/auth/callback': typeof AuthCallbackRoute
 }
@@ -68,6 +75,7 @@ export interface FileRoutesByTo {
   '/privacidade': typeof PrivacidadeRoute
   '/relatorio': typeof RelatorioRoute
   '/termos': typeof TermosRoute
+  '/verificar-link': typeof VerificarLinkRoute
   '/admin/removal': typeof AdminRemovalRoute
   '/auth/callback': typeof AuthCallbackRoute
 }
@@ -78,6 +86,7 @@ export interface FileRoutesById {
   '/privacidade': typeof PrivacidadeRoute
   '/relatorio': typeof RelatorioRoute
   '/termos': typeof TermosRoute
+  '/verificar-link': typeof VerificarLinkRoute
   '/admin/removal': typeof AdminRemovalRoute
   '/auth/callback': typeof AuthCallbackRoute
 }
@@ -89,6 +98,7 @@ export interface FileRouteTypes {
     | '/privacidade'
     | '/relatorio'
     | '/termos'
+    | '/verificar-link'
     | '/admin/removal'
     | '/auth/callback'
   fileRoutesByTo: FileRoutesByTo
@@ -98,6 +108,7 @@ export interface FileRouteTypes {
     | '/privacidade'
     | '/relatorio'
     | '/termos'
+    | '/verificar-link'
     | '/admin/removal'
     | '/auth/callback'
   id:
@@ -107,6 +118,7 @@ export interface FileRouteTypes {
     | '/privacidade'
     | '/relatorio'
     | '/termos'
+    | '/verificar-link'
     | '/admin/removal'
     | '/auth/callback'
   fileRoutesById: FileRoutesById
@@ -117,12 +129,20 @@ export interface RootRouteChildren {
   PrivacidadeRoute: typeof PrivacidadeRoute
   RelatorioRoute: typeof RelatorioRoute
   TermosRoute: typeof TermosRoute
+  VerificarLinkRoute: typeof VerificarLinkRoute
   AdminRemovalRoute: typeof AdminRemovalRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/verificar-link': {
+      id: '/verificar-link'
+      path: '/verificar-link'
+      fullPath: '/verificar-link'
+      preLoaderRoute: typeof VerificarLinkRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/termos': {
       id: '/termos'
       path: '/termos'
@@ -181,6 +201,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacidadeRoute: PrivacidadeRoute,
   RelatorioRoute: RelatorioRoute,
   TermosRoute: TermosRoute,
+  VerificarLinkRoute: VerificarLinkRoute,
   AdminRemovalRoute: AdminRemovalRoute,
   AuthCallbackRoute: AuthCallbackRoute,
 }

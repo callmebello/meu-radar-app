@@ -71,6 +71,11 @@ function Index() {
   const [signedIn, setSignedIn] = useState(false);
   useEffect(() => {
     setSignedIn(localStorage.getItem("priva_signed_in") === "true");
+    // A scan on file means this person has been here before. hasScanned lived
+    // only in memory, so someone who scanned yesterday reopened the app and got
+    // the funnel landing again instead of their own dashboard — the returning
+    // user was treated as a new lead, which is the opposite of retention.
+    if (localStorage.getItem("priva_scan_result")) setHasScanned(true);
     // Shared into the app from another app (Web Share Target, Android PWA):
     // land straight on the verification tools with the content ready.
     if (new URLSearchParams(window.location.search).get("verificar")) setTab("atividade");
@@ -164,6 +169,13 @@ function Index() {
 
     // initial result-sheet count from the mock; HIBP refines it below
     setScanResult({ breachCount, hibp: null });
+    // Real timestamp for "última verificação" — the dashboard printed a
+    // hardcoded "hoje" regardless of when the scan actually ran.
+    try {
+      localStorage.setItem("priva_last_scan_at", new Date().toISOString());
+    } catch {
+      /* ignore */
+    }
 
     void userP.then((u) => {
       if (u?.userId) {
