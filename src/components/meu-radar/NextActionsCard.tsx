@@ -35,10 +35,11 @@ function TargetDart({ className, style }: { className?: string; style?: React.CS
       style={style}
       aria-hidden
     >
-      <circle cx="10.5" cy="13.5" r="8" />
-      <circle cx="10.5" cy="13.5" r="4" />
-      <path d="M10.5 13.5 21 3" />
-      <path d="M16.5 3H21v4.5" />
+      <circle cx="10" cy="14" r="7.5" />
+      <circle cx="10" cy="14" r="4" />
+      <circle cx="10" cy="14" r="0.6" fill="currentColor" stroke="none" />
+      <path d="m10 14 8.5-8.5" />
+      <path d="M14.5 4.5h5v5" />
     </svg>
   );
 }

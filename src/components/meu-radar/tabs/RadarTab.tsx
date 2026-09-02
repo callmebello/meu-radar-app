@@ -9,16 +9,13 @@ import {
   Fingerprint,
   Mail,
   Phone,
-  MapPin,
   X,
-  Lock,
   Trash2,
   Download,
   Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useApp } from "@/contexts/AppContext";
-import { startCheckout } from "@/lib/checkout";
 import { generateRelatorioPdf } from "@/lib/api/generateRelatorio.functions";
 import { track } from "@/lib/analytics";
 import { computeScore } from "@/lib/riskScore";
@@ -36,17 +33,14 @@ const levelColor = (l: string) =>
       ? "var(--color-warning)"
       : "var(--color-success)";
 
-type DashCard =
-  | {
-      kind: "card";
-      icon: typeof Mail;
-      label: string;
-      type: CardType;
-      status: string;
-      level: string;
-      sub?: string;
-    }
-  | { kind: "upsell"; icon: typeof Mail; label: string; title: string; subtitle: string };
+type DashCard = {
+  kind: "card";
+  icon: typeof Mail;
+  label: string;
+  type: CardType;
+  status: string;
+  level: string;
+};
 
 export function RadarTab() {
   const { isPremium, goToTab, hasChecked, scanning, scanResult, exposure, openScan } = useApp();
@@ -104,6 +98,13 @@ export function RadarTab() {
   // Real occurrence count: e-mail breaches (HIBP) + public exposure (web + GitHub).
   const occurrences =
     breachCount + (cpfEx?.count ?? 0) + (phoneEx?.count ?? 0) + (exposure?.github?.count ?? 0);
+  // One sentence for every clean card. Three different ways of saying "nothing
+  // found" made the grid read as three different findings, and "Continuamos
+  // monitorando" repeated the promise of the whole product on every tile,
+  // costing two lines each.
+  const CLEAN = "Nenhuma exposição encontrada";
+  const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+
   const cards: DashCard[] = [
     {
       kind: "card",
@@ -111,10 +112,9 @@ export function RadarTab() {
       label: "CPF",
       type: "cpf",
       status: cpfEx?.found
-        ? `Encontrado em ${cpfEx.count} resultado(s) público(s)`
-        : "Nenhuma exposição pública direta",
+        ? `Encontrado em ${plural(cpfEx.count, "resultado público", "resultados públicos")}`
+        : CLEAN,
       level: cpfEx?.found ? "danger" : "success",
-      sub: cpfEx?.found ? undefined : "Continuamos monitorando",
     },
     {
       kind: "card",
@@ -122,7 +122,9 @@ export function RadarTab() {
       label: "E-mail",
       type: "email",
       status:
-        breachCount > 0 ? `${breachCount} vazamento(s) detectado(s)` : "Nenhum vazamento detectado",
+        breachCount > 0
+          ? `${plural(breachCount, "vazamento detectado", "vazamentos detectados")}`
+          : CLEAN,
       level: breachCount > 0 ? "danger" : "success",
     },
     {
@@ -131,16 +133,9 @@ export function RadarTab() {
       label: "Telefone",
       type: "telefone",
       status: phoneEx?.found
-        ? `Encontrado em ${phoneEx.count} resultado(s) público(s)`
-        : "Não encontrado em buscas públicas",
+        ? `Encontrado em ${plural(phoneEx.count, "resultado público", "resultados públicos")}`
+        : CLEAN,
       level: phoneEx?.found ? "warning" : "success",
-    },
-    {
-      kind: "upsell",
-      icon: MapPin,
-      label: "Endereço",
-      title: "Verificação de endereço",
-      subtitle: "Disponível no plano Proteção Total",
     },
   ];
 
@@ -324,35 +319,6 @@ export function RadarTab() {
               : cards.map((it) => {
                   const Icon = it.icon;
 
-                  // Endereço — genuine upsell (no free CPF↔address source), not fake data.
-                  if (it.kind === "upsell") {
-                    return (
-                      <div
-                        key={it.label}
-                        role="button"
-                        tabIndex={0}
-                        onClick={() => {
-                          void startCheckout("protecao_total");
-                        }}
-                        className="cursor-pointer rounded-2xl border border-border/60 bg-card p-4 text-left shadow-sm transition-all duration-200 active:scale-[0.98]"
-                      >
-                        <div className="flex items-start justify-between">
-                          <span className="grid h-9 w-9 place-items-center rounded-lg bg-secondary">
-                            <Icon className="h-4 w-4 text-foreground" />
-                          </span>
-                          <Lock className="h-3.5 w-3.5 text-muted-foreground" />
-                        </div>
-                        <p className="mt-3 text-sm font-semibold text-foreground">{it.label}</p>
-                        <p className="mt-0.5 text-[11px] leading-tight text-muted-foreground">
-                          {it.title}
-                        </p>
-                        <p className="text-[11px] leading-tight text-[var(--color-navy)]">
-                          {it.subtitle}
-                        </p>
-                      </div>
-                    );
-                  }
-
                   const color = levelColor(it.level);
                   return (
                     <div
@@ -377,11 +343,6 @@ export function RadarTab() {
                           <p className="mt-0.5 text-[11px] leading-tight text-muted-foreground">
                             {it.status}
                           </p>
-                          {it.sub && (
-                            <p className="text-[11px] leading-tight text-muted-foreground/70">
-                              {it.sub}
-                            </p>
-                          )}
                         </>
                       ) : (
                         <div className="mt-1">
