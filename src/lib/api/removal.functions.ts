@@ -15,7 +15,8 @@ function newCaseId(): string {
   return `PV-${ym}-${rnd}`;
 }
 
-const fmtDate = (d: Date) => d.toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
+const fmtDate = (d: Date) =>
+  d.toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
 const addDays = (n: number) => {
   const d = new Date();
   d.setDate(d.getDate() + n);
@@ -41,7 +42,10 @@ function internalEmail(p: {
     ["Fontes a remover", p.sources.join(", ") || "—"],
     ["Data/hora", new Date().toLocaleString("pt-BR")],
   ]
-    .map(([k, v]) => `<tr><td style="padding:4px 10px;color:#666;">${k}</td><td style="padding:4px 10px;font-weight:600;">${v}</td></tr>`)
+    .map(
+      ([k, v]) =>
+        `<tr><td style="padding:4px 10px;color:#666;">${k}</td><td style="padding:4px 10px;font-weight:600;">${v}</td></tr>`,
+    )
     .join("");
   return {
     subject: `🔔 Novo caso de remoção — ${p.caseId}`,
@@ -81,61 +85,74 @@ export const createRemovalRequest = createServerFn({ method: "POST" })
       authorizationText: z.string().min(1),
     }),
   )
-  .handler(async ({ data }): Promise<{ ok: boolean; caseId?: string; status?: string; reason?: string }> => {
-    const admin = getSupabaseAdmin();
-    if (!admin) return { ok: false, reason: "not_configured" };
+  .handler(
+    async ({
+      data,
+    }): Promise<{ ok: boolean; caseId?: string; status?: string; reason?: string }> => {
+      const admin = getSupabaseAdmin();
+      if (!admin) return { ok: false, reason: "not_configured" };
 
-    let uid = data.userId ?? null;
-    if (!uid) {
-      const { data: u } = await admin.from("users").select("id").eq("email", data.email).maybeSingle();
-      uid = (u?.id as string) ?? null;
-    }
+      let uid = data.userId ?? null;
+      if (!uid) {
+        const { data: u } = await admin
+          .from("users")
+          .select("id")
+          .eq("email", data.email)
+          .maybeSingle();
+        uid = (u?.id as string) ?? null;
+      }
 
-    // Insert with a unique case_id (retry once on the rare collision).
-    let caseId = newCaseId();
-    let inserted = false;
-    for (let attempt = 0; attempt < 2 && !inserted; attempt++) {
-      const { error } = await admin.from("removal_requests").insert({
-        user_id: uid,
-        case_id: caseId,
-        full_name: data.fullName,
-        cpf: data.cpf,
-        phone: data.phone,
-        birth_date: data.birthDate,
-        address: data.address ?? null,
-        confirmed_data: data.confirmedData ?? null,
-        sources_to_remove: data.sourcesToRemove,
-        authorization_text: data.authorizationText,
-        status: "pending",
-      });
-      if (!error) inserted = true;
-      else if (error.code === "23505") caseId = newCaseId(); // unique violation → retry
-      else return { ok: false, reason: error.message };
-    }
-    if (!inserted) return { ok: false, reason: "insert_failed" };
+      // Insert with a unique case_id (retry once on the rare collision).
+      let caseId = newCaseId();
+      let inserted = false;
+      for (let attempt = 0; attempt < 2 && !inserted; attempt++) {
+        const { error } = await admin.from("removal_requests").insert({
+          user_id: uid,
+          case_id: caseId,
+          full_name: data.fullName,
+          cpf: data.cpf,
+          phone: data.phone,
+          birth_date: data.birthDate,
+          address: data.address ?? null,
+          confirmed_data: data.confirmedData ?? null,
+          sources_to_remove: data.sourcesToRemove,
+          authorization_text: data.authorizationText,
+          status: "pending",
+        });
+        if (!error) inserted = true;
+        else if (error.code === "23505")
+          caseId = newCaseId(); // unique violation → retry
+        else return { ok: false, reason: error.message };
+      }
+      if (!inserted) return { ok: false, reason: "insert_failed" };
 
-    // E-mails (best-effort — never fail the flow on mail issues).
-    try {
-      const { sendEmail } = await import("../email.server");
-      const internal = internalEmail({
-        caseId,
-        fullName: data.fullName,
-        email: data.email,
-        cpf: data.cpf,
-        phone: data.phone,
-        birthDate: data.birthDate,
-        sources: data.sourcesToRemove,
-      });
-      await sendEmail({ to: ADMIN_EMAIL, subject: internal.subject, html: internal.html, text: internal.text });
+      // E-mails (best-effort — never fail the flow on mail issues).
+      try {
+        const { sendEmail } = await import("../email.server");
+        const internal = internalEmail({
+          caseId,
+          fullName: data.fullName,
+          email: data.email,
+          cpf: data.cpf,
+          phone: data.phone,
+          birthDate: data.birthDate,
+          sources: data.sourcesToRemove,
+        });
+        await sendEmail({
+          to: ADMIN_EMAIL,
+          subject: internal.subject,
+          html: internal.html,
+          text: internal.text,
+        });
 
-      const first = data.fullName.trim().split(/\s+/)[0] || "";
-      const n = data.sourcesToRemove.length;
-      await sendEmail({
-        to: data.email,
-        subject: `Priva: sua solicitação foi recebida ✓ — Caso ${caseId}`,
-        html: shell(
-          "Solicitação recebida ✓",
-          `<p>Olá, <strong style="color:#fff;">${first}</strong>.</p>
+        const first = data.fullName.trim().split(/\s+/)[0] || "";
+        const n = data.sourcesToRemove.length;
+        await sendEmail({
+          to: data.email,
+          subject: `Priva: sua solicitação foi recebida ✓ — Caso ${caseId}`,
+          html: shell(
+            "Solicitação recebida ✓",
+            `<p>Olá, <strong style="color:#fff;">${first}</strong>.</p>
            <p>Recebemos sua solicitação de remoção de dados e nossa equipe já está trabalhando no seu caso.</p>
            <p style="background:#1a1a2e;border-radius:10px;padding:14px;">
              📋 <strong style="color:#fff;">Caso:</strong> ${caseId}<br/>
@@ -145,26 +162,38 @@ export const createRemovalRequest = createServerFn({ method: "POST" })
            <p>Identificamos <strong style="color:#fff;">${n}</strong> fontes onde seus dados aparecem. Enviaremos a solicitação formal nas próximas 48 horas.</p>
            <p>Você receberá atualizações por e-mail.</p>
            <p style="margin-top:18px;">— Equipe Priva<br/><span style="color:#8a8a99;">contato@privaapp.com.br</span></p>`,
-        ),
-      });
-    } catch {
-      /* ignore mail errors */
-    }
+          ),
+        });
+      } catch {
+        /* ignore mail errors */
+      }
 
-    return { ok: true, caseId, status: "pending" };
-  });
+      return { ok: true, caseId, status: "pending" };
+    },
+  );
 
 export const getRemovalRequest = createServerFn({ method: "POST" })
   .inputValidator(z.object({ userId: z.string().nullish(), email: z.string().email().nullish() }))
   .handler(
     async ({
       data,
-    }): Promise<{ found: boolean; caseId?: string; status?: string; createdAt?: string; updatedAt?: string; sources?: string[] }> => {
+    }): Promise<{
+      found: boolean;
+      caseId?: string;
+      status?: string;
+      createdAt?: string;
+      updatedAt?: string;
+      sources?: string[];
+    }> => {
       const admin = getSupabaseAdmin();
       if (!admin) return { found: false };
       let uid = data.userId ?? null;
       if (!uid && data.email) {
-        const { data: u } = await admin.from("users").select("id").eq("email", data.email).maybeSingle();
+        const { data: u } = await admin
+          .from("users")
+          .select("id")
+          .eq("email", data.email)
+          .maybeSingle();
         uid = (u?.id as string) ?? null;
       }
       if (!uid) return { found: false };
@@ -213,7 +242,12 @@ export const listRemovalRequests = createServerFn({ method: "POST" })
   });
 
 export const updateRemovalStatus = createServerFn({ method: "POST" })
-  .inputValidator(z.object({ id: z.string(), status: z.enum(["pending", "sent", "waiting", "resolved", "escalated"]) }))
+  .inputValidator(
+    z.object({
+      id: z.string(),
+      status: z.enum(["pending", "sent", "waiting", "resolved", "escalated"]),
+    }),
+  )
   .handler(async ({ data }): Promise<{ ok: boolean; reason?: string }> => {
     const admin = getSupabaseAdmin();
     if (!admin) return { ok: false, reason: "not_configured" };
@@ -234,7 +268,11 @@ export const updateRemovalStatus = createServerFn({ method: "POST" })
     // Notify the user on the two milestones.
     if (data.status === "sent" || data.status === "resolved") {
       try {
-        const { data: u } = await admin.from("users").select("email").eq("id", row.user_id).maybeSingle();
+        const { data: u } = await admin
+          .from("users")
+          .select("email")
+          .eq("id", row.user_id)
+          .maybeSingle();
         const email = u?.email as string | undefined;
         const sources = ((row.sources_to_remove as string[]) ?? []).slice(0, 8).join(", ");
         const caseId = row.case_id as string;
@@ -269,4 +307,168 @@ export const updateRemovalStatus = createServerFn({ method: "POST" })
       }
     }
     return { ok: true };
+  });
+
+/**
+ * Per-source removal tracking.
+ *
+ * The case model is one case per user holding many sources, which matches how
+ * the letters are actually sent (our team, by hand, in batches). What was
+ * missing is per-source state: the dashboard could only say "seu caso está
+ * enviado", so someone with eight companies saw one line and had nothing to
+ * come back for. Status now lives on each source.
+ *
+ * Legacy rows stored plain strings; both shapes are read.
+ */
+export type SourceStatus = "pending" | "sent" | "waiting" | "resolved" | "refused";
+export type RemovalSource = { source: string; status: SourceStatus; at: string };
+
+function normalizeSources(raw: unknown): RemovalSource[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.map((s) =>
+    typeof s === "string"
+      ? { source: s, status: "pending" as SourceStatus, at: new Date().toISOString() }
+      : {
+          source: String((s as RemovalSource).source ?? ""),
+          status: ((s as RemovalSource).status ?? "pending") as SourceStatus,
+          at: String((s as RemovalSource).at ?? new Date().toISOString()),
+        },
+  );
+}
+
+async function resolveUid(
+  admin: NonNullable<ReturnType<typeof getSupabaseAdmin>>,
+  userId?: string | null,
+  email?: string | null,
+): Promise<string | null> {
+  if (userId) return userId;
+  if (!email) return null;
+  const { data } = await admin.from("users").select("id").eq("email", email).maybeSingle();
+  return (data?.id as string) ?? null;
+}
+
+export const getRemovalCase = createServerFn({ method: "POST" })
+  .inputValidator(z.object({ userId: z.string().nullish(), email: z.string().email().nullish() }))
+  .handler(
+    async ({
+      data,
+    }): Promise<{
+      found: boolean;
+      caseId?: string;
+      createdAt?: string;
+      sources: RemovalSource[];
+    }> => {
+      const admin = getSupabaseAdmin();
+      if (!admin) return { found: false, sources: [] };
+      const uid = await resolveUid(admin, data.userId, data.email);
+      if (!uid) return { found: false, sources: [] };
+      const { data: row } = await admin
+        .from("removal_requests")
+        .select("case_id, created_at, sources_to_remove")
+        .eq("user_id", uid)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (!row) return { found: false, sources: [] };
+      return {
+        found: true,
+        caseId: row.case_id as string,
+        createdAt: row.created_at as string,
+        sources: normalizeSources(row.sources_to_remove),
+      };
+    },
+  );
+
+/**
+ * Adds one company to the person's open case.
+ *
+ * It does NOT send anything: the letter goes out from our side, so the row is
+ * a queue entry and the copy must promise exactly that. The admin notice is
+ * what actually triggers the work.
+ */
+export const addRemovalSource = createServerFn({ method: "POST" })
+  .inputValidator(
+    z.object({
+      userId: z.string().nullish(),
+      email: z.string().email(),
+      source: z.string().min(1),
+    }),
+  )
+  .handler(
+    async ({ data }): Promise<{ ok: boolean; sources?: RemovalSource[]; reason?: string }> => {
+      const admin = getSupabaseAdmin();
+      if (!admin) return { ok: false, reason: "not_configured" };
+      const uid = await resolveUid(admin, data.userId, data.email);
+      if (!uid) return { ok: false, reason: "user_not_found" };
+
+      const { data: row } = await admin
+        .from("removal_requests")
+        .select("id, case_id, sources_to_remove")
+        .eq("user_id", uid)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (!row) return { ok: false, reason: "no_case" };
+
+      const sources = normalizeSources(row.sources_to_remove);
+      const already = sources.some((s) => s.source.toLowerCase() === data.source.toLowerCase());
+      if (already) return { ok: true, sources };
+
+      const next = [
+        ...sources,
+        { source: data.source, status: "pending" as SourceStatus, at: new Date().toISOString() },
+      ];
+      const { error } = await admin
+        .from("removal_requests")
+        .update({ sources_to_remove: next, updated_at: new Date().toISOString() })
+        .eq("id", row.id as string);
+      if (error) return { ok: false, reason: error.message };
+
+      try {
+        const { sendEmail } = await import("../email.server");
+        await sendEmail({
+          to: ADMIN_EMAIL,
+          subject: `➕ Nova fonte no caso ${row.case_id} — ${data.source}`,
+          html: `<div style="font-family:Arial,sans-serif;font-size:14px;">
+          <p>O usuário <strong>${data.email}</strong> adicionou uma fonte ao caso <strong>${row.case_id}</strong>.</p>
+          <p>Fonte: <strong>${data.source}</strong></p>
+          <p>Ação: enviar solicitação LGPD a essa empresa.</p></div>`,
+          text: `Caso ${row.case_id}: nova fonte ${data.source} (usuário ${data.email}).`,
+        });
+      } catch {
+        /* ignore mail errors */
+      }
+
+      return { ok: true, sources: next };
+    },
+  );
+
+/** Admin: moves one source of a case to a new status. */
+export const setRemovalSourceStatus = createServerFn({ method: "POST" })
+  .inputValidator(
+    z.object({
+      caseId: z.string().min(1),
+      source: z.string().min(1),
+      status: z.enum(["pending", "sent", "waiting", "resolved", "refused"]),
+    }),
+  )
+  .handler(async ({ data }): Promise<{ ok: boolean; reason?: string }> => {
+    const admin = getSupabaseAdmin();
+    if (!admin) return { ok: false, reason: "not_configured" };
+    const { data: row } = await admin
+      .from("removal_requests")
+      .select("id, sources_to_remove")
+      .eq("case_id", data.caseId)
+      .maybeSingle();
+    if (!row) return { ok: false, reason: "case_not_found" };
+    const next = normalizeSources(row.sources_to_remove).map((s) =>
+      s.source.toLowerCase() === data.source.toLowerCase()
+        ? { ...s, status: data.status, at: new Date().toISOString() }
+        : s,
+    );
+    const { error } = await admin
+      .from("removal_requests")
+      .update({ sources_to_remove: next, updated_at: new Date().toISOString() })
+      .eq("id", row.id as string);
+    return error ? { ok: false, reason: error.message } : { ok: true };
   });

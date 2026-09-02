@@ -5,10 +5,11 @@ import { CredenciaisTab } from "./CredenciaisTab";
 import { ContasTab } from "./ContasTab";
 import { DarkWebTab } from "./DarkWebTab";
 import { VazamentosTab } from "./VazamentosTab";
+import { RemocaoTab } from "./RemocaoTab";
 import { UpsellBanner, shouldShowUpsell } from "../UpsellBanner";
 import { useApp } from "@/contexts/AppContext";
 
-type Pill = "credenciais" | "contas" | "vazamentos" | "exposicao";
+type Pill = "credenciais" | "contas" | "vazamentos" | "exposicao" | "remocao";
 
 const pills: { id: Pill; label: string }[] = [
   { id: "credenciais", label: "Senhas" },
@@ -22,6 +23,7 @@ const pills: { id: Pill; label: string }[] = [
   // then asked to pay for data their free scan had already fetched.
   { id: "vazamentos", label: "Vazamentos" },
   { id: "exposicao", label: "Exposição" },
+  { id: "remocao", label: "Remoção" },
 ];
 
 export function ProtecaoTab({ initial = "credenciais" }: { initial?: Pill }) {
@@ -47,14 +49,16 @@ export function ProtecaoTab({ initial = "credenciais" }: { initial?: Pill }) {
       )}
 
       {/* Segmented control — the everyday tools sit in the noble area, up top. */}
-      <div className="mx-5 mt-4 flex gap-1 rounded-full border border-border bg-secondary/40 p-1">
+      {/* Scrolls instead of shrinking: five labels squeezed into 375px would
+          drop the type below legibility, and more tools are coming. */}
+      <div className="mx-5 mt-4 flex gap-1 overflow-x-auto rounded-full border border-border bg-secondary/40 p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {pills.map((p) => {
           const isActive = pill === p.id;
           return (
             <button
               key={p.id}
               onClick={() => setPill(p.id)}
-              className={`flex-1 rounded-full px-1 py-1.5 text-[13px] font-medium transition ${
+              className={`shrink-0 grow rounded-full px-3 py-1.5 text-[13px] font-medium whitespace-nowrap transition ${
                 isActive ? "text-white" : "text-muted-foreground"
               }`}
               style={isActive ? { backgroundColor: "#4F46E5" } : undefined}
@@ -70,6 +74,7 @@ export function ProtecaoTab({ initial = "credenciais" }: { initial?: Pill }) {
       {pill === "contas" && <ContasTab />}
       {pill === "vazamentos" && <VazamentosTab />}
       {pill === "exposicao" && <DarkWebTab />}
+      {pill === "remocao" && <RemocaoTab />}
 
       {/* Incident Mode entry — pushed to the bottom: it's the "if something bad
           happened" escape hatch, rarely used, so it stays out of the noble area

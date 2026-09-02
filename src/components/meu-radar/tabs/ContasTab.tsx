@@ -4,6 +4,8 @@ import { useApp } from "@/contexts/AppContext";
 import { recognisableCompanies, displayName, logoOf, type Breach } from "@/lib/breaches";
 import { hasAction, recordAction, undoAction } from "@/lib/actions";
 import { track, gaEvent } from "@/lib/analytics";
+import { addRemovalSource } from "@/lib/api/removal.functions";
+import { getEmail } from "@/lib/identity";
 
 /**
  * Contas esquecidas.
@@ -72,6 +74,31 @@ export function ContasTab() {
   const [kept, setKept] = useState<Set<string>>(() => readKept());
   const [closed, setClosed] = useState<Set<string>>(new Set());
   const [sheet, setSheet] = useState<Breach | null>(null);
+  const [requesting, setRequesting] = useState(false);
+
+  // Subscriber path: the company joins their open case and our team is told.
+  // Nothing is sent from the browser — the letter goes out from our side.
+  const requestRemoval = async (b: Breach) => {
+    const email = getEmail();
+    if (!email) return;
+    setRequesting(true);
+    try {
+      await addRemovalSource({
+        data: {
+          userId: localStorage.getItem("priva_user_id"),
+          email,
+          source: displayName(b),
+        },
+      });
+      recordAction("removal_requested", keyOf(b));
+      track("RemovalRequested");
+      gaEvent("removal_requested", { source: keyOf(b) });
+    } catch {
+      /* best-effort — the person can try again from the same sheet */
+    }
+    setRequesting(false);
+    setSheet(null);
+  };
 
   const companies = useMemo(() => {
     const breaches = (scanResult?.hibp?.breaches ?? []) as Breach[];
@@ -269,18 +296,25 @@ export function ContasTab() {
                 <Search className="h-4 w-4" /> Como excluir a conta
               </a>
 
-              {!isPremium && (
-                <button
-                  onClick={() => {
-                    setSheet(null);
-                    openPaywall();
-                  }}
-                  className="flex w-full items-center justify-center gap-2 rounded-2xl py-3 text-[14px] font-bold text-white transition active:scale-[0.99]"
-                  style={{ background: "linear-gradient(135deg,#4F46E5,#6366F1)" }}
-                >
-                  <ShieldCheck className="h-4 w-4" /> A Priva pede a remoção por você
-                </button>
-              )}
+              {/* For a subscriber this is a real request: it goes on their case
+                  and notifies the team that sends the letter. For everyone else
+                  it is the offer. Either way the copy promises only what
+                  happens — we ask, the company answers or does not. */}
+              <button
+                onClick={() =>
+                  isPremium ? requestRemoval(sheet) : (setSheet(null), openPaywall())
+                }
+                disabled={requesting}
+                className="flex w-full items-center justify-center gap-2 rounded-2xl py-3 text-[14px] font-bold text-white transition active:scale-[0.99] disabled:opacity-60"
+                style={{ background: "linear-gradient(135deg,#4F46E5,#6366F1)" }}
+              >
+                <ShieldCheck className="h-4 w-4" />
+                {requesting
+                  ? "Enviando..."
+                  : isPremium
+                    ? "Pedir remoção dos meus dados"
+                    : "A Priva pede a remoção por você"}
+              </button>
 
               <button
                 onClick={() => markClosed(sheet)}
