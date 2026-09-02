@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { AppHeader } from "../Header";
 import { AnimatedScoreGauge } from "../AnimatedScoreGauge";
 import { PaywallLock } from "../PaywallLock";
+import { startCheckout } from "@/lib/checkout";
 import {
   ChevronRight,
   ChevronLeft,
@@ -9,7 +10,9 @@ import {
   Fingerprint,
   Mail,
   Phone,
+  MapPin,
   X,
+  Lock,
   Trash2,
   Download,
   Loader2,
@@ -33,14 +36,16 @@ const levelColor = (l: string) =>
       ? "var(--color-warning)"
       : "var(--color-success)";
 
-type DashCard = {
-  kind: "card";
-  icon: typeof Mail;
-  label: string;
-  type: CardType;
-  status: string;
-  level: string;
-};
+type DashCard =
+  | {
+      kind: "card";
+      icon: typeof Mail;
+      label: string;
+      type: CardType;
+      status: string;
+      level: string;
+    }
+  | { kind: "upsell"; icon: typeof Mail; label: string; subtitle: string };
 
 export function RadarTab() {
   const { isPremium, goToTab, hasChecked, scanning, scanResult, exposure, openScan } = useApp();
@@ -136,6 +141,15 @@ export function RadarTab() {
         ? `Encontrado em ${plural(phoneEx.count, "resultado público", "resultados públicos")}`
         : CLEAN,
       level: phoneEx?.found ? "warning" : "success",
+    },
+    {
+      // A genuine upsell: there is no free CPF↔address source, so this stays a
+      // locked tile rather than invented data. The "Verificação de endereço"
+      // line was dropped — the label already says what it is.
+      kind: "upsell",
+      icon: MapPin,
+      label: "Endereço",
+      subtitle: "Disponível no plano Proteção Total",
     },
   ];
 
@@ -318,6 +332,31 @@ export function RadarTab() {
                 ))
               : cards.map((it) => {
                   const Icon = it.icon;
+
+                  if (it.kind === "upsell") {
+                    return (
+                      <div
+                        key={it.label}
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => {
+                          void startCheckout("protecao_total");
+                        }}
+                        className="cursor-pointer rounded-2xl border border-border/60 bg-card p-4 text-left shadow-sm transition-all duration-200 active:scale-[0.98]"
+                      >
+                        <div className="flex items-start justify-between">
+                          <span className="grid h-9 w-9 place-items-center rounded-lg bg-secondary">
+                            <Icon className="h-4 w-4 text-foreground" />
+                          </span>
+                          <Lock className="h-3.5 w-3.5 text-muted-foreground" />
+                        </div>
+                        <p className="mt-3 text-sm font-semibold text-foreground">{it.label}</p>
+                        <p className="mt-0.5 text-[11px] leading-tight text-[var(--color-navy)]">
+                          {it.subtitle}
+                        </p>
+                      </div>
+                    );
+                  }
 
                   const color = levelColor(it.level);
                   return (

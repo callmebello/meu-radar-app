@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronRight, TrendingUp } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { useApp } from "@/contexts/AppContext";
 import { nextActions } from "@/lib/nextActions";
 import { track, gaEvent } from "@/lib/analytics";
@@ -16,34 +16,6 @@ import { track, gaEvent } from "@/lib/analytics";
  * under the recovery cap, so this never advertises gains the score will refuse
  * to hand over.
  */
-/**
- * Target with a dart in the bullseye. Lucide has the rings (Target) and a flag
- * in a circle (Goal), but nothing hitting the mark — so it is drawn here, to
- * the same 24-grid and 2px round stroke as the rest of the icon set, and it
- * sits beside them without looking borrowed.
- */
-function TargetDart({ className, style }: { className?: string; style?: React.CSSProperties }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-      style={style}
-      aria-hidden
-    >
-      <circle cx="10" cy="14" r="7.5" />
-      <circle cx="10" cy="14" r="4" />
-      <circle cx="10" cy="14" r="0.6" fill="currentColor" stroke="none" />
-      <path d="m10 14 8.5-8.5" />
-      <path d="M14.5 4.5h5v5" />
-    </svg>
-  );
-}
-
 export function NextActionsCard() {
   const { scanResult, exposure, goToTab, setProtecaoPill } = useApp();
   const { actions, headroom } = nextActions(scanResult, exposure);
@@ -75,7 +47,7 @@ export function NextActionsCard() {
           className="grid h-10 w-10 shrink-0 place-items-center rounded-xl"
           style={{ backgroundColor: "rgba(79,70,229,0.10)" }}
         >
-          <TargetDart className="h-[18px] w-[18px]" style={{ color: "#4F46E5" }} />
+          <img src="/PRIVA_mark.png" alt="" className="h-5 w-5 object-contain" />
         </span>
 
         <span className="min-w-0 flex-1">
@@ -92,7 +64,7 @@ export function NextActionsCard() {
             className="inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-1 text-[10.5px] font-bold"
             style={{ backgroundColor: "rgba(15,169,104,0.12)", color: "#0FA968" }}
           >
-            <TrendingUp className="h-3 w-3" /> até +{headroom}
+            +{headroom} {headroom === 1 ? "ponto" : "pontos"}
           </span>
         )}
 
