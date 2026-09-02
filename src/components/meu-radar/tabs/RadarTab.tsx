@@ -173,18 +173,38 @@ export function RadarTab() {
           </div>
         )}
 
-        {/* Score ⇄ Priva ID. Both live in the same grid cell, so the frame
-            takes the height of the taller one and the two slide across it
-            without the page jumping. */}
-        <div className="relative overflow-hidden rounded-2xl">
-          <div className="grid">
+        {/* Score ⇄ Priva ID — a real 3D flip on the X axis.
+            The front stays in normal flow and defines the box; the back is
+            absolutely positioned over it, so the two faces are the same size by
+            construction rather than by a magic number that drifts the moment a
+            font or a label changes. */}
+        <div style={{ perspective: "1400px" }}>
+          <div
+            className="relative transition-transform duration-700 ease-[cubic-bezier(0.4,0.15,0.2,1)]"
+            style={{
+              transformStyle: "preserve-3d",
+              // Horizontal flip, matching the arrows: forward spins to the
+              // right (›), back spins to the left (‹).
+              // translateZ keeps the matrix 3D — a plain rotateY(0deg) computes
+              // to a 2D matrix, which flattens the context and paints the back
+              // face straight over the front.
+              transform: showId
+                ? "rotateY(180deg) translateZ(0.01px)"
+                : "rotateY(0deg) translateZ(0.01px)",
+            }}
+          >
+            {/* FRONT — score */}
             <section
-              className="rounded-2xl border border-border/60 bg-card p-6 shadow-[0_2px_20px_-8px_rgba(30,45,90,0.15)] transition-all duration-500 ease-out"
+              className="rounded-2xl border border-border/60 bg-card p-6 shadow-[0_2px_20px_-8px_rgba(30,45,90,0.15)]"
               style={{
-                gridArea: "1 / 1",
-                transform: showId ? "translateX(-102%)" : "translateX(0)",
+                backfaceVisibility: "hidden",
+                WebkitBackfaceVisibility: "hidden",
+                // backface-visibility alone proved unreliable here, so the two
+                // faces also swap at the halfway point of the rotation. The
+                // delay is half the 700ms flip: you always see the face that is
+                // turned towards you, on every engine.
                 opacity: showId ? 0 : 1,
-                pointerEvents: showId ? "none" : undefined,
+                transition: "opacity 0s linear 350ms",
               }}
               aria-hidden={showId}
             >
@@ -200,8 +220,8 @@ export function RadarTab() {
                     <p className="mt-6 text-xs text-muted-foreground">verificando...</p>
                   </>
                 ) : score === null ? (
-                  /* Never measured. A number here would be a guess, and this is the
-                 one place the whole app is judged on being honest. */
+                  /* Never measured. A number here would be a guess, and this is
+                     the one place the whole app is judged on being honest. */
                   <>
                     <p className="mt-6 text-5xl font-extrabold text-muted-foreground">—</p>
                     <p className="mt-4 max-w-[15rem] text-[13px] leading-relaxed text-muted-foreground">
@@ -220,9 +240,6 @@ export function RadarTab() {
                     <div className="mt-3 w-full">
                       <AnimatedScoreGauge score={score} max={100} />
                     </div>
-                    {/* The loop made visible: what they did is worth points, and the
-                    card says how many. Without this the score never moves and
-                    there is no reason to resolve anything. */}
                     {result && result.credit > 0 && (
                       <p
                         className="mt-3 text-[12.5px] font-semibold"
@@ -236,43 +253,32 @@ export function RadarTab() {
                         ? `Última verificação: ${new Date(lastScan).toLocaleDateString("pt-BR")}`
                         : "Verificação concluída"}
                     </p>
+                    <button
+                      onClick={() => setShowId(true)}
+                      className="mt-4 flex items-center justify-center gap-1.5 text-[12.5px] font-semibold"
+                      style={{ color: "#4F46E5" }}
+                    >
+                      Ver meu Priva ID <ChevronRight className="h-3.5 w-3.5" />
+                    </button>
                   </>
                 )}
               </div>
-
-              {score !== null && (
-                <button
-                  onClick={() => setShowId(true)}
-                  className="mt-4 flex w-full items-center justify-center gap-1.5 text-[12.5px] font-semibold"
-                  style={{ color: "#4F46E5" }}
-                >
-                  Ver meu Priva ID <ChevronRight className="h-3.5 w-3.5" />
-                </button>
-              )}
             </section>
 
+            {/* BACK — Priva ID, same box */}
             <div
-              className="flex flex-col transition-all duration-500 ease-out"
+              className="absolute inset-0"
               style={{
-                gridArea: "1 / 1",
-                transform: showId ? "translateX(0)" : "translateX(102%)",
+                backfaceVisibility: "hidden",
+                WebkitBackfaceVisibility: "hidden",
+                transform: "rotateY(180deg)",
                 opacity: showId ? 1 : 0,
+                transition: "opacity 0s linear 350ms",
                 pointerEvents: showId ? undefined : "none",
               }}
               aria-hidden={!showId}
             >
-              {/* flex-1 so the card fills the frame the score card defines —
-                  the two faces are the same size, as a card should be. */}
-              <div className="flex-1">
-                <PrivaIdCard onShare={() => setShareOpen(true)} />
-              </div>
-              <button
-                onClick={() => setShowId(false)}
-                className="mt-3 flex w-full shrink-0 items-center justify-center gap-1.5 text-[12.5px] font-semibold"
-                style={{ color: "#4F46E5" }}
-              >
-                <ChevronLeft className="h-3.5 w-3.5" /> Voltar ao score
-              </button>
+              <PrivaIdCard onShare={() => setShareOpen(true)} onBack={() => setShowId(false)} />
             </div>
           </div>
         </div>
