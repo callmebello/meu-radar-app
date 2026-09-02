@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronDown, ChevronRight, TrendingUp } from "lucide-react";
+import { ChevronRight, Target, TrendingUp } from "lucide-react";
 import { useApp } from "@/contexts/AppContext";
 import { nextActions } from "@/lib/nextActions";
 import { track, gaEvent } from "@/lib/analytics";
@@ -40,25 +40,36 @@ export function NextActionsCard() {
     <section className="overflow-hidden rounded-2xl border border-border/60 bg-card shadow-[0_2px_20px_-8px_rgba(30,45,90,0.15)]">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center justify-between gap-3 px-5 py-4 text-left"
+        className="flex w-full items-center gap-2.5 px-4 py-3.5 text-left"
         aria-expanded={open}
       >
-        <span className="min-w-0">
-          <span className="block text-[14.5px] font-bold text-foreground">
-            Próximos passos
-            <span className="ml-1.5 font-semibold text-muted-foreground">({actions.length})</span>
+        <span
+          className="grid h-10 w-10 shrink-0 place-items-center rounded-xl"
+          style={{ backgroundColor: "rgba(79,70,229,0.10)" }}
+        >
+          <Target className="h-[18px] w-[18px]" style={{ color: "#4F46E5" }} />
+        </span>
+
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-[13.5px] font-bold leading-tight text-foreground">
+            Melhore sua proteção
+          </span>
+          <span className="block text-[12px] leading-tight text-muted-foreground">
+            {actions.length} {actions.length === 1 ? "ação disponível" : "ações disponíveis"}
           </span>
         </span>
+
         {headroom > 0 && (
           <span
-            className="inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold"
+            className="inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-1 text-[10.5px] font-bold"
             style={{ backgroundColor: "rgba(15,169,104,0.12)", color: "#0FA968" }}
           >
             <TrendingUp className="h-3 w-3" /> até +{headroom}
           </span>
         )}
-        <ChevronDown
-          className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`}
+
+        <ChevronRight
+          className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${open ? "rotate-90" : ""}`}
         />
       </button>
 

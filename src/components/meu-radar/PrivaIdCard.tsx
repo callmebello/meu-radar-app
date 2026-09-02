@@ -69,10 +69,11 @@ function cpfDigitsValid(cpf: string): boolean {
  * person merely told us — which is also the only honest distinction here.
  */
 function Seal({ label, verified }: { label: string; verified: boolean }) {
-  // Grey, not amber: "informado" is the normal state for most people, and
-  // painting three warnings on a card meant to reassure was noise. Colour now
-  // marks only what we can actually vouch for.
-  const color = verified ? "#0FA968" : "var(--color-muted-foreground)";
+  // Brand purple for what we actually verified, green for what the person
+  // told us. The strongest colour on the card marks the strongest claim; the
+  // word underneath is what states which is which, since green on its own
+  // would read as confirmed.
+  const color = verified ? "#4F46E5" : "#0FA968";
   return (
     <div className="flex min-w-0 flex-1 items-center gap-1.5">
       {verified ? (
@@ -97,7 +98,6 @@ export function PrivaIdCard({ onShare, onBack }: { onShare?: () => void; onBack?
   const [emailVerified, setEmailVerified] = useState(false);
   const [authEmail, setAuthEmail] = useState("");
   const [revealed, setRevealed] = useState(false);
-  const [logoFailed, setLogoFailed] = useState(false);
 
   useEffect(() => {
     void getUser()
@@ -158,21 +158,13 @@ export function PrivaIdCard({ onShare, onBack }: { onShare?: () => void; onBack?
       </span>
 
       <div className="relative flex items-center justify-between gap-3">
-        {/* The wordmark as artwork. Falls back to the type lockup so the card
-            never renders a broken image if the asset is missing. */}
-        {logoFailed ? (
-          <p className="text-[15px] font-extrabold tracking-tight">
-            <span style={{ color: "#4F46E5" }}>PRIVA</span>{" "}
-            <span className="text-muted-foreground">ID</span>
-          </p>
-        ) : (
-          <img
-            src="/priva-id-logo.png"
-            alt="Priva ID"
-            onError={() => setLogoFailed(true)}
-            className="h-[18px] w-auto"
-          />
-        )}
+        {/* The mark the rest of the app already ships — one asset to keep in
+            sync instead of two, and at this size a symbol reads faster than a
+            wordmark. */}
+        <span className="flex items-center gap-2">
+          <img src="/PRIVA_mark.png" alt="Priva" className="h-7 w-7 object-contain" />
+          <span className="text-[13px] font-bold tracking-[0.14em] text-muted-foreground">ID</span>
+        </span>
         <span
           className="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[10.5px] font-bold tracking-wide"
           style={
@@ -217,7 +209,7 @@ export function PrivaIdCard({ onShare, onBack }: { onShare?: () => void; onBack?
         </div>
 
         {score !== null && (
-          <div className="shrink-0 pl-2 text-right">
+          <div className="shrink-0 pl-2 pr-3 text-right">
             <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Score</p>
             <p className="text-[32px] font-extrabold leading-none" style={{ color: "#4F46E5" }}>
               {score}
