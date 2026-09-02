@@ -59,6 +59,8 @@ export type ScoreResult = {
   credit: number;
   /** Score this person would have with no remediation — the "before". */
   baseScore: number;
+  /** Most that remediation can ever give back for this exposure. */
+  creditCap: number;
 };
 
 export function computeScore(input: ScoreInput): ScoreResult {
@@ -105,7 +107,8 @@ export function computeScore(input: ScoreInput): ScoreResult {
     : 0;
   // Recovery is bounded by what was actually lost, so someone with nothing
   // found cannot farm points, and nobody climbs back to a clean slate.
-  const credit = Math.min(earned, Math.round(total * MAX_RECOVERY));
+  const creditCap = Math.round(total * MAX_RECOVERY);
+  const credit = Math.min(earned, creditCap);
 
   if (credit > 0) {
     factors.push({ label: "Ações que você concluiu", weight: -credit, icon: "check" });
@@ -113,7 +116,7 @@ export function computeScore(input: ScoreInput): ScoreResult {
 
   const score = Math.min(100, Math.max(8, baseScore + credit));
 
-  return { score, factors, credit, baseScore };
+  return { score, factors, credit, baseScore, creditCap };
 }
 
 export function riskLevel(score: number) {

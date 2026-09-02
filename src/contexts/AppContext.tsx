@@ -21,6 +21,9 @@ type Ctx = {
   setScanResult: (v: ScanResult | null) => void;
   exposure: ExposureResult | null;
   setExposure: (v: ExposureResult | null) => void;
+  /** Which panel Proteção opens on — set when the home routes to an action. */
+  protecaoPill: string | null;
+  setProtecaoPill: (p: string | null) => void;
   familyAddPending: boolean;
   requestFamilyAdd: () => void;
   clearFamilyAdd: () => void;
@@ -76,8 +79,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const setOpenScan = useCallback((fn: () => void) => setOpenScanFn({ fn }), []);
   const openScan = useCallback(() => openScanFn.fn(), [openScanFn]);
 
-  const [openCaptureFn, setOpenCaptureFn] = useState<{ fn: (r: CaptureReason) => void }>({ fn: () => {} });
-  const setOpenCapture = useCallback((fn: (r: CaptureReason) => void) => setOpenCaptureFn({ fn }), []);
+  const [openCaptureFn, setOpenCaptureFn] = useState<{ fn: (r: CaptureReason) => void }>({
+    fn: () => {},
+  });
+  const setOpenCapture = useCallback(
+    (fn: (r: CaptureReason) => void) => setOpenCaptureFn({ fn }),
+    [],
+  );
   const openCapture = useCallback((r: CaptureReason) => openCaptureFn.fn(r), [openCaptureFn]);
 
   const [scanning, setScanning] = useState(false);
@@ -115,6 +123,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [exposure]);
 
+  const [protecaoPill, setProtecaoPill] = useState<string | null>(null);
   const [familyAddPending, setFamilyAddPending] = useState(false);
   const requestFamilyAdd = useCallback(() => setFamilyAddPending(true), []);
   const clearFamilyAdd = useCallback(() => setFamilyAddPending(false), []);
@@ -141,6 +150,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setScanResult,
         exposure,
         setExposure,
+        protecaoPill,
+        setProtecaoPill,
         familyAddPending,
         requestFamilyAdd,
         clearFamilyAdd,

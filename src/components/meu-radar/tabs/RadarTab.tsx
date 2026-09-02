@@ -23,6 +23,7 @@ import { computeScore } from "@/lib/riskScore";
 import { scoreInputsFrom } from "@/lib/scoreInputs";
 import { UpsellBanner, shouldShowUpsell } from "../UpsellBanner";
 import { ProtecaoTrackingCard } from "../ProtecaoTrackingCard";
+import { NextActionsCard } from "../NextActionsCard";
 import { IdentityCardSheet, type CardType } from "../IdentityCardSheet";
 
 const levelColor = (l: string) =>
@@ -220,6 +221,10 @@ export function RadarTab() {
             )}
           </div>
         </section>
+
+        {/* The loop, made walkable: score first, then the shortest path to a
+            better one. Renders nothing when there is nothing to do. */}
+        <NextActionsCard />
 
         {/* Post-subscription CTA — download the full report. Only for active
             subscribers with a scan on file; shows a loading state while the PDF

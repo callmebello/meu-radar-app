@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { LifeBuoy, ChevronRight } from "lucide-react";
 import { AppHeader } from "../Header";
 import { CredenciaisTab } from "./CredenciaisTab";
@@ -25,8 +25,16 @@ const pills: { id: Pill; label: string }[] = [
 ];
 
 export function ProtecaoTab({ initial = "credenciais" }: { initial?: Pill }) {
-  const [pill, setPill] = useState<Pill>(initial);
-  const { isPremium, goToTab } = useApp();
+  const { isPremium, goToTab, protecaoPill, setProtecaoPill } = useApp();
+  // The home can route straight to a panel ("Trocar a senha do Canva" lands on
+  // Vazamentos, not on whatever pill happened to be open).
+  const [pill, setPill] = useState<Pill>((protecaoPill as Pill) || initial);
+  useEffect(() => {
+    if (protecaoPill) {
+      setPill(protecaoPill as Pill);
+      setProtecaoPill(null);
+    }
+  }, [protecaoPill, setProtecaoPill]);
 
   return (
     <>
