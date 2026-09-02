@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Copy, RefreshCw, Plus, X, Trash2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { PasswordChecker } from "../PasswordChecker";
+import { ChevronDown, KeyRound } from "lucide-react";
 import { checkPwnedPassword } from "@/lib/pwned";
 import {
   getCredentials,
@@ -22,20 +23,20 @@ const statusColor = (s: CredStatus) =>
 
 function getServiceLogo(name: string): string {
   const domains: Record<string, string> = {
-    'Gmail': 'gmail.com',
-    'Instagram': 'instagram.com',
-    'Nubank': 'nubank.com.br',
-    'iFood': 'ifood.com.br',
-    'LinkedIn': 'linkedin.com',
-    'Spotify': 'spotify.com',
-    'Facebook': 'facebook.com',
-    'Twitter': 'twitter.com',
-    'Mercado Livre': 'mercadolivre.com.br',
-    'Banco Inter': 'bancointer.com.br',
-    'Bradesco': 'bradesco.com.br',
-    'Itaú': 'itau.com.br',
-    'Magazine Luiza': 'magazineluiza.com.br',
-    'Amazon': 'amazon.com.br',
+    Gmail: "gmail.com",
+    Instagram: "instagram.com",
+    Nubank: "nubank.com.br",
+    iFood: "ifood.com.br",
+    LinkedIn: "linkedin.com",
+    Spotify: "spotify.com",
+    Facebook: "facebook.com",
+    Twitter: "twitter.com",
+    "Mercado Livre": "mercadolivre.com.br",
+    "Banco Inter": "bancointer.com.br",
+    Bradesco: "bradesco.com.br",
+    Itaú: "itau.com.br",
+    "Magazine Luiza": "magazineluiza.com.br",
+    Amazon: "amazon.com.br",
   };
   const domain = domains[name] || `${name.toLowerCase().replace(/\s+/g, "")}.com`;
   return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
@@ -57,6 +58,7 @@ export function CredenciaisTab() {
   const [numbers, setNumbers] = useState(true);
   const [symbols, setSymbols] = useState(true);
   const [pwd, setPwd] = useState("Kx#9mP$vL2@nQ8");
+  const [genOpen, setGenOpen] = useState(false);
 
   // User-managed credentials (persisted) — real data only, no demo entries.
   const [creds, setCreds] = useState<Credential[]>(() => getCredentials());
@@ -98,56 +100,6 @@ export function CredenciaisTab() {
         {/* Pwned Passwords checker (standalone tool) */}
         <PasswordChecker />
 
-        {/* Generator */}
-        <section className="rounded-2xl border border-border/60 bg-card p-5 shadow-sm">
-          <h2 className="text-sm font-semibold text-foreground">Gerador de Senhas</h2>
-          <div className="mt-3 rounded-xl p-4" style={{ backgroundColor: "#4F46E5" }}>
-            <p className="font-mono text-lg font-medium tracking-wider text-white break-all">{pwd}</p>
-          </div>
-
-          <div className="mt-4 flex items-center justify-between">
-            <label className="text-xs font-medium text-muted-foreground">Tamanho</label>
-            <span className="text-sm font-semibold text-foreground">{length} caracteres</span>
-          </div>
-          <input type="range" min={8} max={32} value={length} onChange={(e) => setLength(+e.target.value)} className="mt-2 w-full" style={{ accentColor: "#4F46E5" }} />
-
-          <div className="mt-4 space-y-2.5">
-            {[
-              { l: "Maiúsculas", v: upper, s: setUpper },
-              { l: "Números", v: numbers, s: setNumbers },
-              { l: "Símbolos", v: symbols, s: setSymbols },
-            ].map((t) => (
-              <label key={t.l} className="flex items-center justify-between text-sm text-foreground">
-                {t.l}
-                <button
-                  onClick={() => t.s(!t.v)}
-                  className={`relative h-6 w-11 rounded-full transition ${t.v ? "" : "bg-muted"}`}
-                  style={t.v ? { backgroundColor: "#4F46E5" } : undefined}
-                >
-                  <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition ${t.v ? "left-[22px]" : "left-0.5"}`} />
-                </button>
-              </label>
-            ))}
-          </div>
-
-          <div className="mt-5 flex gap-2">
-            <button
-              onClick={() => setPwd(generatePassword(length, upper, numbers, symbols))}
-              className="flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold text-white hover:opacity-90 transition"
-              style={{ backgroundColor: "#4F46E5" }}
-            >
-              <RefreshCw className="h-4 w-4" /> Gerar nova senha
-            </button>
-            <button
-              onClick={() => { navigator.clipboard?.writeText(pwd); toast.success("Senha copiada"); }}
-              className="flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold text-white hover:opacity-90 transition"
-              style={{ backgroundColor: "#4F46E5" }}
-            >
-              <Copy className="h-4 w-4" /> Copiar
-            </button>
-          </div>
-        </section>
-
         {/* Credentials list */}
         <section>
           <h2 className="mb-3 px-1 text-sm font-semibold text-foreground">Suas credenciais</h2>
@@ -157,7 +109,11 @@ export function CredenciaisTab() {
               <li className="border-b border-border/60 p-4">
                 <div className="mb-3 flex items-center justify-between">
                   <p className="text-sm font-semibold text-foreground">Nova credencial</p>
-                  <button onClick={() => setAdding(false)} aria-label="Cancelar" className="grid h-7 w-7 place-items-center rounded-full text-muted-foreground hover:bg-secondary/60">
+                  <button
+                    onClick={() => setAdding(false)}
+                    aria-label="Cancelar"
+                    className="grid h-7 w-7 place-items-center rounded-full text-muted-foreground hover:bg-secondary/60"
+                  >
                     <X className="h-4 w-4" />
                   </button>
                 </div>
@@ -200,7 +156,9 @@ export function CredenciaisTab() {
                   <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[var(--color-navy)]/10">
                     <Plus className="h-5 w-5 text-[var(--color-navy)]" />
                   </span>
-                  <span className="text-sm font-semibold text-[var(--color-navy)]">Adicionar credencial</span>
+                  <span className="text-sm font-semibold text-[var(--color-navy)]">
+                    Adicionar credencial
+                  </span>
                 </button>
               </li>
             )}
@@ -209,7 +167,10 @@ export function CredenciaisTab() {
             {creds.map((it) => {
               const c = statusColor(it.status);
               return (
-                <li key={it.id} className="flex items-center gap-3 border-t border-border/60 px-4 py-3.5">
+                <li
+                  key={it.id}
+                  className="flex items-center gap-3 border-t border-border/60 px-4 py-3.5"
+                >
                   <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center">
                     <img
                       src={getServiceLogo(it.name)}
@@ -225,10 +186,20 @@ export function CredenciaisTab() {
                     <p className="text-sm font-semibold text-foreground">{it.name}</p>
                     <p className="text-[11px] text-muted-foreground">{it.when}</p>
                   </div>
-                  <span className="rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide" style={{ backgroundColor: `color-mix(in oklab, ${c} 14%, transparent)`, color: c }}>
+                  <span
+                    className="rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide"
+                    style={{
+                      backgroundColor: `color-mix(in oklab, ${c} 14%, transparent)`,
+                      color: c,
+                    }}
+                  >
                     {it.status}
                   </span>
-                  <button onClick={() => removeCred(it.id)} aria-label="Remover credencial" className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-secondary/60 hover:text-red-400">
+                  <button
+                    onClick={() => removeCred(it.id)}
+                    aria-label="Remover credencial"
+                    className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-secondary/60 hover:text-red-400"
+                  >
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>
                 </li>
@@ -239,10 +210,119 @@ export function CredenciaisTab() {
             {creds.length === 0 && !adding && (
               <li className="border-t border-border/60 px-4 py-6 text-center">
                 <p className="text-sm text-muted-foreground">Nenhuma credencial ainda.</p>
-                <p className="mt-1 text-[11px] text-muted-foreground">Toque em “Adicionar credencial” para começar.</p>
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  Toque em “Adicionar credencial” para começar.
+                </p>
               </li>
             )}
           </ul>
+        </section>
+
+        {/* Generator — collapsed, and last.
+            It is a utility you reach for occasionally, and it was sitting above
+            the two things this screen exists for: whether a password of yours
+            has leaked, and the credentials you are tracking. */}
+        <section className="overflow-hidden rounded-2xl border border-border/60 bg-card shadow-sm">
+          <button
+            onClick={() => setGenOpen((v) => !v)}
+            className="flex w-full items-center gap-3 px-4 py-3.5 text-left"
+            aria-expanded={genOpen}
+          >
+            <span
+              className="grid h-9 w-9 shrink-0 place-items-center rounded-lg"
+              style={{ backgroundColor: "rgba(79,70,229,0.10)" }}
+            >
+              <KeyRound className="h-4 w-4" style={{ color: "#4F46E5" }} />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-[13.5px] font-bold leading-tight text-foreground">
+                Gerador de senhas
+              </span>
+              <span className="block text-[11.5px] leading-tight text-muted-foreground">
+                Crie uma senha forte
+              </span>
+            </span>
+            <ChevronDown
+              className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${genOpen ? "rotate-180" : ""}`}
+            />
+          </button>
+
+          <div
+            className="grid transition-all duration-300"
+            style={{ gridTemplateRows: genOpen ? "1fr" : "0fr" }}
+          >
+            <div className="overflow-hidden">
+              <div className="border-t border-border px-4 py-4">
+                <div className="flex items-center gap-2">
+                  <p
+                    className="min-w-0 flex-1 break-all rounded-xl px-3 py-2.5 font-mono text-[15px] font-medium tracking-wide text-white"
+                    style={{ backgroundColor: "#4F46E5" }}
+                  >
+                    {pwd}
+                  </p>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard?.writeText(pwd);
+                      toast.success("Senha copiada");
+                    }}
+                    aria-label="Copiar senha"
+                    className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-border text-foreground"
+                  >
+                    <Copy className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => setPwd(generatePassword(length, upper, numbers, symbols))}
+                    aria-label="Gerar nova senha"
+                    className="grid h-10 w-10 shrink-0 place-items-center rounded-xl text-white"
+                    style={{ backgroundColor: "#4F46E5" }}
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                  </button>
+                </div>
+
+                <div className="mt-3 flex items-center gap-3">
+                  <span className="shrink-0 text-[11.5px] text-muted-foreground">
+                    {length} car.
+                  </span>
+                  <input
+                    type="range"
+                    min={8}
+                    max={32}
+                    value={length}
+                    onChange={(e) => setLength(+e.target.value)}
+                    className="min-w-0 flex-1"
+                    style={{ accentColor: "#4F46E5" }}
+                  />
+                </div>
+
+                {/* Chips instead of three labelled toggle rows: same choice,
+                    one line instead of five. */}
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  {[
+                    { l: "ABC", v: upper, s: setUpper },
+                    { l: "123", v: numbers, s: setNumbers },
+                    { l: "#$&", v: symbols, s: setSymbols },
+                  ].map((t) => (
+                    <button
+                      key={t.l}
+                      onClick={() => t.s(!t.v)}
+                      className="rounded-full border px-3 py-1.5 text-[12px] font-semibold transition"
+                      style={
+                        t.v
+                          ? { backgroundColor: "#4F46E5", borderColor: "#4F46E5", color: "#fff" }
+                          : {
+                              borderColor: "var(--color-border)",
+                              color: "var(--color-muted-foreground)",
+                            }
+                      }
+                    >
+                      {t.l}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
         </section>
       </div>
     </>

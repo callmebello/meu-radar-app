@@ -5,6 +5,7 @@ import { rankForDisplay, displayName, logoOf, pwnCountLabel, type Breach } from 
 import { guidanceFor, leakedLabels } from "@/lib/breachActions";
 import { hasAction, recordAction, undoAction, type ActionType } from "@/lib/actions";
 import { startCheckout } from "@/lib/checkout";
+import { ContasTab } from "./ContasTab";
 import { track, gaEvent } from "@/lib/analytics";
 
 /**
@@ -180,6 +181,11 @@ function BreachRow({ b, onChange }: { b: Breach; onChange: () => void }) {
 export function VazamentosTab() {
   const { scanResult, isPremium, openScan } = useApp();
   const [, force] = useState(0);
+  // Contas used to be its own pill. It reads the same HIBP payload as the
+  // breach list — one is "what leaked", the other "where you still have an
+  // account" — so they belong under one heading, and the top bar gets a slot
+  // back.
+  const [view, setView] = useState<"vazamentos" | "contas">("vazamentos");
   const breaches = useMemo(
     () => rankForDisplay((scanResult?.hibp?.breaches ?? []) as Breach[]),
     [scanResult],
@@ -203,8 +209,43 @@ export function VazamentosTab() {
     );
   }
 
+  const Switcher = (
+    <div className="flex gap-1 rounded-full border border-border bg-secondary/40 p-1">
+      {(
+        [
+          { id: "vazamentos", label: "Vazamentos" },
+          { id: "contas", label: "Contas" },
+        ] as const
+      ).map((v) => {
+        const active = view === v.id;
+        return (
+          <button
+            key={v.id}
+            onClick={() => setView(v.id)}
+            className={`flex-1 rounded-full py-1.5 text-[13px] font-medium transition ${
+              active ? "text-white" : "text-muted-foreground"
+            }`}
+            style={active ? { backgroundColor: "#4F46E5" } : undefined}
+          >
+            {v.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+
+  if (view === "contas") {
+    return (
+      <div className="pb-2">
+        <div className="px-5 pt-4">{Switcher}</div>
+        <ContasTab />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4 px-5 py-4">
+      {Switcher}
       {breaches.length === 0 ? (
         <div className="flex items-center gap-3 rounded-2xl border border-[var(--color-success)]/20 bg-[var(--color-success)]/5 p-4">
           <CheckCircle2 className="h-4 w-4 shrink-0 text-[var(--color-success)]" />

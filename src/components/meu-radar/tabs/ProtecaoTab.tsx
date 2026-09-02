@@ -2,20 +2,15 @@ import { useEffect, useState } from "react";
 import { LifeBuoy, ChevronRight } from "lucide-react";
 import { AppHeader } from "../Header";
 import { CredenciaisTab } from "./CredenciaisTab";
-import { ContasTab } from "./ContasTab";
 import { ExposicaoTab } from "./ExposicaoTab";
 import { VazamentosTab } from "./VazamentosTab";
 import { RemocaoTab } from "./RemocaoTab";
 import { useApp } from "@/contexts/AppContext";
 
-type Pill = "credenciais" | "contas" | "vazamentos" | "exposicao" | "remocao";
+type Pill = "credenciais" | "vazamentos" | "exposicao" | "remocao";
 
 const pills: { id: Pill; label: string }[] = [
   { id: "credenciais", label: "Senhas" },
-  // "Contas" replaced the credit-score panel, which was an honest but empty
-  // "em breve" occupying a quarter of the navigation. This slot now holds
-  // something built from data we already have.
-  { id: "contas", label: "Contas" },
   // Renamed to match what each panel actually holds. "Vazamentos" used to show
   // public web results while the real breach list sat behind the paywall in
   // "Dark Web" — someone looking for their leaks found the wrong panel, and was
@@ -64,7 +59,6 @@ export function ProtecaoTab({ initial = "credenciais" }: { initial?: Pill }) {
 
       {/* Content */}
       {pill === "credenciais" && <CredenciaisTab />}
-      {pill === "contas" && <ContasTab />}
       {pill === "vazamentos" && <VazamentosTab />}
       {pill === "exposicao" && <ExposicaoTab />}
       {pill === "remocao" && <RemocaoTab />}
