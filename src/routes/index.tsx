@@ -15,7 +15,6 @@ import { PreScanQuiz } from "@/components/quiz/PreScanQuiz";
 import { PaywallModal } from "@/components/meu-radar/PaywallModal";
 import { ScanFunnel } from "@/components/meu-radar/ScanFunnel";
 import { ScanningOverlay } from "@/components/meu-radar/ScanningOverlay";
-import { ScanNudge } from "@/components/meu-radar/ScanNudge";
 import { ScanLanding } from "@/components/meu-radar/ScanLanding";
 import { PaymentReturn } from "@/components/PaymentReturn";
 import { isValidCPF, generateResult, getScore } from "@/lib/funnel";
@@ -391,7 +390,6 @@ function Index() {
           <ScanningOverlay open={scanning} />
           {/* Nudge stays visible until the lead converts (buys). Hidden on desktop
               (no bottom scan button to point at — the sidebar has its own). */}
-          <ScanNudge show={!showEmpty && !isPremium && !scanning && !funnelOpen} onScan={onScan} />
           {!showEmpty && (
             <BottomNav active={tab} onChange={setTab} onScan={onScan} scanning={scanning} />
           )}

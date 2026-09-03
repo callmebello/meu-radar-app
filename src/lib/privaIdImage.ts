@@ -102,14 +102,13 @@ export async function renderPrivaIdPng(data: PrivaIdData): Promise<Blob> {
   if (logo) {
     const h = 34;
     ctx.drawImage(logo, pad, pad, (logo.width / logo.height) * h, h);
-    ctx.fillStyle = GREY;
+    ctx.fillStyle = INDIGO;
     ctx.font = "700 24px system-ui, -apple-system, Segoe UI, sans-serif";
     ctx.fillText("ID", pad + (logo.width / logo.height) * h + 14, pad + 26);
   } else {
     ctx.fillStyle = INDIGO;
     ctx.font = "800 30px system-ui, -apple-system, Segoe UI, sans-serif";
     ctx.fillText("PRIVA", pad, pad + 28);
-    ctx.fillStyle = GREY;
     ctx.fillText("ID", pad + 120, pad + 28);
   }
 

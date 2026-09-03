@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { AppHeader } from "../Header";
 import { QrScanner } from "../QrScanner";
+import { InviteBlock } from "../InviteBlock";
 import { FamiliaTab } from "./FamiliaTab";
 import { useApp } from "@/contexts/AppContext";
 import { analyzeLink, type LinkResult } from "@/lib/security/link";
@@ -216,6 +217,9 @@ export function AtividadeTab() {
 
   return (
     <>
+      {/* Invite sits under every tool, for free users only. */}
+      {!isPremium && <InviteBlock />}
+
       {scanning && <QrScanner onResult={onQrResult} onClose={() => setScanning(false)} />}
 
       {accountSheet && (

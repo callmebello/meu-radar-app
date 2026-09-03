@@ -13,7 +13,14 @@ interface Props {
 
 const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
 
-export function AnimatedScoreGauge({ score, max = 100, duration = 1500, showMax = false, gradient = false, showLabel = true }: Props) {
+export function AnimatedScoreGauge({
+  score,
+  max = 100,
+  duration = 1500,
+  showMax = false,
+  gradient = false,
+  showLabel = true,
+}: Props) {
   const [current, setCurrent] = useState(0);
 
   useEffect(() => {
@@ -30,8 +37,13 @@ export function AnimatedScoreGauge({ score, max = 100, duration = 1500, showMax 
 
   const pct = Math.max(0, Math.min(1, current / max));
   const ratio = score / max;
-  const color =
-    ratio < 0.4 ? "#ef4444" : ratio <= 0.7 ? "#f59e0b" : "#22c55e";
+  // The arc runs through our own indigo, weak to strong, instead of the
+  // red-amber-green of a warning light: the number is a state of protection,
+  // and it should look like the brand rather than like an alarm. The verdict
+  // pill below keeps the semantic colour — that one is information.
+  const PURPLE = ["#C7D2FE", "#A5B4FC", "#818CF8", "#6366F1", "#4F46E5", "#4338CA"] as const;
+  const arcColor = PURPLE[Math.min(PURPLE.length - 1, Math.round(ratio * (PURPLE.length - 1)))];
+  const color = ratio < 0.4 ? "#ef4444" : ratio <= 0.7 ? "#f59e0b" : "#22c55e";
   const label = ratio < 0.4 ? "RISCO ALTO" : ratio <= 0.7 ? "RISCO MÉDIO" : "RISCO BAIXO";
 
   // Semicircle: cx=100, cy=100, r=80, sweep 180° → 0°
@@ -49,6 +61,15 @@ export function AnimatedScoreGauge({ score, max = 100, duration = 1500, showMax 
   return (
     <div className="relative flex flex-col items-center">
       <svg viewBox="0 0 200 130" className="w-full max-w-[240px]">
+        <defs>
+          {/* Weak on the left, strong on the right: the arc itself shows the
+              scale the score is climbing. */}
+          <linearGradient id="gauge-priva-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#C7D2FE" />
+            <stop offset="55%" stopColor="#818CF8" />
+            <stop offset="100%" stopColor="#4338CA" />
+          </linearGradient>
+        </defs>
         {gradient && (
           <defs>
             <linearGradient id="gauge-risk-grad" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -73,7 +94,7 @@ export function AnimatedScoreGauge({ score, max = 100, duration = 1500, showMax 
         <path
           d={`M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`}
           fill="none"
-          stroke={gradient ? "url(#gauge-risk-grad)" : color}
+          stroke={gradient ? "url(#gauge-risk-grad)" : "url(#gauge-priva-grad)"}
           strokeWidth="12"
           strokeLinecap="round"
           strokeDasharray={gradient ? undefined : arcLen}
@@ -92,16 +113,39 @@ export function AnimatedScoreGauge({ score, max = 100, duration = 1500, showMax 
           />
         )}
         {/* needle dot */}
-        <circle cx={nx} cy={ny} r="6" fill={color} stroke="white" strokeWidth="2" />
+        <circle
+          cx={nx}
+          cy={ny}
+          r="6"
+          fill={gradient ? color : arcColor}
+          stroke="white"
+          strokeWidth="2"
+        />
         {/* Speedometer mode: number lives INSIDE the svg (centered, bottom of the
             arc) so it scales with the gauge and never collides with the needle. */}
         {gradient && (
           <>
-            <text x="100" y="86" textAnchor="middle" className="text-foreground" fill="currentColor" fontSize="34" fontWeight={800}>
+            <text
+              x="100"
+              y="86"
+              textAnchor="middle"
+              className="text-foreground"
+              fill="currentColor"
+              fontSize="34"
+              fontWeight={800}
+            >
               {Math.round(current)}
             </text>
             {showMax && (
-              <text x="100" y="103" textAnchor="middle" className="text-muted-foreground" fill="currentColor" fontSize="12" fontWeight={600}>
+              <text
+                x="100"
+                y="103"
+                textAnchor="middle"
+                className="text-muted-foreground"
+                fill="currentColor"
+                fontSize="12"
+                fontWeight={600}
+              >
                 / {max}
               </text>
             )}
@@ -114,9 +158,7 @@ export function AnimatedScoreGauge({ score, max = 100, duration = 1500, showMax 
             <span className="text-4xl font-extrabold tracking-tight text-foreground">
               {Math.round(current)}
             </span>
-            {showMax && (
-              <span className="text-sm font-medium text-muted-foreground">/{max}</span>
-            )}
+            {showMax && <span className="text-sm font-medium text-muted-foreground">/{max}</span>}
           </div>
           {showLabel && (
             <span

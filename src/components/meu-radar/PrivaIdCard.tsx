@@ -190,7 +190,9 @@ export function PrivaIdCard({ onShare, onBack }: { onShare?: () => void; onBack?
             alt="Priva"
             className="h-[15px] w-auto object-contain"
           />
-          <span className="text-[13px] font-bold tracking-[0.14em] text-muted-foreground">ID</span>
+          <span className="text-[13px] font-bold tracking-[0.14em]" style={{ color: "#4F46E5" }}>
+            ID
+          </span>
         </span>
         <span
           className="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[10.5px] font-bold tracking-wide"

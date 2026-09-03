@@ -85,7 +85,7 @@ export function IdentityTile({
           tabIndex={0}
           onClick={() => setOpen(true)}
           onKeyDown={(e) => e.key === "Enter" && setOpen(true)}
-          className="cursor-pointer rounded-2xl border border-border/60 bg-card p-4 text-left shadow-sm transition-all duration-200 active:scale-[0.98]"
+          className="flex min-h-[132px] cursor-pointer flex-col overflow-hidden rounded-2xl border border-border/60 bg-card p-4 text-left shadow-sm transition-all duration-200 active:scale-[0.98]"
           style={{
             backfaceVisibility: "hidden",
             WebkitBackfaceVisibility: "hidden",
@@ -115,7 +115,10 @@ export function IdentityTile({
 
         {/* BACK */}
         <div
-          className="absolute inset-0 flex flex-col rounded-2xl border border-border/60 bg-card p-4 text-left shadow-sm"
+          role="button"
+          tabIndex={open ? 0 : -1}
+          onClick={close}
+          className="absolute inset-0 flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-border/60 bg-card p-4 text-left shadow-sm"
           style={{
             backfaceVisibility: "hidden",
             WebkitBackfaceVisibility: "hidden",
@@ -131,7 +134,10 @@ export function IdentityTile({
               {label}
             </p>
             <button
-              onClick={close}
+              onClick={(e) => {
+                e.stopPropagation();
+                close();
+              }}
               aria-label="Fechar"
               className="-mr-1 -mt-1 grid h-6 w-6 shrink-0 place-items-center rounded-full text-muted-foreground"
             >
@@ -141,14 +147,20 @@ export function IdentityTile({
 
           {locked ? (
             <button
-              onClick={onLockedTap}
+              onClick={(e) => {
+                e.stopPropagation();
+                onLockedTap?.();
+              }}
               className="mt-2 flex-1 text-left text-[12.5px] font-semibold leading-snug"
               style={{ color: "var(--color-navy)" }}
             >
               {lockedText}
             </button>
           ) : showInput ? (
-            <div className="mt-2 flex flex-1 flex-col justify-center">
+            <div
+              className="mt-2 flex flex-1 flex-col justify-center"
+              onClick={(e) => e.stopPropagation()}
+            >
               <input
                 autoFocus
                 value={draft}
@@ -167,7 +179,8 @@ export function IdentityTile({
             </div>
           ) : value ? (
             <button
-              onClick={() => {
+              onClick={(e) => {
+                e.stopPropagation();
                 setDraft(rawValue ?? value);
                 setEditing(true);
               }}

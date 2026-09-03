@@ -206,15 +206,8 @@ export function CredenciaisTab() {
               );
             })}
 
-            {/* Empty state */}
-            {creds.length === 0 && !adding && (
-              <li className="border-t border-border/60 px-4 py-6 text-center">
-                <p className="text-sm text-muted-foreground">Nenhuma credencial ainda.</p>
-                <p className="mt-1 text-[11px] text-muted-foreground">
-                  Toque em “Adicionar credencial” para começar.
-                </p>
-              </li>
-            )}
+            {/* No empty state: the "Adicionar credencial" row above already
+                says what to do, and an empty list is self-evident. */}
           </ul>
         </section>
 
