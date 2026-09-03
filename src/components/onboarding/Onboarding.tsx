@@ -13,6 +13,7 @@ import {
   Star,
 } from "lucide-react";
 import { Step, Title, Sub, Hl } from "./ui";
+import { PhoneMock } from "./PhoneMock";
 import { checkHibp } from "@/lib/api/hibp.functions";
 import { saveUser } from "@/lib/api/saveUser";
 import { rankForDisplay, displayName, logoOf, type Breach } from "@/lib/breaches";
@@ -391,34 +392,38 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
 
   if (id === "prepaywall") {
     return (
-      <Step progress={progress} onBack={back} cta="Começar minha proteção" onCta={() => go()}>
-        <div className="mt-6">
-          <Title>
-            Privacidade não é sorte. É <Hl>monitoramento</Hl>.
-          </Title>
-          <Sub>Alerta quando algo muda, e o que fazer a respeito.</Sub>
+      <Step progress={progress} onBack={back} cta="Continuar de graça" onCta={() => go()}>
+        <Title>
+          Sua proteção <Hl>já está pronta</Hl>
+        </Title>
+        <Sub>Privacidade não é sorte. É monitoramento, alerta e ação.</Sub>
+
+        <div className="mt-6 flex justify-center">
+          <PhoneMock width={210} />
         </div>
-        <div className="mt-6 space-y-2.5">
+
+        <div className="mt-6 space-y-2">
           {[
             { Icon: Eye, t: "Monitoramento contínuo" },
             { Icon: Bell, t: "Alerta de vazamento novo" },
             { Icon: ShieldCheck, t: "Ações práticas para se proteger" },
           ].map((b) => (
-            <div
-              key={b.t}
-              className="flex items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3"
-            >
+            <div key={b.t} className="flex items-center gap-2.5">
               <b.Icon className="h-4 w-4 shrink-0" style={{ color: "#4F46E5" }} />
-              <span className="text-[14px] font-semibold text-foreground">{b.t}</span>
+              <span className="text-[13.5px] text-foreground">{b.t}</span>
             </div>
           ))}
         </div>
-        <p className="mt-4 text-center text-[12px] text-muted-foreground">Nenhuma cobrança agora</p>
+
+        <p className="mt-5 flex items-center justify-center gap-1.5 text-center text-[12.5px] font-semibold text-foreground">
+          <Check className="h-3.5 w-3.5" style={{ color: "var(--color-success)" }} /> Nenhuma
+          cobrança agora
+        </p>
       </Step>
     );
   }
 
-  return <Paywall onBack={back} onDone={onDone} />;
+  return <Paywall onDone={onDone} />;
 }
 
 /* ── Preview mock ────────────────────────────────────────────────────────── */
@@ -770,7 +775,18 @@ function Social({
 const brl = (v: number) =>
   v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-function Paywall({ onBack, onDone }: { onBack: () => void; onDone: () => void }) {
+/**
+ * Hard paywall. No dismiss, by design: the report the person just saw is the
+ * product, and everything past this point costs money to run — the search, the
+ * monitoring, the removal letters. The two ways out are the two plans, plus
+ * restore for someone who already paid.
+ *
+ * The trial belongs to the annual only. The monthly says "sem período de teste"
+ * and nothing about refunds: on the App Store refunds are Apple's call, and in
+ * Brazil article 49 of the CDC gives seven days of regret regardless — a "no
+ * refund" line would be a promise we do not get to make.
+ */
+function Paywall({ onDone }: { onDone: () => void }) {
   const [plan, setPlan] = useState<"anual" | "mensal">("anual");
   const annual = 49.9;
   const monthly = 19.9;
@@ -780,87 +796,35 @@ function Paywall({ onBack, onDone }: { onBack: () => void; onDone: () => void })
   const start = () => {
     track("InitiateCheckout", { value: plan === "anual" ? annual : monthly, currency: "BRL" });
     gaEvent("begin_checkout", { plan });
-    // Access is granted by the store receipt, never here.
+    // Access comes from the store receipt, never from here.
     onDone();
   };
 
   return (
     <div className="flex min-h-[100dvh] flex-col bg-background">
-      <div className="flex items-center gap-3 px-5 pt-4">
-        <button
-          onClick={onBack}
-          aria-label="Voltar"
-          className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-secondary text-muted-foreground"
-        >
-          ‹
-        </button>
-        <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-secondary">
-          <div
-            className="h-full w-full rounded-full"
-            style={{ background: "linear-gradient(90deg,#4F46E5,#6366F1)" }}
-          />
-        </div>
-        <button onClick={onDone} className="shrink-0 text-[12.5px] text-muted-foreground">
-          Agora não
-        </button>
-      </div>
-
-      {/* Headline beside the device, benefits full width underneath. The
-          reference lays these side by side on a wider canvas; at 375px the
-          phone was covering the benefits, so the row holds only the headline
-          and the list gets the whole width. */}
-      <div className="px-6 pt-4">
-        <div className="flex items-start gap-2">
-          <div className="min-w-0 flex-1">
-            <h1 className="text-[27px] font-extrabold leading-[1.08] tracking-tight text-foreground">
-              Comece seus
-              <br />
-              <Hl>3 dias grátis</Hl>
-            </h1>
-            <p className="mt-2.5 text-[13px] leading-relaxed text-muted-foreground">
-              Sua privacidade merece atenção todos os dias. A Priva cuida disso por você.
-            </p>
-          </div>
-
-          <div
-            className="-mr-8 w-[132px] shrink-0"
-            style={{ animation: "mascot-in 0.8s cubic-bezier(0.34,1.2,0.5,1) both" }}
-          >
-            <div className="overflow-hidden rounded-[22px] border-[4px] border-foreground/85 bg-background shadow-2xl">
-              <PreviewCard />
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-5 space-y-2.5">
-          {[
-            { Icon: ShieldCheck, t: "Relatório completo", s: "CPF, telefone e exposição na web" },
-            { Icon: Bell, t: "Alertas em tempo real", s: "Quando um vazamento novo aparecer" },
-            { Icon: Lock, t: "Remoção conforme a LGPD", s: "A gente solicita em seu nome" },
-          ].map((b) => (
-            <div key={b.t} className="flex items-center gap-3">
-              <span
-                className="grid h-9 w-9 shrink-0 place-items-center rounded-xl"
-                style={{ backgroundColor: "rgba(79,70,229,0.10)" }}
-              >
-                <b.Icon className="h-4 w-4" style={{ color: "#4F46E5" }} />
-              </span>
-              <span className="min-w-0">
-                <span className="block text-[13.5px] font-bold leading-tight text-foreground">
-                  {b.t}
-                </span>
-                <span className="block text-[11.5px] leading-snug text-muted-foreground">
-                  {b.s}
-                </span>
-              </span>
-            </div>
-          ))}
+      {/* Hero: the product, held. */}
+      <div
+        className="relative flex justify-center overflow-hidden px-6 pb-2 pt-8"
+        style={{
+          background:
+            "radial-gradient(120% 80% at 50% 0%, rgba(99,102,241,0.16) 0%, rgba(99,102,241,0) 70%)",
+        }}
+      >
+        <div style={{ animation: "mascot-in 0.7s cubic-bezier(0.34,1.2,0.5,1) both" }}>
+          <PhoneMock width={196} />
         </div>
       </div>
 
-      {/* Extra room above: the "3 dias grátis" badge sits outside the card
-          and would otherwise touch the benefit above it. */}
-      <div className="mt-7 space-y-2.5 px-6">
+      <div className="px-6 pt-5">
+        <h1 className="text-[27px] font-extrabold leading-[1.1] tracking-tight text-foreground">
+          Comece seus <Hl>3 dias grátis</Hl>
+        </h1>
+        <p className="mt-2 text-[13.5px] leading-relaxed text-muted-foreground">
+          Seu relatório completo já está pronto. A Priva monitora seus dados todos os dias.
+        </p>
+      </div>
+
+      <div className="mt-6 space-y-2.5 px-6">
         <button
           onClick={() => setPlan("anual")}
           className="relative flex w-full items-center gap-3 rounded-2xl px-4 py-4 text-left transition"
@@ -916,7 +880,7 @@ function Paywall({ onBack, onDone }: { onBack: () => void; onDone: () => void })
         </button>
       </div>
 
-      <div className="px-6 pb-8 pt-5">
+      <div className="mt-auto px-6 pb-8 pt-5">
         <button
           onClick={start}
           className="flex w-full items-center justify-center gap-2 rounded-2xl py-4 text-[16px] font-bold text-white transition active:scale-[0.99]"
@@ -925,26 +889,20 @@ function Paywall({ onBack, onDone }: { onBack: () => void; onDone: () => void })
           {plan === "anual" ? "Começar meus 3 dias grátis" : "Assinar plano mensal"}
         </button>
 
-        <div className="mt-4 grid grid-cols-3 gap-2">
-          {[
-            { Icon: ShieldCheck, t: "Sem cobrança hoje" },
-            { Icon: Check, t: "Cancele quando quiser" },
-            { Icon: Bell, t: "Renovação após o teste" },
-          ].map((r) => (
-            <div key={r.t} className="flex flex-col items-center gap-1 text-center">
-              <r.Icon className="h-3.5 w-3.5" style={{ color: "#4F46E5" }} />
-              <span className="text-[9.5px] leading-tight text-muted-foreground">{r.t}</span>
-            </div>
-          ))}
-        </div>
-
-        <p className="mt-3 text-center text-[10.5px] text-muted-foreground/80">
+        <p className="mt-3 text-center text-[12px] font-semibold text-foreground">
           {plan === "anual"
-            ? `Após o teste, R$ ${brl(annual)} por ano. Renovação automática.`
+            ? "Sem cobrança hoje. Cancele quando quiser."
+            : "Cancele quando quiser."}
+        </p>
+        <p className="mt-1 text-center text-[10.5px] leading-relaxed text-muted-foreground/80">
+          {plan === "anual"
+            ? `Depois do teste, R$ ${brl(annual)} por ano. Renovação automática.`
             : `R$ ${brl(monthly)} por mês. Renovação automática.`}
         </p>
-        <div className="mt-2 flex items-center justify-center gap-2 text-[10.5px] text-muted-foreground">
-          <button className="underline-offset-2 hover:underline">Restaurar compras</button>
+        <div className="mt-2.5 flex items-center justify-center gap-2 text-[10.5px] text-muted-foreground">
+          <button onClick={onDone} className="underline-offset-2 hover:underline">
+            Restaurar compras
+          </button>
           <span aria-hidden>·</span>
           <a href="/termos" className="underline-offset-2 hover:underline">
             Termos
