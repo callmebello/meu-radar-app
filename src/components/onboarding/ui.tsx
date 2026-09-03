@@ -60,7 +60,7 @@ export function Step({
       </div>
 
       {(cta || footer) && (
-        <div className="px-6 pb-8 pt-4">
+        <div className="px-6 pb-6 pt-3">
           {cta && (
             <button
               onClick={onCta}

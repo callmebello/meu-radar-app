@@ -72,6 +72,55 @@ const ORDER: Id[] = [
 ];
 
 const onlyDigits = (v: string) => v.replace(/\D/g, "");
+
+/**
+ * Enough of an address to be worth sending to HIBP.
+ *
+ * "has an @" let through `a@b`, trailing dots and double dots — and every one
+ * of those spends a paid lookup and comes back with nothing, which the person
+ * reads as "I am safe". The shape check is strict; the typo check only catches
+ * the handful of domains that account for most of the mistakes.
+ */
+const COMMON_DOMAINS = [
+  "gmail.com",
+  "hotmail.com",
+  "outlook.com",
+  "yahoo.com.br",
+  "icloud.com",
+  "bol.com.br",
+  "uol.com.br",
+  "terra.com.br",
+];
+
+function emailLooksReal(v: string): boolean {
+  const e = v.trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/.test(e)) return false;
+  if (/\.\.|^\.|\.@|@\.|\.$/.test(e)) return false;
+  const [user, domain] = e.split("@");
+  if (user.length < 1 || domain.length < 4) return false;
+  return true;
+}
+
+/** One edit away from a domain people actually use — worth asking about. */
+function domainTypo(v: string): string | null {
+  const e = v.trim().toLowerCase();
+  const domain = e.split("@")[1];
+  if (!domain || COMMON_DOMAINS.includes(domain)) return null;
+  const dist = (a: string, b: string) => {
+    const m = Array.from({ length: a.length + 1 }, (_, i) => [i, ...Array(b.length).fill(0)]);
+    for (let j = 0; j <= b.length; j++) m[0][j] = j;
+    for (let i = 1; i <= a.length; i++)
+      for (let j = 1; j <= b.length; j++)
+        m[i][j] = Math.min(
+          m[i - 1][j] + 1,
+          m[i][j - 1] + 1,
+          m[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1),
+        );
+    return m[a.length][b.length];
+  };
+  const hit = COMMON_DOMAINS.find((d) => dist(domain, d) <= 2);
+  return hit ?? null;
+}
 const maskCpf = (v: string) => {
   const d = onlyDigits(v).slice(0, 11);
   return d
@@ -298,7 +347,7 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
   }
 
   if (id === "email") {
-    const ok = /.+@.+\..{2,}/.test(email);
+    const ok = emailLooksReal(email);
     return (
       <Step progress={progress} onBack={back} cta="Continuar" onCta={() => go()} ctaDisabled={!ok}>
         <div className="mt-5">
@@ -318,9 +367,22 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
           placeholder="voce@email.com"
           className="mt-6 w-full rounded-2xl border border-border bg-card px-5 py-4 text-center text-[16px] text-foreground outline-none transition-colors placeholder:text-muted-foreground/60 focus:border-indigo-500"
         />
-        <p className="mt-3 flex items-center justify-center gap-1.5 text-center text-[11.5px] text-muted-foreground">
-          <Lock className="h-3 w-3" /> Não enviamos spam e não vendemos seus dados
-        </p>
+        {(() => {
+          const typo = email.includes("@") ? domainTypo(email) : null;
+          return typo ? (
+            <button
+              onClick={() => setEmail(`${email.split("@")[0]}@${typo}`)}
+              className="mt-3 w-full text-center text-[12.5px] font-semibold"
+              style={{ color: "#4F46E5" }}
+            >
+              Você quis dizer {email.split("@")[0]}@{typo}?
+            </button>
+          ) : (
+            <p className="mt-3 flex items-center justify-center gap-1.5 text-center text-[11.5px] text-muted-foreground">
+              <Lock className="h-3 w-3" /> Não enviamos spam e não vendemos seus dados
+            </p>
+          );
+        })()}
       </Step>
     );
   }
@@ -400,7 +462,18 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
 
   if (id === "prepaywall") {
     return (
-      <Step progress={progress} onBack={back} cta="Continuar de graça" onCta={() => go()}>
+      <Step
+        progress={progress}
+        onBack={back}
+        cta="Continuar de graça"
+        onCta={() => go()}
+        footer={
+          <span className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-foreground">
+            <Check className="h-3.5 w-3.5" style={{ color: "var(--color-success)" }} /> Nenhuma
+            cobrança agora
+          </span>
+        }
+      >
         <Title>
           Sua proteção <Hl>já está pronta</Hl>
         </Title>
@@ -412,7 +485,7 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
             bottom is cropped and blurred out rather than scaled down, so the
             frame keeps its size. */}
         <div className="relative mt-6">
-          <div className="mx-auto flex h-[44vh] max-h-[350px] justify-center overflow-hidden">
+          <div className="mx-auto flex h-[47vh] max-h-[380px] justify-center overflow-hidden">
             <PhoneMock src="/mockup-priva-id.png" width={228} />
           </div>
 
@@ -437,11 +510,6 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
             delay="0.45s"
           />
         </div>
-
-        <p className="mt-2 flex items-center justify-center gap-1.5 text-center text-[12.5px] font-semibold text-foreground">
-          <Check className="h-3.5 w-3.5" style={{ color: "var(--color-success)" }} /> Nenhuma
-          cobrança agora
-        </p>
       </Step>
     );
   }
@@ -554,6 +622,7 @@ function Processing({
   onReady: (b: Breach[]) => void;
 }) {
   const [pct, setPct] = useState(0);
+  const [, setFailed] = useState(false);
   const done = useRef(false);
 
   useEffect(() => {
@@ -569,6 +638,10 @@ function Processing({
         : Promise.resolve(null),
     ]);
     void work.then(([h, u]) => {
+      // A failed lookup comes back as zero breaches, which would read as "you
+      // are safe" — the one wrong thing to tell someone here. The partial
+      // report is told the difference.
+      if (!h || typeof h.count !== "number") setFailed(true);
       if (u && "userId" in u && u.userId) {
         try {
           localStorage.setItem("priva_user_id", u.userId);
@@ -601,17 +674,19 @@ function Processing({
     const t = setInterval(() => {
       setPct((p) => {
         if (p >= 100) return p;
-        if (!done.current) return Math.min(92, p + Math.max(0.6, (92 - p) * 0.045));
-        if (p >= 100) return 100;
-        return Math.min(100, p + 3);
+        // Slower on purpose. The bar is the only thing telling someone we are
+        // actually looking, and at the old speed it hit 92% before the sentence
+        // under it had been read. It still never completes on its own.
+        if (!done.current) return Math.min(92, p + Math.max(0.22, (92 - p) * 0.016));
+        return Math.min(100, p + 1.6);
       });
-    }, 60);
+    }, 55);
     return () => clearInterval(t);
   }, []);
 
   useEffect(() => {
     if (pct >= 100) {
-      const t = setTimeout(() => onReadyRef.current(), 450);
+      const t = setTimeout(() => onReadyRef.current(), 700);
       return () => clearTimeout(t);
     }
   }, [pct]);
