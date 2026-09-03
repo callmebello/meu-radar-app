@@ -25,6 +25,8 @@ export type IdentityTileProps = {
   dot: string;
   /** Value to show on the back, empty when there is nothing on file. */
   value?: string;
+  /** What editing starts from, when the displayed value is masked. */
+  rawValue?: string;
   /** Shown on the back when there is no value. */
   emptyText?: string;
   placeholder?: string;
@@ -40,6 +42,7 @@ export function IdentityTile({
   status,
   dot,
   value = "",
+  rawValue,
   emptyText = "",
   placeholder = "",
   onSave,
@@ -49,7 +52,7 @@ export function IdentityTile({
 }: IdentityTileProps) {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState(value);
+  const [draft, setDraft] = useState(rawValue ?? value);
 
   const close = () => {
     setOpen(false);
@@ -165,15 +168,17 @@ export function IdentityTile({
           ) : value ? (
             <button
               onClick={() => {
-                setDraft(value);
+                setDraft(rawValue ?? value);
                 setEditing(true);
               }}
-              className="mt-2 flex flex-1 flex-col justify-center text-left"
+              className="relative mt-2 flex flex-1 flex-col justify-center text-left"
             >
-              <span className="break-all text-[13.5px] font-semibold leading-snug text-foreground">
+              <span className="break-all pr-12 text-[13.5px] font-semibold leading-snug text-foreground">
                 {value}
               </span>
-              <span className="mt-1.5 inline-flex items-center gap-1 text-[11px] text-muted-foreground">
+              {/* Bottom-right: out of the way of the value, and where a thumb
+                  already is. */}
+              <span className="absolute bottom-0 right-0 inline-flex items-center gap-1 text-[11px] text-muted-foreground">
                 <Pencil className="h-3 w-3" /> Editar
               </span>
             </button>

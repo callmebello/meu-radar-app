@@ -44,6 +44,7 @@ type DashCard = {
   status: string;
   level: string;
   value?: string;
+  rawValue?: string;
   emptyText?: string;
   placeholder?: string;
   onSave?: (v: string) => void;
@@ -140,7 +141,10 @@ export function RadarTab() {
           ? plural(breachCount, "vazamento detectado", "vazamentos detectados")
           : CLEAN,
       level: breachCount > 0 ? "danger" : "success",
-      value: email,
+      // Masked so it fits the tile on one line; editing starts from the real
+      // address, not from the dots.
+      value: email ? `${email.slice(0, 2)}${"•".repeat(4)}@${email.split("@")[1] ?? ""}` : "",
+      rawValue: email,
       emptyText: "Nenhum e-mail cadastrado. Toque para adicionar.",
       placeholder: "voce@email.com",
       onSave: (v) => {
@@ -366,6 +370,7 @@ export function RadarTab() {
                     status={it.status}
                     dot={levelColor(it.level)}
                     value={it.value}
+                    rawValue={it.rawValue}
                     emptyText={it.emptyText}
                     placeholder={it.placeholder}
                     onSave={it.onSave}

@@ -12,17 +12,11 @@ type Notif = {
   level: "danger" | "success";
 };
 
-// Real, widely-reported Brazilian data-leak headline (Serasa megavazamento, 2021).
-const initial: Notif[] = [
-  {
-    id: "1",
-    icon: "alert",
-    title: "Megavazamento expôs CPF de 223 milhões de brasileiros",
-    time: "Notícia · proteja seus dados",
-    unread: true,
-    level: "danger",
-  },
-];
+// Nothing seeded. The app shipped with a news headline pre-loaded as an unread
+// notification, so every new user met a red badge before anything had actually
+// happened to them — a badge that means nothing is a badge nobody believes the
+// next time. Real alerts (a new breach, a case update) go here.
+const initial: Notif[] = [];
 
 const DISMISSED_KEY = "priva_notifs_dismissed";
 const SEEN_KEY = "priva_notifs_seen";
