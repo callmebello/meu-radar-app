@@ -5,6 +5,7 @@ import {
   Check,
   Eye,
   IdCard,
+  FileText,
   Lock,
   Mail,
   Search,
@@ -491,23 +492,32 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
 
           <FadeOut height={120} />
 
+          {/* Five claims, alternating sides down the device so none of them
+              covers another and the eye zig-zags instead of scanning a column. */}
+          <FloatChip Icon={IdCard} label="Priva ID" className="left-0 top-3" delay="0.12s" />
           <FloatChip
             Icon={Eye}
             label="Monitoramento contínuo"
-            className="left-0 top-6"
-            delay="0.15s"
+            className="right-0 top-[20%]"
+            delay="0.22s"
+          />
+          <FloatChip
+            Icon={FileText}
+            label="Relatório completo"
+            className="left-0 top-[43%]"
+            delay="0.32s"
           />
           <FloatChip
             Icon={Bell}
             label="Alerta de vazamento"
-            className="right-0 top-[38%]"
-            delay="0.3s"
+            className="right-0 top-[63%]"
+            delay="0.42s"
           />
           <FloatChip
             Icon={ShieldCheck}
             label="Remoção via LGPD"
-            className="bottom-6 left-2"
-            delay="0.45s"
+            className="bottom-4 left-2"
+            delay="0.52s"
           />
         </div>
       </Step>
