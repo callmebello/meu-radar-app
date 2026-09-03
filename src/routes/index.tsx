@@ -372,7 +372,11 @@ function Index() {
         )}
 
         {/* Content column */}
-        <div className="relative flex min-h-screen flex-1 flex-col">
+        {/* min-w-0: this column is a flex item, so its default min-width:auto
+            lets any wide child stretch the whole app frame past the phone —
+            which is exactly what the incident checklist was doing. Capping it
+            here fixes every screen at once, present and future. */}
+        <div className="relative flex min-h-screen min-w-0 flex-1 flex-col">
           <main className="flex flex-1 flex-col pb-2 lg:mx-auto lg:w-full lg:max-w-3xl lg:px-2">
             {showEmpty ? (
               <ScanLanding onStart={() => setQuizOpen(true)} />

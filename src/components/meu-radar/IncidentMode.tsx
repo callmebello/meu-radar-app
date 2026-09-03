@@ -346,10 +346,10 @@ function Triage({ onPick, onBack }: { onPick: (t: Tipo) => void; onBack: () => v
                 <t.Icon className="h-5 w-5" style={{ color: t.tone }} />
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block text-[15.5px] font-bold leading-tight text-foreground">
+                <span className="block truncate text-[15.5px] font-bold leading-tight text-foreground">
                   {t.label}
                 </span>
-                <span className="mt-0.5 block text-[12.5px] leading-snug text-muted-foreground">
+                <span className="mt-0.5 line-clamp-2 block text-[12.5px] leading-snug text-muted-foreground">
                   {t.sub}
                 </span>
                 {done > 0 && (
@@ -406,9 +406,8 @@ function Checklist({ tipo, onBack }: { tipo: Tipo; onBack: () => void }) {
         <button onClick={onBack} aria-label="Voltar" className="text-muted-foreground">
           <ArrowLeft className="h-5 w-5" />
         </button>
-        <IncidentMark className="h-7 w-7" />
       </div>
-      <h1 className="px-5 pt-3 text-[26px] font-extrabold leading-tight text-foreground">
+      <h1 className="px-5 pt-2 text-[26px] font-extrabold leading-tight text-foreground">
         {meta.label}
       </h1>
       <p className="px-5 pt-1.5 text-[14px] leading-relaxed text-muted-foreground">
@@ -435,7 +434,7 @@ function Checklist({ tipo, onBack }: { tipo: Tipo; onBack: () => void }) {
           const isDone = done.includes(i);
           const isActive = i === active;
           return (
-            <li key={s.title} className="relative flex gap-3">
+            <li key={s.title} className="relative flex min-w-0 gap-3">
               {/* Rail */}
               <span className="flex w-5 shrink-0 flex-col items-center pt-6">
                 <span
@@ -461,7 +460,7 @@ function Checklist({ tipo, onBack }: { tipo: Tipo; onBack: () => void }) {
                   opacity: isDone ? 0.65 : 1,
                 }}
               >
-                <div className="flex items-start gap-3">
+                <div className="flex min-w-0 items-start gap-3">
                   <span
                     className="grid h-11 w-11 shrink-0 place-items-center rounded-xl"
                     style={{ backgroundColor: `${s.tone}1f` }}
@@ -474,47 +473,56 @@ function Checklist({ tipo, onBack }: { tipo: Tipo; onBack: () => void }) {
                   </span>
 
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
+                    <div className="flex min-w-0 items-center gap-2">
                       <span
                         className="grid h-5 w-5 shrink-0 place-items-center rounded-full text-[11px] font-bold text-white"
                         style={{ backgroundColor: s.tone }}
                       >
                         {i + 1}
                       </span>
+                      {/* min-w-0 on the truncating span itself: `truncate`
+                          sets white-space:nowrap, so as a flex item its
+                          min-content is the whole string — which is what was
+                          stretching the page past the phone. */}
                       <span
-                        className={`text-[15px] font-bold leading-tight text-foreground ${isDone ? "line-through" : ""}`}
+                        className={`min-w-0 flex-1 truncate text-[15px] font-bold leading-tight text-foreground ${isDone ? "line-through" : ""}`}
                       >
                         {s.title}
                       </span>
                     </div>
-                    <p className="mt-1 text-[12.5px] leading-snug text-muted-foreground">
+                    <p className="mt-1 line-clamp-2 text-[12.5px] leading-snug text-muted-foreground">
                       {s.desc}
                     </p>
 
-                    {s.link && (
-                      <a
-                        href={s.link.href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={(e) => e.stopPropagation()}
-                        className="mt-2.5 inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-[12.5px] font-bold"
-                        style={{ backgroundColor: `${s.tone}1f`, color: s.tone }}
-                      >
-                        {s.link.label} <ExternalLink className="h-3.5 w-3.5" />
-                      </a>
-                    )}
-                    {s.go && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (s.go?.pill) setProtecaoPill(s.go.pill);
-                          goToTab(s.go!.tab);
-                        }}
-                        className="mt-2.5 inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-[12.5px] font-bold"
-                        style={{ backgroundColor: `${s.tone}1f`, color: s.tone }}
-                      >
-                        {s.go.label} <ChevronRight className="h-3.5 w-3.5" />
-                      </button>
+                    {/* Bottom-right, so the action never pushes the card taller
+                        than title + two lines. */}
+                    {(s.link || s.go) && (
+                      <div className="mt-2 flex justify-end">
+                        {s.link ? (
+                          <a
+                            href={s.link.href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-[12.5px] font-bold"
+                            style={{ backgroundColor: `${s.tone}1f`, color: s.tone }}
+                          >
+                            {s.link.label} <ExternalLink className="h-3.5 w-3.5" />
+                          </a>
+                        ) : (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (s.go?.pill) setProtecaoPill(s.go.pill);
+                              goToTab(s.go!.tab);
+                            }}
+                            className="inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-[12.5px] font-bold"
+                            style={{ backgroundColor: `${s.tone}1f`, color: s.tone }}
+                          >
+                            {s.go!.label} <ChevronRight className="h-3.5 w-3.5" />
+                          </button>
+                        )}
+                      </div>
                     )}
                   </div>
                 </div>
