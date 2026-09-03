@@ -68,9 +68,14 @@ export function ProtecaoTab({ initial = "credenciais" }: { initial?: Pill }) {
           but is findable while browsing Proteção. Hidden on Remoção: someone
           reading the status of their own LGPD requests is not in an emergency,
           and a red panic row under it only muddies the screen. */}
-      <div className={`px-5 pb-6 pt-2 ${pill === "remocao" ? "hidden" : ""}`}>
-        <EmergencyCta />
-      </div>
+      {/* Only on Senhas. Under a leak list or a search result it read as a
+          reaction to what was on screen, which it is not — the emergency path
+          is about something that already happened, not about a finding. */}
+      {pill === "credenciais" && (
+        <div className="px-5 pb-6 pt-2">
+          <EmergencyCta />
+        </div>
+      )}
     </>
   );
 }

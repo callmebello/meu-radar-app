@@ -42,8 +42,10 @@ type Tool = "link" | "pix" | "mensagem" | "familia";
 type Level = "seguro" | "atencao" | "alto";
 
 const TOOLS: { id: Tool; label: string; Icon: typeof Link2 }[] = [
-  { id: "link", label: "Link", Icon: Link2 },
+  // Pix first: it is the check people open the app for, and the one with money
+  // on the other side of the decision.
   { id: "pix", label: "Pix", Icon: QrCode },
+  { id: "link", label: "Link", Icon: Link2 },
   { id: "mensagem", label: "Mensagem", Icon: MessageSquareText },
   { id: "familia", label: "Família", Icon: Users },
 ];
@@ -92,7 +94,7 @@ const HELP: Record<Tool, string> = {
 
 export function AtividadeTab() {
   const { isPremium, openPaywall } = useApp();
-  const [tool, setTool] = useState<Tool>("link");
+  const [tool, setTool] = useState<Tool>("pix");
   const [input, setInput] = useState("");
   const [result, setResult] = useState<LinkResult | PixResult | MessageResult | null>(null);
   const [history, setHistory] = useState<HistoryItem[]>([]);
@@ -434,10 +436,10 @@ export function AtividadeTab() {
                 ))}
               </ul>
 
-              {/* Only on a high-risk result: the person has just been told
-                  they were targeted, which is the one moment in this tab when
-                  "algo já aconteceu" is a live question rather than noise. */}
-              {result.level === "alto" && <EmergencyCta className="mt-4" />}
+              {/* High risk anywhere, and always on Pix — a Pix already sent is
+                  the emergency people actually arrive with, and by the time
+                  they are checking the code the money may already be gone. */}
+              {(result.level === "alto" || tool === "pix") && <EmergencyCta className="mt-4" />}
 
               <p className="px-2 pt-4 text-center text-[11px] leading-relaxed text-muted-foreground/70">
                 Análise feita no seu aparelho, a partir do conteúdo colado. Ajuda a decidir, mas não
