@@ -50,6 +50,7 @@ type Id =
   | "partial"
   | "social"
   | "prepaywall"
+  | "notifications"
   | "paywall";
 
 const ORDER: Id[] = [
@@ -64,6 +65,7 @@ const ORDER: Id[] = [
   "partial",
   "social",
   "prepaywall",
+  "notifications",
   "paywall",
 ];
 
@@ -422,6 +424,75 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
         <p className="mt-5 flex items-center justify-center gap-1.5 text-center text-[12.5px] font-semibold text-foreground">
           <Check className="h-3.5 w-3.5" style={{ color: "var(--color-success)" }} /> Nenhuma
           cobrança agora
+        </p>
+      </Step>
+    );
+  }
+
+  if (id === "notifications") {
+    return (
+      <Step
+        progress={progress}
+        onBack={back}
+        cta="Permitir notificações"
+        onCta={() => {
+          // The native prompt appears once, ever. Asking is the whole point of
+          // this screen; the answer does not gate the flow.
+          void (async () => {
+            try {
+              if (typeof Notification !== "undefined" && Notification.permission === "default") {
+                await Notification.requestPermission();
+              }
+            } catch {
+              /* unsupported or blocked — carry on either way */
+            }
+            gaEvent("notifications_prompted");
+            go();
+          })();
+        }}
+        footer={
+          <button onClick={() => go()} className="text-[13px] text-muted-foreground">
+            Agora não
+          </button>
+        }
+      >
+        <Title>
+          Posso te avisar quando <Hl>algo mudar</Hl>?
+        </Title>
+        <Sub>
+          Vazamento novo aparece toda semana. O aviso é o que transforma monitoramento em proteção.
+        </Sub>
+
+        <div className="mt-7 space-y-2.5">
+          {[
+            { Icon: Bell, t: "Vazamento novo com seus dados", s: "No dia em que aparecer." },
+            { Icon: ShieldCheck, t: "Resposta de uma remoção", s: "Quando uma empresa responder." },
+            { Icon: Eye, t: "Mudança no seu score", s: "Para bem ou para mal." },
+          ].map((b) => (
+            <div
+              key={b.t}
+              className="flex items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3"
+            >
+              <span
+                className="grid h-9 w-9 shrink-0 place-items-center rounded-xl"
+                style={{ backgroundColor: "rgba(79,70,229,0.10)" }}
+              >
+                <b.Icon className="h-4 w-4" style={{ color: "#4F46E5" }} />
+              </span>
+              <span className="min-w-0">
+                <span className="block text-[14px] font-bold leading-tight text-foreground">
+                  {b.t}
+                </span>
+                <span className="block text-[12px] leading-snug text-muted-foreground">{b.s}</span>
+              </span>
+            </div>
+          ))}
+        </div>
+
+        {/* Said plainly, because the alternative is a permission granted under a
+            promise we then break. */}
+        <p className="mt-5 text-center text-[11.5px] leading-relaxed text-muted-foreground">
+          Só avisos sobre a sua privacidade. Sem promoção e sem spam — você desliga quando quiser.
         </p>
       </Step>
     );
