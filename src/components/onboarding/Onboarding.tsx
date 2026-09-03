@@ -165,13 +165,16 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
   if (id === "preview") {
     return (
       <Step progress={progress} onBack={back} cta="Continuar" onCta={() => go()}>
-        <div className="mx-auto mb-5 w-full max-w-[16rem] overflow-hidden rounded-[26px] border-4 border-foreground/85 bg-background shadow-2xl">
-          <PreviewCard />
-        </div>
         <Title>
           Tudo num <Hl>só lugar</Hl>
         </Title>
         <Sub>Monitore seus dados, descubra riscos e aumente seu nível de proteção.</Sub>
+        {/* Cropped by a fixed window rather than a negative margin: the frame
+            still runs off the bottom, but it stops before the button instead of
+            sitting under it. */}
+        <div className="mt-5 flex h-[42vh] max-h-[330px] justify-center overflow-hidden">
+          <PhoneMock width={244} />
+        </div>
       </Step>
     );
   }
@@ -425,36 +428,6 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
   }
 
   return <Paywall onBack={back} onDone={onDone} />;
-}
-
-/* ── Preview mock ────────────────────────────────────────────────────────── */
-function PreviewCard() {
-  return (
-    <div className="bg-muted/40 p-3">
-      <div className="rounded-2xl border border-border/60 bg-card p-4 text-center">
-        <p className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
-          Identity Score
-        </p>
-        <p className="mt-1 text-[34px] font-extrabold leading-none" style={{ color: "#4F46E5" }}>
-          68
-        </p>
-        <span
-          className="mt-1 inline-block rounded-full px-2 py-0.5 text-[8px] font-bold"
-          style={{ backgroundColor: "rgba(99,102,241,0.14)", color: "#6366F1" }}
-        >
-          RISCO MÉDIO
-        </span>
-      </div>
-      <div className="mt-2 grid grid-cols-2 gap-2">
-        {["CPF", "E-mail", "Telefone", "Endereço"].map((l) => (
-          <div key={l} className="rounded-xl border border-border/60 bg-card p-2.5">
-            <p className="text-[10px] font-bold text-foreground">{l}</p>
-            <p className="text-[8px] leading-tight text-muted-foreground">Monitorado</p>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
 }
 
 /* ── Processing ──────────────────────────────────────────────────────────── */
