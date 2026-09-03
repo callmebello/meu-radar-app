@@ -17,7 +17,6 @@ export function Step({
   onCta,
   ctaDisabled,
   footer,
-  compact = false,
 }: {
   progress: number;
   onBack?: () => void;
@@ -26,7 +25,6 @@ export function Step({
   onCta?: () => void;
   ctaDisabled?: boolean;
   footer?: ReactNode;
-  compact?: boolean;
 }) {
   return (
     <div className="flex min-h-[100dvh] flex-col bg-background">
@@ -53,9 +51,11 @@ export function Step({
         </div>
       </div>
 
-      <div
-        className={`flex flex-1 flex-col ${compact ? "justify-start pt-4" : "justify-center"} px-6`}
-      >
+      {/* Top-aligned, always. With the mascot out, centring pushed the
+          headline into the middle of the screen and left the noble area empty —
+          the rest of the app puts the thing that matters up top, and so does
+          this now. */}
+      <div className="flex flex-1 flex-col justify-start px-6 pt-6">
         <div className="animate-step-in">{children}</div>
       </div>
 

@@ -12,7 +12,6 @@ import {
   Sparkles,
   Star,
 } from "lucide-react";
-import { Mascot } from "./Mascot";
 import { Step, Title, Sub, Hl } from "./ui";
 import { checkHibp } from "@/lib/api/hibp.functions";
 import { saveUser } from "@/lib/api/saveUser";
@@ -121,27 +120,50 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
         <div className="mx-auto mb-5 w-fit rounded-full border border-border bg-card px-4 py-2 text-[13px] text-muted-foreground">
           Oi! Boas-vindas à Priva
         </div>
-        <Mascot pose="welcome" size={210} />
-        <div className="mt-6">
+        <div>
           <Title>
             Sua proteção digital <Hl>começa agora</Hl>
           </Title>
           <Sub>Vamos entender sua identidade digital para te proteger melhor.</Sub>
         </div>
+
+        {/* The four steps carry the noble area. Without them the screen was a
+            headline floating over half a phone of white — and they set the
+            expectation the rest of the flow then delivers on. */}
+        <ol className="mt-7 space-y-2.5">
+          {[
+            { n: "01", t: "Detecta", s: "Encontra seus dados expostos" },
+            { n: "02", t: "Analisa", s: "Mostra o risco de cada um" },
+            { n: "03", t: "Remove", s: "Solicita a remoção conforme a LGPD" },
+            { n: "04", t: "Monitora", s: "Avisa quando aparecer algo novo" },
+          ].map((b) => (
+            <li
+              key={b.n}
+              className="flex items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3"
+            >
+              <span
+                className="grid h-9 w-9 shrink-0 place-items-center rounded-xl text-[12px] font-extrabold"
+                style={{ backgroundColor: "rgba(79,70,229,0.10)", color: "#4F46E5" }}
+              >
+                {b.n}
+              </span>
+              <span className="min-w-0">
+                <span className="block text-[14.5px] font-bold leading-tight text-foreground">
+                  {b.t}
+                </span>
+                <span className="block text-[12px] leading-snug text-muted-foreground">{b.s}</span>
+              </span>
+            </li>
+          ))}
+        </ol>
       </Step>
     );
   }
 
   if (id === "preview") {
     return (
-      <Step progress={progress} onBack={back} cta="Continuar" onCta={() => go()} compact>
+      <Step progress={progress} onBack={back} cta="Continuar" onCta={() => go()}>
         <div className="mx-auto mb-5 w-full max-w-[16rem] overflow-hidden rounded-[26px] border-4 border-foreground/85 bg-background shadow-2xl">
-          <img
-            src="/preview-home.png"
-            alt=""
-            className="w-full"
-            onError={(e) => e.currentTarget.remove()}
-          />
           <PreviewCard />
         </div>
         <Title>
@@ -161,7 +183,6 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
         onCta={() => go()}
         ctaDisabled={first.length < 2}
       >
-        <Mascot pose="thinking" size={150} />
         <div className="mt-5">
           <Title>
             Como podemos te <Hl>chamar</Hl>?
@@ -183,12 +204,43 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
   if (id === "greeting") {
     return (
       <Step progress={progress} onBack={back} cta="Continuar" onCta={() => go()}>
-        <Mascot pose="done" size={200} />
-        <div className="mt-6">
+        <div>
           <Title>
             Prazer em te conhecer, <Hl>{first}</Hl>!
           </Title>
-          <Sub>Vamos cuidar da sua privacidade e manter seus dados protegidos.</Sub>
+          <Sub>Antes de começar, três coisas sobre como a gente trabalha.</Sub>
+        </div>
+
+        {/* The beat screen earns its place by saying something true, instead of
+            being a name repeated back over empty space. */}
+        <div className="mt-7 space-y-2.5">
+          {[
+            { Icon: Lock, t: "Seu CPF vira código", s: "Guardamos o hash, nunca o número." },
+            { Icon: Eye, t: "Você vê o que encontramos", s: "Sem enrolação e sem termo técnico." },
+            {
+              Icon: ShieldCheck,
+              t: "Conforme a LGPD",
+              s: "Você pede, a gente solicita a remoção.",
+            },
+          ].map((b) => (
+            <div
+              key={b.t}
+              className="flex items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3"
+            >
+              <span
+                className="grid h-9 w-9 shrink-0 place-items-center rounded-xl"
+                style={{ backgroundColor: "rgba(16,185,129,0.12)" }}
+              >
+                <b.Icon className="h-4 w-4" style={{ color: "var(--color-success)" }} />
+              </span>
+              <span className="min-w-0">
+                <span className="block text-[14px] font-bold leading-tight text-foreground">
+                  {b.t}
+                </span>
+                <span className="block text-[12px] leading-snug text-muted-foreground">{b.s}</span>
+              </span>
+            </div>
+          ))}
         </div>
       </Step>
     );
@@ -196,14 +248,7 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
 
   if (id === "intro") {
     return (
-      <Step
-        progress={progress}
-        onBack={back}
-        cta="Começar minha verificação"
-        onCta={() => go()}
-        compact
-      >
-        <Mascot pose="idle" size={170} />
+      <Step progress={progress} onBack={back} cta="Começar minha verificação" onCta={() => go()}>
         <div className="mt-5">
           <Title>
             {first}, vamos descobrir o que a <Hl>internet sabe</Hl> sobre você?
@@ -247,7 +292,6 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
     const ok = /.+@.+\..{2,}/.test(email);
     return (
       <Step progress={progress} onBack={back} cta="Continuar" onCta={() => go()} ctaDisabled={!ok}>
-        <Mascot pose="thinking" size={140} />
         <div className="mt-5">
           <Title>
             Qual é o seu <Hl>e-mail</Hl>?
@@ -287,7 +331,6 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
           </button>
         }
       >
-        <Mascot pose="thinking" size={140} />
         <div className="mt-5">
           <Title>
             E o seu <Hl>CPF</Hl>?
@@ -349,7 +392,6 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
   if (id === "prepaywall") {
     return (
       <Step progress={progress} onBack={back} cta="Começar minha proteção" onCta={() => go()}>
-        <Mascot pose="done" size={180} />
         <div className="mt-6">
           <Title>
             Privacidade não é sorte. É <Hl>monitoramento</Hl>.
@@ -493,7 +535,6 @@ function Processing({
 
   return (
     <Step progress={0.66}>
-      <Mascot pose="scan" size={190} />
       <p
         className="mt-6 text-center text-[54px] font-extrabold leading-none"
         style={{ color: "#4F46E5" }}
@@ -567,13 +608,7 @@ function Partial({
   const masked = email.replace(/^(.{2}).*(@.*)$/, "$1••••$2");
 
   return (
-    <Step
-      progress={progress}
-      onBack={onBack}
-      cta="Ver meu relatório completo"
-      onCta={onNext}
-      compact
-    >
+    <Step progress={progress} onBack={onBack} cta="Ver meu relatório completo" onCta={onNext}>
       <Title>
         {breaches.length > 0 ? (
           <>
@@ -676,8 +711,7 @@ function Social({
   progress: number;
 }) {
   return (
-    <Step progress={progress} onBack={onBack} cta="Continuar" onCta={onNext} compact>
-      <Mascot pose="done" size={140} />
+    <Step progress={progress} onBack={onBack} cta="Continuar" onCta={onNext}>
       <div className="mt-4">
         <Title>
           Privacidade mais <Hl>simples</Hl> de entender
