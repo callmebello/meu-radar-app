@@ -177,21 +177,33 @@ export function PrivaIdCard({
           "radial-gradient(120% 90% at 88% 16%, rgba(99,102,241,0.11) 0%, rgba(99,102,241,0) 55%), radial-gradient(90% 70% at 10% 94%, rgba(79,70,229,0.07) 0%, rgba(79,70,229,0) 60%)",
       }}
     >
-      {/* Reflective film. A card catches light when it moves; this is that,
-          slowed right down and kept faint — noticed on the second look, never
-          competing with the name. */}
+      {/* Reflective film, in two parts.
+
+          A permanent iridescent wash gives the card the presence of a laminate
+          even when nothing is moving — that constant is what the earlier
+          version got from the streak over the fingerprint, and losing it is why
+          the film went quiet. On top of it, one bright pass crosses when the
+          card turns to face you. Both are clipped to the card's radius, so
+          nothing shows a corner. */}
       <span
         aria-hidden
         className="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl"
       >
         <span
-          key={sheenRun}
-          className="absolute inset-y-[-60%] w-[52%]"
+          className="absolute inset-0"
           style={{
             background:
-              "linear-gradient(100deg, rgba(255,255,255,0) 0%, rgba(199,210,254,0.55) 38%, rgba(255,255,255,0.85) 50%, rgba(196,181,253,0.5) 62%, rgba(255,255,255,0) 100%)",
-            filter: "blur(6px)",
-            animation: "id-sheen 1.5s cubic-bezier(0.4,0,0.2,1) 0.55s both",
+              "linear-gradient(125deg, rgba(139,92,246,0.10) 0%, rgba(255,255,255,0) 26%, rgba(99,102,241,0.09) 44%, rgba(255,255,255,0) 62%, rgba(167,139,250,0.11) 100%)",
+          }}
+        />
+        <span
+          key={sheenRun}
+          className="absolute inset-y-[-60%] w-[70%]"
+          style={{
+            background:
+              "linear-gradient(100deg, rgba(255,255,255,0) 0%, rgba(199,210,254,0.75) 30%, rgba(255,255,255,0.98) 50%, rgba(196,181,253,0.7) 70%, rgba(255,255,255,0) 100%)",
+            filter: "blur(4px)",
+            animation: "id-sheen 2.4s cubic-bezier(0.35,0,0.2,1) 0.5s both",
           }}
         />
       </span>
