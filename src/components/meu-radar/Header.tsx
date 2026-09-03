@@ -178,11 +178,11 @@ export function AppHeader({
                 return next;
               });
             }}
-            className="relative grid h-10 w-10 place-items-center rounded-full bg-secondary hover:bg-secondary/80 transition-all duration-200"
+            className="relative grid h-10 w-10 place-items-center rounded-full text-foreground transition active:scale-95 hover:opacity-70"
           >
             <Bell className="h-5 w-5 text-foreground" />
             {unreadCount > 0 && (
-              <span className="absolute top-1 right-1 grid h-4 w-4 place-items-center rounded-full bg-[var(--color-danger)] text-[10px] font-bold text-white">
+              <span className="absolute right-1.5 top-1.5 grid h-4 w-4 place-items-center rounded-full bg-[var(--color-danger)] text-[10px] font-bold text-white">
                 {unreadCount}
               </span>
             )}

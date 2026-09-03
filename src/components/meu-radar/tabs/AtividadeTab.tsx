@@ -366,6 +366,12 @@ export function AtividadeTab() {
                     copia-e-cola continua livre.
                   </p>
                 )}
+
+                {/* The emergency button is here BEFORE anything is pasted, on
+                    purpose. Someone who already sent the money is not going to
+                    paste the code and read a verdict — they need the way out on
+                    the first screen they land on. */}
+                <EmergencyCta className="mt-3" />
               </div>
             )}
           </div>
@@ -444,10 +450,9 @@ export function AtividadeTab() {
                 ))}
               </ul>
 
-              {/* High risk anywhere, and always on Pix — a Pix already sent is
-                  the emergency people actually arrive with, and by the time
-                  they are checking the code the money may already be gone. */}
-              {(result.level === "alto" || tool === "pix") && <EmergencyCta className="mt-4" />}
+              {/* Pix already carries the button above the input, so only the
+                  other tools add one here — and only on a high-risk verdict. */}
+              {result.level === "alto" && tool !== "pix" && <EmergencyCta className="mt-4" />}
 
               <p className="px-2 pt-4 text-center text-[11px] leading-relaxed text-muted-foreground/70">
                 Análise feita no seu aparelho, a partir do conteúdo colado. Ajuda a decidir, mas não

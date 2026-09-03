@@ -110,7 +110,7 @@ export function PasswordChecker() {
         ))}
 
       <p className="mt-3 text-[11px] leading-snug text-muted-foreground/70">
-        Modelo k-anonymity: apenas os 5 primeiros caracteres do hash SHA-1 são consultados.
+        Sua senha não sai do aparelho. Nem nós, nem ninguém, conseguimos ver o que você digitou.
       </p>
     </section>
   );

@@ -1,4 +1,5 @@
-import type { Breach } from "./breaches";
+import { isStealerLog, type Breach } from "./breaches";
+import { difficultyOf } from "./removal";
 import type { ActionType } from "./actions";
 
 /**
@@ -53,6 +54,17 @@ export function leakedLabels(b: Breach): string[] {
 
 const hasClass = (b: Breach, re: RegExp) => (b.DataClasses ?? []).some((c) => re.test(c));
 
+/**
+ * Is there a service here someone could have an account with?
+ *
+ * A stealer log is a malware dump and a domain-less entry is an aggregated
+ * file — you cannot close an account at either. Data brokers (which do have
+ * domains) are handled separately: you never opened an account there, they
+ * collected you, so closing is not the move — removal is.
+ */
+const canHoldAnAccount = (b: Breach): boolean =>
+  !isStealerLog(b) && Boolean((b.Domain ?? "").trim()) && difficultyOf(b) !== "dificil";
+
 export function guidanceFor(b: Breach, name: string): BreachGuidance {
   const tasks: BreachTask[] = [];
   const advice: string[] = [];
@@ -66,6 +78,24 @@ export function guidanceFor(b: Breach, name: string): BreachGuidance {
     advice.push(
       "Se você usa essa mesma senha em outro site, troque lá também — é assim que um vazamento vira vários.",
     );
+  }
+
+  // The option nobody offers, and the one that fits most of these leaks: half
+  // of what HIBP returns is an account from years ago that the person will
+  // never open again. Changing the password on a service you abandoned is
+  // housekeeping; closing it removes the thing that leaks next time — which is
+  // why it credits more (see ACTION_CREDIT) and why it is worth naming as its
+  // own choice rather than hiding inside the advice.
+  //
+  // Only where an account can exist. A combolist and a data broker both show up
+  // in this list, and neither is a service anyone signed up for — "apaguei
+  // minha conta no Naz.API" is a task nobody can complete, and an impossible
+  // checkbox is worse than no checkbox.
+  if (canHoldAnAccount(b)) {
+    tasks.push({
+      type: "account_closed",
+      label: `Não uso mais ${name || "esse serviço"} — apaguei minha conta`,
+    });
   }
 
   if (hasClass(b, /security question/i)) {

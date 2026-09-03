@@ -23,6 +23,7 @@ import { saveUser } from "@/lib/api/saveUser";
 import { rankForDisplay, displayName, logoOf, type Breach } from "@/lib/breaches";
 import { leakedLabels } from "@/lib/breachActions";
 import { rememberIdentity } from "@/lib/identity";
+import { saveProfile } from "@/lib/profile";
 import { getFirstTouch, attributionParams } from "@/lib/attribution";
 import { track, gaEvent } from "@/lib/analytics";
 import { PLAN_PRICE } from "@/lib/checkout";
@@ -155,6 +156,18 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
   const first = name.trim().split(/\s+/)[0] || "";
   const progress = (i + 1) / ORDER.length;
 
+  /**
+   * The name is the first real thing the person gives us, and until now it
+   * lived only in this component's state — so the Priva ID they were being
+   * sold two screens later still fell back to the e-mail prefix. Persisting it
+   * here means the card carries their name from the moment they type it.
+   */
+  const saveName = () => {
+    const clean = name.trim().replace(/\s+/g, " ");
+    if (clean) saveProfile({ cpfName: clean });
+    go();
+  };
+
   useEffect(() => {
     track("ViewContent", { content_name: `onb_${id}`, ...attributionParams() });
     gaEvent("onboarding_step", { step: id });
@@ -239,7 +252,7 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
         progress={progress}
         onBack={back}
         cta="Continuar"
-        onCta={() => go()}
+        onCta={() => saveName()}
         ctaDisabled={first.length < 2}
       >
         <div className="mt-5">
@@ -252,7 +265,7 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
           autoFocus
           value={name}
           onChange={(e) => setName(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && first.length >= 2 && go()}
+          onKeyDown={(e) => e.key === "Enter" && first.length >= 2 && saveName()}
           placeholder="Seu nome"
           className="mt-6 w-full rounded-2xl border border-border bg-card px-5 py-4 text-center text-[16px] text-foreground outline-none transition-colors placeholder:text-muted-foreground/60 focus:border-indigo-500"
         />

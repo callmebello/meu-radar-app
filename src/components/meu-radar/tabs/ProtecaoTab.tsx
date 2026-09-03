@@ -24,7 +24,21 @@ export function ProtecaoTab({ initial = "credenciais" }: { initial?: Pill }) {
   const { isPremium, goToTab, protecaoPill, setProtecaoPill } = useApp();
   // The home can route straight to a panel ("Trocar a senha do Canva" lands on
   // Vazamentos, not on whatever pill happened to be open).
-  const [pill, setPill] = useState<Pill>((protecaoPill as Pill) || initial);
+  const [pill, setPill] = useState<Pill>(() => {
+    if (protecaoPill) return protecaoPill as Pill;
+    // Set by the report before it navigates here (see routes/relatorio.tsx).
+    // Read once and cleared, so a later visit opens where it should.
+    try {
+      const handed = sessionStorage.getItem("priva_open_pill") as Pill | null;
+      if (handed) {
+        sessionStorage.removeItem("priva_open_pill");
+        return handed;
+      }
+    } catch {
+      /* ignore */
+    }
+    return initial;
+  });
   useEffect(() => {
     if (protecaoPill) {
       setPill(protecaoPill as Pill);

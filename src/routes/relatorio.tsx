@@ -36,6 +36,8 @@ import {
   recognisableCompanies,
   type Breach,
 } from "@/lib/breaches";
+import { ReportActionPlan } from "@/components/meu-radar/ReportActionPlan";
+import { generateRelatorioPdf } from "@/lib/api/generateRelatorio.functions";
 
 export const Route = createFileRoute("/relatorio")({
   head: () => ({ meta: [{ title: "Relatório de Exposição — Priva" }] }),
@@ -117,6 +119,12 @@ function RelatorioPage() {
   const [whereOpen, setWhereOpen] = useState(false);
   const [failedLogos, setFailedLogos] = useState<Set<string>>(new Set());
   const [mounted, setMounted] = useState(false);
+  // Bumped whenever the action ledger changes, so the score above the plan
+  // recomputes the moment a box is ticked. Without it the number sits still
+  // while the plan claims it moved — the one thing that would make the whole
+  // score read as decorative.
+  const [ledgerTick, setLedgerTick] = useState(0);
+  const [pdfBusy, setPdfBusy] = useState(false);
 
   // Scan is read from localStorage AND re-read for a few seconds: the HIBP
   // result can land right after the scan navigation, so poll until breaches
@@ -176,7 +184,7 @@ function RelatorioPage() {
   const recent = breaches.some((b) => tsOf(b) && Date.now() - tsOf(b) < 365 * 86_400_000);
 
   // Deterministic score from the evidence — see lib/riskScore.
-  const { score, factors } = useMemo(
+  const { score, factors, credit, creditCap } = useMemo(
     () =>
       computeScore({
         breachCount,
@@ -187,8 +195,40 @@ function RelatorioPage() {
         // different scores for the same person.
         resolved: resolvedCounts(),
       }),
-    [breachCount, counts, recent, publicHits],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [breachCount, counts, recent, publicHits, ledgerTick],
   );
+  const headroom = Math.max(0, creditCap - credit);
+
+  /**
+   * Removal lives as a pill inside Proteção, and this route sits outside the
+   * AppProvider that owns that state — so the destination is handed over in
+   * sessionStorage and picked up on the other side. A search param would work
+   * too, but it would also survive a share of the URL, which this should not.
+   */
+  const goRemocao = () => {
+    try {
+      sessionStorage.setItem("priva_open_pill", "remocao");
+    } catch {
+      /* the dashboard just opens on its default pill */
+    }
+    navigate({ to: "/" });
+  };
+
+  // Same server-rendered PDF the profile offers, reachable from the place the
+  // person is actually reading the report.
+  const downloadPdf = async () => {
+    const uid = typeof window !== "undefined" ? localStorage.getItem("priva_user_id") : null;
+    if (!uid) return;
+    setPdfBusy(true);
+    try {
+      const res = await generateRelatorioPdf({ data: { userId: uid } });
+      if (res.ok && res.url) window.open(res.url, "_blank");
+    } catch {
+      /* the button re-enables so they can try again */
+    }
+    setPdfBusy(false);
+  };
   const risk = riskLevel(score);
 
   // The person hands us e-mail and CPF, so those two are always answered — and
@@ -642,53 +682,82 @@ function RelatorioPage() {
           </div>
         </section>
 
-        {/* ── 5. RECOMMENDATIONS — things they can do themselves ───── */}
-        <section className="mt-7 px-5">
-          <h2 className="mb-3 text-[17px] font-bold text-foreground">
-            O que recomendamos para você
-          </h2>
-          <div className="grid gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-3">
-            {[
-              {
-                Icon: KeyRound,
-                title: "Troque a senha comprometida",
-                text: "Use uma senha forte e única em cada conta importante.",
-              },
-              {
-                Icon: Lock,
-                title: "Ative a verificação em duas etapas",
-                text: "Mesmo com a senha vazada, ninguém entra sem o segundo fator.",
-              },
-              {
-                Icon: ShieldCheck,
-                title: "Assine a Priva",
-                text: "Pedimos a remoção dos seus dados nas fontes e seguimos monitorando para avisar de vazamentos novos.",
-              },
-            ].map((r) => (
-              <div key={r.title} className="flex gap-3 bg-card px-4 py-4 sm:flex-col sm:gap-2">
-                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[var(--color-navy)]/10">
-                  <r.Icon className="h-4 w-4 text-[var(--color-navy)]" strokeWidth={1.9} />
-                </span>
-                <div className="min-w-0">
-                  <p className="text-[13.5px] font-bold leading-snug text-foreground">{r.title}</p>
-                  <p className="mt-1 text-[12px] leading-snug text-muted-foreground">{r.text}</p>
+        {/* ── 5a. THE PLAN — subscribers only, because it IS the product ── */}
+        {isPaid && (
+          <ReportActionPlan
+            breaches={breaches}
+            headroom={headroom}
+            onGoRemocao={() => goRemocao()}
+            onChange={() => setLedgerTick((n) => n + 1)}
+          />
+        )}
+
+        {/* ── 5b. RECOMMENDATIONS — the free reader's version of the above ── */}
+        {!isPaid && (
+          <section className="mt-7 px-5">
+            <h2 className="mb-3 text-[17px] font-bold text-foreground">
+              O que recomendamos para você
+            </h2>
+            <div className="grid gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-3">
+              {[
+                {
+                  Icon: KeyRound,
+                  title: "Troque a senha comprometida",
+                  text: "Use uma senha forte e única em cada conta importante.",
+                },
+                {
+                  Icon: Lock,
+                  title: "Ative a verificação em duas etapas",
+                  text: "Mesmo com a senha vazada, ninguém entra sem o segundo fator.",
+                },
+                {
+                  Icon: ShieldCheck,
+                  title: "Assine a Priva",
+                  text: "Pedimos a remoção dos seus dados nas fontes e seguimos monitorando para avisar de vazamentos novos.",
+                },
+              ].map((r) => (
+                <div key={r.title} className="flex gap-3 bg-card px-4 py-4 sm:flex-col sm:gap-2">
+                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[var(--color-navy)]/10">
+                    <r.Icon className="h-4 w-4 text-[var(--color-navy)]" strokeWidth={1.9} />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-[13.5px] font-bold leading-snug text-foreground">
+                      {r.title}
+                    </p>
+                    <p className="mt-1 text-[12px] leading-snug text-muted-foreground">{r.text}</p>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        </section>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* ── 6. THE OFFER — how do you want to solve it ───────────── */}
         {isPaid ? (
-          <section className="mt-8 px-5 text-center">
-            <p className="flex items-center justify-center gap-2 text-[17px] font-bold text-[var(--color-success)]">
-              <ShieldCheck className="h-5 w-5" /> Você já está protegido
-            </p>
+          /* A subscriber who reaches the end of the report used to get a
+             congratulation and a way out. Two things belong here instead: the
+             file they can keep (and forward to a bank, an employer, a lawyer)
+             and the queue where the removals actually happen. */
+          <section className="mt-8 space-y-2.5 px-5">
+            <button
+              onClick={() => void downloadPdf()}
+              disabled={pdfBusy}
+              className="flex w-full items-center justify-center gap-2 rounded-2xl py-4 text-[15px] font-bold text-white transition active:scale-[0.99] disabled:opacity-60"
+              style={{ background: "linear-gradient(135deg,#4F46E5,#6366F1)" }}
+            >
+              {pdfBusy ? "Gerando…" : "Baixar relatório em PDF"}
+            </button>
+            <button
+              onClick={() => goRemocao()}
+              className="flex w-full items-center justify-center gap-2 rounded-2xl border border-border bg-card py-4 text-[15px] font-bold text-foreground transition active:scale-[0.99]"
+            >
+              Ir para a central de remoção <ArrowRight className="h-4 w-4" />
+            </button>
             <button
               onClick={() => navigate({ to: "/" })}
-              className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-[var(--color-navy)] py-4 font-bold text-white transition active:scale-[0.99]"
+              className="w-full py-2 text-[13px] font-semibold text-muted-foreground"
             >
-              Voltar ao app <ArrowRight className="h-4 w-4" />
+              Voltar ao app
             </button>
           </section>
         ) : (

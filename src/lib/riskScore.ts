@@ -27,13 +27,31 @@ export type ScoreInput = {
  *
  * These are smaller than the penalties they answer, and deliberately so: a
  * changed password reduces the chance of the leak being used, it does not
- * un-leak the data. Requesting removal is worth the most because it is the
- * only action with a third party actually on the hook.
+ * un-leak the data.
+ *
+ * The ladder is ordered by how much of the exposure each one actually removes,
+ * which is also — not by accident — the order we want people to climb:
+ *
+ *   password  a leaked credential stops working, but the account and
+ *   (5)       everything in it stays where it is.
+ *
+ *   2FA       the credential stops being enough on its own. Slightly better
+ *   (6)       than a new password, because the next leak is covered too.
+ *
+ *   closed    the account stops existing. Nothing left to leak next time —
+ *   (8)       and for an account nobody uses, this is strictly better than a
+ *             new password on a login they will never open again.
+ *
+ *   removal   a third party is legally on the hook to erase what they hold.
+ *   (10)      The only action whose effect outlives the account itself.
+ *
+ * Closing used to sit BELOW changing a password (4 vs 5), which quietly told
+ * people the weakest option was the best one available.
  */
 export const ACTION_CREDIT = {
   passwordChanged: 5,
-  accountClosed: 4,
   twoFactorEnabled: 6,
+  accountClosed: 8,
   removalRequested: 10,
 } as const;
 

@@ -11,7 +11,6 @@ import { IncidentMode } from "@/components/meu-radar/IncidentMode";
 import { Toaster } from "@/components/ui/sonner";
 import { AppProvider, useApp, type CaptureReason } from "@/contexts/AppContext";
 import { CpfCaptureSheet } from "@/components/CpfCaptureSheet";
-import { PreScanQuiz } from "@/components/quiz/PreScanQuiz";
 import { PaywallModal } from "@/components/meu-radar/PaywallModal";
 import { ScanFunnel } from "@/components/meu-radar/ScanFunnel";
 import { ScanningOverlay } from "@/components/meu-radar/ScanningOverlay";
@@ -26,13 +25,7 @@ import { checkHibp } from "@/lib/api/hibp.functions";
 import { searchExposure } from "@/lib/api/serpapi.functions";
 import { searchGithubExposure } from "@/lib/api/github.functions";
 import { getUser } from "@/lib/auth";
-import {
-  getCpf,
-  getEmail,
-  hasCompletedQuiz,
-  markQuizCompleted,
-  rememberIdentity,
-} from "@/lib/identity";
+import { getCpf, getEmail, rememberIdentity } from "@/lib/identity";
 import { getUserPlan } from "@/lib/api/account.functions";
 import { syncLeadProfile } from "@/lib/api/quiz.functions";
 import { readQuizAnswers } from "@/lib/quiz";
@@ -78,10 +71,11 @@ function Index() {
     // Shared into the app from another app (Web Share Target, Android PWA):
     // land straight on the verification tools with the content ready.
     if (new URLSearchParams(window.location.search).get("verificar")) setTab("atividade");
+    // Handed over by the report when it sends someone to a Proteção panel.
+    if (sessionStorage.getItem("priva_open_pill")) setTab("protecao");
   }, []);
   const [captureOpen, setCaptureOpen] = useState(false);
   const [captureReason, setCaptureReason] = useState<CaptureReason>("scan");
-  const [quizOpen, setQuizOpen] = useState(false);
   const {
     setGoToTab,
     isPremium,
@@ -128,7 +122,7 @@ function Index() {
   // Core scan: spins the button, slides up the scanning box, then opens the
   // result sheet. In parallel it persists the user (hashed CPF), queries HIBP for
   // the real breach count, and caches the scan — all best-effort (guarded).
-  const runScan = (cpf: string, email: string, opts?: { silent?: boolean }) => {
+  const runScan = (cpf: string, email: string) => {
     setHasScanned(true);
     setTab("radar");
     setFunnelOpen(false);
@@ -271,37 +265,25 @@ function Index() {
 
     // Land on /relatorio only once the real HIBP result is in (so the report
     // never opens empty), keeping the ≥3.5s scan animation and capping the wait
-    // at 7s if HIBP is slow. Paid users (silent) stay on the dashboard.
+    // at 7s if HIBP is slow.
     const minAnim = new Promise<void>((res) => setTimeout(res, 3500));
     const hibpReady = Promise.race([hibpP, new Promise((res) => setTimeout(res, 7000))]);
     void Promise.all([minAnim, hibpReady]).then(() => {
       setScanning(false);
-      if (!opts?.silent) navigate({ to: "/relatorio" });
+      navigate({ to: "/relatorio" });
     });
   };
 
-  // Single entry point from the pre-scan quiz's CPF step. The Pixel `Lead` is
-  // fired by the quiz the moment that step is reached (not here), so it counts
-  // leads that got to the form — firing it again on submit would double it.
-  const beginScan = (cpf: string, email: string) => {
-    setQuizOpen(false);
-    rememberIdentity(cpf, email);
-    markQuizCompleted();
-    runScan(cpf, email);
-  };
-
   // CPF capture (post-payment "confirm CPF" fallback, or Scan-button capture for
-  // already-unlocked users). Paid users scan silently (no sales funnel).
+  // already-unlocked users).
   const confirmCapture = (cpf: string, email: string) => {
     setCaptureOpen(false);
     rememberIdentity(cpf, email);
     track("Lead", attributionParams());
-    runScan(cpf, email, { silent: isPremium });
+    runScan(cpf, email);
   };
 
-  // Central scan button: scan inline if CPF is known, else capture it. Free
-  // leads go through the pre-scan quiz (the sales flow); paid users skip it and
-  // get the bare CPF sheet — they've already converted, don't re-sell them.
+  // Central scan button: scan inline if the CPF is known, else ask for it.
   const onScan = () => {
     const c = getCpf();
     const e = getEmail();
@@ -315,19 +297,17 @@ function Index() {
     }
 
     if (c && isValidCPF(c)) {
-      runScan(c, e, { silent: isPremium });
+      runScan(c, e);
       return;
     }
 
-    // No CPF on file. Someone who already answered the quiz never sees it
-    // again — they just get the short capture sheet.
-    if (isPremium || hasCompletedQuiz()) {
-      setCaptureReason("scan");
-      setCaptureOpen(true);
-      return;
-    }
-
-    setQuizOpen(true);
+    // No CPF on file. The app build asks for it directly: the pre-scan quiz
+    // belongs to the web funnel (branch `versao-quiz`), where the visitor has
+    // not yet been onboarded. Someone inside the app has already given us a
+    // name and an e-mail — sending them through a sales questionnaire to reach
+    // their own scan is the detour that made this button feel broken.
+    setCaptureReason("scan");
+    setCaptureOpen(true);
   };
 
   useEffect(() => {
@@ -379,7 +359,12 @@ function Index() {
         <div className="relative flex min-h-screen min-w-0 flex-1 flex-col">
           <main className="flex flex-1 flex-col pb-2 lg:mx-auto lg:w-full lg:max-w-3xl lg:px-2">
             {showEmpty ? (
-              <ScanLanding onStart={() => setQuizOpen(true)} />
+              <ScanLanding
+                onStart={() => {
+                  setCaptureReason("scan");
+                  setCaptureOpen(true);
+                }}
+              />
             ) : (
               <>
                 {tab === "radar" && <RadarTab />}
@@ -401,15 +386,6 @@ function Index() {
       </div>
 
       <PaymentReturn />
-      {quizOpen && (
-        <PreScanQuiz
-          defaultEmail={
-            (typeof window !== "undefined" && sessionStorage.getItem("priva_email")) || ""
-          }
-          onComplete={beginScan}
-          onExit={() => setQuizOpen(false)}
-        />
-      )}
       {captureOpen && (
         <CpfCaptureSheet
           reason={captureReason}
