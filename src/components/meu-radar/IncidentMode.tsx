@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { IncidentMark } from "./IncidentMark";
 import {
   ArrowLeft,
   ChevronRight,
@@ -110,6 +111,7 @@ function Triage({ onPick, onBack }: { onPick: (t: Tipo) => void; onBack: () => v
         <button onClick={onBack} aria-label="Voltar" className="text-muted-foreground">
           <ArrowLeft className="h-5 w-5" />
         </button>
+        <IncidentMark className="h-6 w-6" />
         <h1 className="text-lg font-bold text-foreground">O que aconteceu?</h1>
       </div>
       <p className="px-5 pt-1 text-sm text-muted-foreground">

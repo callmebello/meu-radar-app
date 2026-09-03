@@ -129,7 +129,13 @@ export function RadarTab() {
       level: cpfEx?.found ? "danger" : "success",
       value:
         cpfDigits.length === 11 ? `•••.•••.${cpfDigits.slice(6, 9)}-${cpfDigits.slice(9)}` : "",
-      emptyText: "Nenhum CPF verificado ainda. Toque em Scan Grátis para começar.",
+      rawValue: cpfDigits,
+      emptyText: "Nenhum CPF cadastrado. Toque para adicionar.",
+      placeholder: "000.000.000-00",
+      onSave: (v) => {
+        rememberIdentity(v);
+        forceRender((n) => n + 1);
+      },
     },
     {
       icon: Mail,

@@ -52,6 +52,7 @@ export function IdentityTile({
 }: IdentityTileProps) {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [justSaved, setJustSaved] = useState(false);
   const [draft, setDraft] = useState(rawValue ?? value);
 
   const close = () => {
@@ -60,13 +61,20 @@ export function IdentityTile({
   };
 
   const save = () => {
-    onSave?.(draft.trim());
+    const v = draft.trim();
+    if (!v) return;
+    onSave?.(v);
     setEditing(false);
+    // A beat of confirmation before the value comes back. Saving with no
+    // feedback at all reads as a dead button — which is exactly how the CPF
+    // card felt when it had no handler wired to it.
+    setJustSaved(true);
+    setTimeout(() => setJustSaved(false), 1100);
   };
 
   // No value and not locked: the back opens straight into the field, since
   // asking someone to tap twice to fill an empty box is just friction.
-  const showInput = !locked && (editing || (open && !value));
+  const showInput = !locked && !justSaved && (editing || (open && !value));
 
   return (
     <div style={{ perspective: "1200px" }}>
@@ -156,6 +164,22 @@ export function IdentityTile({
             >
               {lockedText}
             </button>
+          ) : justSaved ? (
+            <div className="flex flex-1 flex-col items-center justify-center gap-1.5">
+              <span
+                className="grid h-9 w-9 animate-[scan-pop_0.35s_ease-out] place-items-center rounded-full"
+                style={{ backgroundColor: "rgba(15,169,104,0.14)" }}
+              >
+                <Check
+                  className="h-4 w-4"
+                  style={{ color: "var(--color-success)" }}
+                  strokeWidth={3}
+                />
+              </span>
+              <span className="text-[12px] font-semibold" style={{ color: "var(--color-success)" }}>
+                Salvo
+              </span>
+            </div>
           ) : showInput ? (
             <div
               className="mt-2 flex flex-1 flex-col justify-center"
@@ -186,7 +210,9 @@ export function IdentityTile({
               }}
               className="relative mt-2 flex flex-1 flex-col justify-center text-left"
             >
-              <span className="break-all pr-12 text-[13.5px] font-semibold leading-snug text-foreground">
+              {/* Clamped: a long address or e-mail has to fit the tile rather
+                  than grow it or spill over the Editar link. */}
+              <span className="line-clamp-3 break-all pr-12 text-[13.5px] font-semibold leading-snug text-foreground">
                 {value}
               </span>
               {/* Bottom-right: out of the way of the value, and where a thumb

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { LifeBuoy, ChevronRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
+import { IncidentMark } from "../IncidentMark";
 import { AppHeader } from "../Header";
 import { CredenciaisTab } from "./CredenciaisTab";
 import { ExposicaoTab } from "./ExposicaoTab";
@@ -72,7 +73,7 @@ export function ProtecaoTab({ initial = "credenciais" }: { initial?: Pill }) {
           className="flex w-full items-center gap-3 rounded-2xl border border-[var(--color-danger)]/25 bg-[var(--color-danger)]/5 px-4 py-3.5 text-left transition active:scale-[0.99]"
         >
           <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[var(--color-danger)]/12">
-            <LifeBuoy className="h-5 w-5 text-[var(--color-danger)]" strokeWidth={1.9} />
+            <IncidentMark className="h-5 w-5" />
           </span>
           <span className="min-w-0 flex-1">
             <span className="block text-[14px] font-bold text-foreground">
