@@ -70,6 +70,11 @@ export function AnimatedScoreGauge({
             <stop offset="55%" stopColor="#818CF8" />
             <stop offset="100%" stopColor="#4338CA" />
           </linearGradient>
+          {/* Neon: the arc is redrawn blurred underneath itself, so the light
+              spills onto the card instead of the stroke merely being brighter. */}
+          <filter id="gauge-glow" x="-40%" y="-40%" width="180%" height="180%">
+            <feGaussianBlur stdDeviation="5" />
+          </filter>
         </defs>
         {gradient && (
           <defs>
@@ -89,6 +94,20 @@ export function AnimatedScoreGauge({
           strokeWidth="12"
           strokeLinecap="round"
         />
+        {/* glow pass, solid mode only */}
+        {!gradient && (
+          <path
+            d={`M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`}
+            fill="none"
+            stroke="url(#gauge-priva-grad)"
+            strokeWidth="14"
+            strokeLinecap="round"
+            strokeDasharray={arcLen}
+            strokeDashoffset={offset}
+            filter="url(#gauge-glow)"
+            opacity="0.55"
+          />
+        )}
         {/* foreground arc — gradient mode draws the FULL green→red scale
             (speedometer); the needle indicates the score. Solid mode keeps the
             animated fill. */}
@@ -153,8 +172,9 @@ export function AnimatedScoreGauge({
           </>
         )}
       </svg>
+      {/* Pulled up into the arc: the number belongs inside the dial. */}
       {!gradient && (
-        <div className="-mt-12 flex flex-col items-center">
+        <div className="-mt-[68px] flex flex-col items-center">
           <div className="flex items-baseline gap-1">
             <span className="text-4xl font-extrabold tracking-tight text-foreground">
               {Math.round(current)}
