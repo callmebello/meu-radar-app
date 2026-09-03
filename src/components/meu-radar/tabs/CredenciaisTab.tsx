@@ -254,9 +254,14 @@ export function CredenciaisTab() {
             <div className="overflow-hidden">
               <div className="border-t border-border px-4 py-4">
                 <div className="flex items-center gap-2">
+                  {/* A tinted field, not a solid indigo block: the password is
+                      the content here, not a call to action. */}
                   <p
-                    className="min-w-0 flex-1 break-all rounded-xl px-3 py-2.5 font-mono text-[15px] font-medium tracking-wide text-white"
-                    style={{ backgroundColor: "#4F46E5" }}
+                    className="min-w-0 flex-1 break-all rounded-xl border px-3 py-2.5 font-mono text-[15px] font-semibold tracking-wide text-foreground"
+                    style={{
+                      backgroundColor: "rgba(79,70,229,0.06)",
+                      borderColor: "rgba(79,70,229,0.20)",
+                    }}
                   >
                     {pwd}
                   </p>

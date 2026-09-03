@@ -27,7 +27,9 @@ import { ProtecaoTrackingCard } from "../ProtecaoTrackingCard";
 import { NextActionsCard } from "../NextActionsCard";
 import { PrivaIdCard } from "../PrivaIdCard";
 import { ShareResultSheet } from "../ShareResultSheet";
-import { IdentityCardSheet, type CardType } from "../IdentityCardSheet";
+import { IdentityTile } from "../IdentityTile";
+import { getProfile, saveProfile } from "@/lib/profile";
+import { getCpf, getEmail, rememberIdentity } from "@/lib/identity";
 
 const levelColor = (l: string) =>
   l === "danger"
@@ -36,16 +38,18 @@ const levelColor = (l: string) =>
       ? "var(--color-warning)"
       : "var(--color-success)";
 
-type DashCard =
-  | {
-      kind: "card";
-      icon: typeof Mail;
-      label: string;
-      type: CardType;
-      status: string;
-      level: string;
-    }
-  | { kind: "upsell"; icon: typeof Mail; label: string; subtitle: string };
+type DashCard = {
+  icon: typeof Mail;
+  label: string;
+  status: string;
+  level: string;
+  value?: string;
+  emptyText?: string;
+  placeholder?: string;
+  onSave?: (v: string) => void;
+  locked?: boolean;
+  lockedText?: string;
+};
 
 export function RadarTab() {
   const { isPremium, goToTab, hasChecked, scanning, scanResult, exposure, openScan } = useApp();
@@ -61,7 +65,7 @@ export function RadarTab() {
   const [bannerVisible, setBannerVisible] = useState(true);
   const [showId, setShowId] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
-  const [cardSheet, setCardSheet] = useState<CardType | null>(null);
+  const [, forceRender] = useState(0);
   const [pdfBusy, setPdfBusy] = useState(false);
 
   // The report CTA below the score appears only for active subscribers who have
@@ -110,46 +114,72 @@ export function RadarTab() {
   const CLEAN = "Nenhuma exposição encontrada";
   const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 
+  const profile = getProfile();
+  const cpfDigits = getCpf().replace(/\D/g, "");
+  const phoneDigits = (profile.extraPhone ?? "").replace(/\D/g, "");
+  const email = getEmail();
+  const address = [profile.addrStreet, profile.addrCity].filter(Boolean).join(", ");
+
   const cards: DashCard[] = [
     {
-      kind: "card",
       icon: Fingerprint,
       label: "CPF",
-      type: "cpf",
       status: cpfEx?.found
         ? `Encontrado em ${plural(cpfEx.count, "resultado público", "resultados públicos")}`
         : CLEAN,
       level: cpfEx?.found ? "danger" : "success",
+      value:
+        cpfDigits.length === 11 ? `•••.•••.${cpfDigits.slice(6, 9)}-${cpfDigits.slice(9)}` : "",
+      emptyText: "Nenhum CPF verificado ainda. Toque em Scan Grátis para começar.",
     },
     {
-      kind: "card",
       icon: Mail,
       label: "E-mail",
-      type: "email",
       status:
         breachCount > 0
-          ? `${plural(breachCount, "vazamento detectado", "vazamentos detectados")}`
+          ? plural(breachCount, "vazamento detectado", "vazamentos detectados")
           : CLEAN,
       level: breachCount > 0 ? "danger" : "success",
+      value: email,
+      emptyText: "Nenhum e-mail cadastrado. Toque para adicionar.",
+      placeholder: "voce@email.com",
+      onSave: (v) => {
+        rememberIdentity("", v);
+        forceRender((n) => n + 1);
+      },
     },
     {
-      kind: "card",
       icon: Phone,
       label: "Telefone",
-      type: "telefone",
       status: phoneEx?.found
         ? `Encontrado em ${plural(phoneEx.count, "resultado público", "resultados públicos")}`
         : CLEAN,
       level: phoneEx?.found ? "warning" : "success",
+      value: phoneDigits ? `(${phoneDigits.slice(0, 2)}) •••••-${phoneDigits.slice(-4)}` : "",
+      emptyText: "Nenhum telefone cadastrado. Toque para adicionar.",
+      placeholder: "(11) 90000-0000",
+      onSave: (v) => {
+        saveProfile({ extraPhone: v });
+        forceRender((n) => n + 1);
+      },
     },
     {
-      // A genuine upsell: there is no free CPF↔address source, so this stays a
-      // locked tile rather than invented data. The "Verificação de endereço"
-      // line was dropped — the label already says what it is.
-      kind: "upsell",
       icon: MapPin,
       label: "Endereço",
-      subtitle: "Disponível no plano Proteção Total",
+      status: address || CLEAN,
+      level: "success",
+      value: isPremium ? address : "",
+      emptyText: "Nenhum endereço cadastrado. Toque para adicionar.",
+      placeholder: "Rua e número",
+      onSave: (v) => {
+        saveProfile({ addrStreet: v });
+        forceRender((n) => n + 1);
+      },
+      // No free source links a CPF to an address, so this stays honest about
+      // being a paid capability instead of showing a reassuring green.
+      locked: !isPremium,
+      // Two lines so the tile matches the height of the one beside it.
+      lockedText: "Plano\nProteção Total",
     },
   ];
 
@@ -313,11 +343,9 @@ export function RadarTab() {
           </button>
         )}
 
-        {/* Identity radar grid */}
+        {/* Identity radar grid — the heading is gone: the tiles say what they
+            are, and the label cost a row on the one screen that must fit. */}
         <section>
-          <h2 className="mb-3 px-1 text-center text-sm font-semibold text-foreground">
-            Radar de identidade
-          </h2>
           <div className="grid grid-cols-2 gap-3">
             {scanning
               ? cards.map((it) => (
@@ -330,72 +358,27 @@ export function RadarTab() {
                     <div className="mt-2 h-3 w-28 animate-pulse rounded bg-gray-800" />
                   </div>
                 ))
-              : cards.map((it) => {
-                  const Icon = it.icon;
-
-                  if (it.kind === "upsell") {
-                    return (
-                      <div
-                        key={it.label}
-                        role="button"
-                        tabIndex={0}
-                        onClick={() => {
-                          void startCheckout("protecao_total");
-                        }}
-                        className="cursor-pointer rounded-2xl border border-border/60 bg-card p-4 text-left shadow-sm transition-all duration-200 active:scale-[0.98]"
-                      >
-                        <div className="flex items-start justify-between">
-                          <span className="grid h-9 w-9 place-items-center rounded-lg bg-secondary">
-                            <Icon className="h-4 w-4 text-foreground" />
-                          </span>
-                          <Lock className="h-3.5 w-3.5 text-muted-foreground" />
-                        </div>
-                        <p className="mt-3 text-sm font-semibold text-foreground">{it.label}</p>
-                        <p className="mt-0.5 text-[11px] leading-tight text-[var(--color-navy)]">
-                          {it.subtitle}
-                        </p>
-                      </div>
-                    );
-                  }
-
-                  const color = levelColor(it.level);
-                  return (
-                    <div
-                      key={it.label}
-                      role="button"
-                      tabIndex={0}
-                      onClick={() => setCardSheet(it.type)}
-                      className="cursor-pointer rounded-2xl border border-border/60 bg-card p-4 text-left shadow-sm transition-all duration-200 active:scale-[0.98]"
-                    >
-                      <div className="flex items-start justify-between">
-                        <span className="grid h-9 w-9 place-items-center rounded-lg bg-secondary">
-                          <Icon className="h-4 w-4 text-foreground" />
-                        </span>
-                        <span
-                          className="h-2.5 w-2.5 rounded-full"
-                          style={{ backgroundColor: color }}
-                        />
-                      </div>
-                      <p className="mt-3 text-sm font-semibold text-foreground">{it.label}</p>
-                      {isPremium ? (
-                        <>
-                          <p className="mt-0.5 text-[11px] leading-tight text-muted-foreground">
-                            {it.status}
-                          </p>
-                        </>
-                      ) : (
-                        <div className="mt-1">
-                          <PaywallLock />
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+              : cards.map((it) => (
+                  <IdentityTile
+                    key={it.label}
+                    icon={it.icon}
+                    label={it.label}
+                    status={it.status}
+                    dot={levelColor(it.level)}
+                    value={it.value}
+                    emptyText={it.emptyText}
+                    placeholder={it.placeholder}
+                    onSave={it.onSave}
+                    locked={it.locked}
+                    lockedText={it.lockedText}
+                    onLockedTap={() => {
+                      void startCheckout("protecao_total");
+                    }}
+                  />
+                ))}
           </div>
         </section>
       </div>
-
-      {cardSheet && <IdentityCardSheet type={cardSheet} onClose={() => setCardSheet(null)} />}
 
       {/* Shares the headline only — no name, no e-mail, no company names. */}
       {shareOpen && score !== null && (
