@@ -40,7 +40,8 @@ export function AnimatedScoreGauge({
   // The arc runs through our own indigo, weak to strong, instead of the
   // red-amber-green of a warning light: the number is a state of protection,
   // and it should look like the brand rather than like an alarm. The verdict
-  // pill below keeps the semantic colour — that one is information.
+  // pill takes the same tone at the same intensity, so the two read as one
+  // object — the words still carry the verdict.
   const PURPLE = ["#C7D2FE", "#A5B4FC", "#818CF8", "#6366F1", "#4F46E5", "#4338CA"] as const;
   const arcColor = PURPLE[Math.min(PURPLE.length - 1, Math.round(ratio * (PURPLE.length - 1)))];
   const color = ratio < 0.4 ? "#ef4444" : ratio <= 0.7 ? "#f59e0b" : "#22c55e";
@@ -163,7 +164,7 @@ export function AnimatedScoreGauge({
           {showLabel && (
             <span
               className="mt-1 rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider"
-              style={{ backgroundColor: `${color}22`, color }}
+              style={{ backgroundColor: `${arcColor}24`, color: arcColor }}
             >
               {label}
             </span>
