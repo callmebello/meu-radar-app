@@ -253,7 +253,10 @@ export function AtividadeTab() {
               }`}
               style={isActive ? { backgroundColor: "#4F46E5" } : undefined}
             >
-              <t.Icon className="h-3.5 w-3.5" />
+              {/* "Mensagem" is the long one: with an icon beside it the pill
+                  runs out of room and the glyph clips. The word alone is
+                  clearer than a cropped icon. */}
+              {t.id !== "mensagem" && <t.Icon className="h-3.5 w-3.5 shrink-0" />}
               {t.label}
             </button>
           );
