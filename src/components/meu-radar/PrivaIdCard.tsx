@@ -16,6 +16,7 @@ import { getCpf, getEmail } from "@/lib/identity";
 import { getProfile } from "@/lib/profile";
 import { readAvatar } from "./AvatarPicker";
 import { useIsDark } from "@/hooks/use-is-dark";
+import { PrivaIdShareSheet } from "./PrivaIdShareSheet";
 import { computeScore } from "@/lib/riskScore";
 import { scoreInputsFrom } from "@/lib/scoreInputs";
 
@@ -105,6 +106,7 @@ export function PrivaIdCard({ onShare, onBack }: { onShare?: () => void; onBack?
   const [emailVerified, setEmailVerified] = useState(false);
   const [authEmail, setAuthEmail] = useState("");
   const [revealed, setRevealed] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
   const isDark = useIsDark();
   const avatar = readAvatar();
 
@@ -133,8 +135,20 @@ export function PrivaIdCard({ onShare, onBack }: { onShare?: () => void; onBack?
   // Stable, non-reversible, and never the CPF.
   const identityId = useMemo(() => {
     const uid = typeof window !== "undefined" ? localStorage.getItem("priva_user_id") || "" : "";
-    const seed = (uid || email || "priva").replace(/[^a-z0-9]/gi, "").toUpperCase();
-    return (seed.slice(-8) || "00000000").padStart(8, "0");
+    if (uid)
+      return uid
+        .replace(/[^a-z0-9]/gi, "")
+        .toUpperCase()
+        .slice(-8)
+        .padStart(8, "0");
+    // No account yet: hash the address instead of slicing it, or the code ends
+    // up spelling the tail of the domain ("LCOM") on everyone's card.
+    let h = 2166136261;
+    for (const ch of email || "priva") {
+      h ^= ch.charCodeAt(0);
+      h = Math.imul(h, 16777619);
+    }
+    return (h >>> 0).toString(16).toUpperCase().padStart(8, "0").slice(-8);
   }, [email]);
 
   const inputs = scoreInputsFrom(scanResult, exposure);
@@ -266,17 +280,35 @@ export function PrivaIdCard({ onShare, onBack }: { onShare?: () => void; onBack?
             <ChevronLeft className="h-3.5 w-3.5" /> Voltar ao score
           </button>
         )}
-        {onShare && (
+        {
           <button
-            onClick={onShare}
+            onClick={() => setShareOpen(true)}
             aria-label="Compartilhar"
             className="absolute right-0 inline-flex items-center gap-1.5 text-[12.5px] font-semibold"
             style={{ color: "#4F46E5" }}
           >
             <Share2 className="h-4 w-4" />
           </button>
-        )}
+        }
       </div>
+
+      {shareOpen && (
+        <PrivaIdShareSheet
+          data={{
+            name,
+            identityId,
+            score,
+            premium: isPremium,
+            avatar: avatar || undefined,
+            seals: [
+              { label: "E-mail", state: emailVerified ? "verified" : email ? "filled" : "empty" },
+              { label: "Telefone", state: phone ? "filled" : "empty" },
+              { label: "CPF", state: cpf ? "filled" : "empty" },
+            ],
+          }}
+          onClose={() => setShareOpen(false)}
+        />
+      )}
     </div>
   );
 }

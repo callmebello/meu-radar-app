@@ -26,7 +26,6 @@ import { scoreInputsFrom } from "@/lib/scoreInputs";
 import { ProtecaoTrackingCard } from "../ProtecaoTrackingCard";
 import { NextActionsCard } from "../NextActionsCard";
 import { PrivaIdCard } from "../PrivaIdCard";
-import { ShareResultSheet } from "../ShareResultSheet";
 import { IdentityTile } from "../IdentityTile";
 import { getProfile, saveProfile } from "@/lib/profile";
 import { getCpf, getEmail, rememberIdentity } from "@/lib/identity";
@@ -65,7 +64,6 @@ export function RadarTab() {
   const score = result?.score ?? null;
   const [bannerVisible, setBannerVisible] = useState(true);
   const [showId, setShowId] = useState(false);
-  const [shareOpen, setShareOpen] = useState(false);
   const [, forceRender] = useState(0);
   const [pdfBusy, setPdfBusy] = useState(false);
 
@@ -313,7 +311,7 @@ export function RadarTab() {
               }}
               aria-hidden={!showId}
             >
-              <PrivaIdCard onShare={() => setShareOpen(true)} onBack={() => setShowId(false)} />
+              <PrivaIdCard onBack={() => setShowId(false)} />
             </div>
           </div>
         </div>
@@ -384,15 +382,6 @@ export function RadarTab() {
           </div>
         </section>
       </div>
-
-      {/* Shares the headline only — no name, no e-mail, no company names. */}
-      {shareOpen && score !== null && (
-        <ShareResultSheet
-          breachCount={breachCount}
-          score={score}
-          onClose={() => setShareOpen(false)}
-        />
-      )}
     </>
   );
 }
