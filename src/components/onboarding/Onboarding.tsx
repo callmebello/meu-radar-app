@@ -9,6 +9,7 @@ import {
   Mail,
   Search,
   ShieldCheck,
+  ArrowLeft,
   Sparkles,
   Star,
 } from "lucide-react";
@@ -423,7 +424,7 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
     );
   }
 
-  return <Paywall onDone={onDone} />;
+  return <Paywall onBack={back} onDone={onDone} />;
 }
 
 /* ── Preview mock ────────────────────────────────────────────────────────── */
@@ -786,7 +787,7 @@ const brl = (v: number) =>
  * Brazil article 49 of the CDC gives seven days of regret regardless — a "no
  * refund" line would be a promise we do not get to make.
  */
-function Paywall({ onDone }: { onDone: () => void }) {
+function Paywall({ onBack, onDone }: { onBack: () => void; onDone: () => void }) {
   const [plan, setPlan] = useState<"anual" | "mensal">("anual");
   const annual = 49.9;
   const monthly = 19.9;
@@ -802,20 +803,38 @@ function Paywall({ onDone }: { onDone: () => void }) {
 
   return (
     <div className="flex min-h-[100dvh] flex-col bg-background">
-      {/* Hero: the product, held. */}
-      <div
-        className="relative flex justify-center overflow-hidden px-6 pb-2 pt-8"
-        style={{
-          background:
-            "radial-gradient(120% 80% at 50% 0%, rgba(99,102,241,0.16) 0%, rgba(99,102,241,0) 70%)",
-        }}
-      >
-        <div style={{ animation: "mascot-in 0.7s cubic-bezier(0.34,1.2,0.5,1) both" }}>
-          <PhoneMock width={196} />
-        </div>
+      {/* Hero photo, faded into the page.
+          A hard edge between a photograph and a UI reads as two screens glued
+          together; the gradient makes the page start inside the image. */}
+      <div className="relative">
+        <img
+          src="/paywall-hero.jpg"
+          alt=""
+          className="h-[34vh] max-h-[270px] w-full object-cover object-[62%_30%]"
+        />
+        <div
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-32"
+          style={{
+            // color-mix keeps the fade on the real background token, so it
+            // still lands correctly if the theme changes.
+            background:
+              "linear-gradient(to bottom, color-mix(in srgb, var(--color-background) 0%, transparent) 0%, var(--color-background) 88%)",
+          }}
+        />
+        {/* Back sits over the photo, on a disc so it stays legible whatever the
+            image does behind it. */}
+        <button
+          onClick={onBack}
+          aria-label="Voltar"
+          className="absolute left-5 top-5 grid h-9 w-9 place-items-center rounded-full bg-card/90 text-foreground shadow-sm backdrop-blur"
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </button>
       </div>
 
-      <div className="px-6 pt-5">
+      {/* No negative margin: it pulled the first line up behind the opaque
+          part of the photo and the headline read "grátis". */}
+      <div className="px-6 pt-1">
         <h1 className="text-[27px] font-extrabold leading-[1.1] tracking-tight text-foreground">
           Comece seus <Hl>3 dias grátis</Hl>
         </h1>
