@@ -101,12 +101,28 @@ function Seal({ label, filled, verified }: { label: string; filled: boolean; ver
   );
 }
 
-export function PrivaIdCard({ onShare, onBack }: { onShare?: () => void; onBack?: () => void }) {
+export function PrivaIdCard({
+  onShare,
+  onBack,
+  /** True while this face is the one turned towards the viewer. */
+  active = true,
+}: {
+  onShare?: () => void;
+  onBack?: () => void;
+  active?: boolean;
+}) {
   const { scanResult, exposure, isPremium } = useApp();
   const [emailVerified, setEmailVerified] = useState(false);
   const [authEmail, setAuthEmail] = useState("");
   const [revealed, setRevealed] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
+  // The film passes once per flip and then stops. Looping made it a shimmer,
+  // which reads as "loading"; a single pass on arrival reads as a card catching
+  // the light as it turns.
+  const [sheenRun, setSheenRun] = useState(0);
+  useEffect(() => {
+    if (active) setSheenRun((n) => n + 1);
+  }, [active]);
   const isDark = useIsDark();
   const avatar = readAvatar();
 
@@ -169,34 +185,28 @@ export function PrivaIdCard({ onShare, onBack }: { onShare?: () => void; onBack?
         className="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl"
       >
         <span
+          key={sheenRun}
           className="absolute inset-y-[-60%] w-[52%]"
           style={{
             background:
               "linear-gradient(100deg, rgba(255,255,255,0) 0%, rgba(199,210,254,0.55) 38%, rgba(255,255,255,0.85) 50%, rgba(196,181,253,0.5) 62%, rgba(255,255,255,0) 100%)",
             filter: "blur(6px)",
-            animation: "id-sheen 7s cubic-bezier(0.45,0,0.25,1) infinite",
+            animation: "id-sheen 1.5s cubic-bezier(0.4,0,0.2,1) 0.55s both",
           }}
         />
       </span>
 
       {/* Watermark — the app's own icon set, so it reads as ours, not as stock.
-          A soft violet streak passes over it, the way light catches a card held
-          at an angle. Kept faint: it should be noticed only on second look. */}
-      <span aria-hidden className="pointer-events-none absolute -right-8 top-4 h-48 w-48">
-        <Fingerprint
-          className="h-full w-full opacity-[0.07]"
-          style={{ color: "#4F46E5" }}
-          strokeWidth={0.7}
-        />
-        <span
-          className="absolute inset-0"
-          style={{
-            background:
-              "linear-gradient(118deg, rgba(139,92,246,0) 26%, rgba(139,92,246,0.20) 44%, rgba(99,102,241,0.10) 53%, rgba(139,92,246,0) 68%)",
-            mixBlendMode: "plus-lighter",
-          }}
-        />
-      </span>
+          It used to carry its own violet streak, but that streak was a
+          rectangle laid over a round mark: on a light card its edges showed as
+          a square. The film above crosses the whole card and does the job
+          properly, so the mark is just the mark now. */}
+      <Fingerprint
+        aria-hidden
+        className="pointer-events-none absolute -right-8 top-4 h-48 w-48 opacity-[0.07]"
+        style={{ color: "#4F46E5" }}
+        strokeWidth={0.7}
+      />
 
       <div className="relative flex items-center justify-between gap-3">
         {/* The same wordmark the header carries, so the card is unmistakably
@@ -208,10 +218,10 @@ export function PrivaIdCard({ onShare, onBack }: { onShare?: () => void; onBack?
             alt="Priva"
             className="h-[17px] w-auto object-contain"
           />
-          {/* 21px lands the cap height of "ID" on the wordmark's, so the two
-              read as one lockup instead of a logo with a label after it. */}
+          {/* Just under the wordmark's cap height: matching it exactly made
+              "ID" the louder half of the lockup. */}
           <span
-            className="text-[21px] font-bold leading-none tracking-[0.10em]"
+            className="text-[19.5px] font-bold leading-none tracking-[0.10em]"
             style={{ color: "#4F46E5" }}
           >
             ID

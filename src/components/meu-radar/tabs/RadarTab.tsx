@@ -317,7 +317,7 @@ export function RadarTab() {
               }}
               aria-hidden={!showId}
             >
-              <PrivaIdCard onBack={() => setShowId(false)} />
+              <PrivaIdCard active={showId} onBack={() => setShowId(false)} />
             </div>
           </div>
         </div>
