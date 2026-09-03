@@ -161,7 +161,7 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
         onCta={() => go()}
         ctaDisabled={first.length < 2}
       >
-        <Mascot pose="idle" size={150} />
+        <Mascot pose="thinking" size={150} />
         <div className="mt-5">
           <Title>
             Como podemos te <Hl>chamar</Hl>?
@@ -203,7 +203,7 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
         onCta={() => go()}
         compact
       >
-        <Mascot pose="scan" size={170} />
+        <Mascot pose="idle" size={170} />
         <div className="mt-5">
           <Title>
             {first}, vamos descobrir o que a <Hl>internet sabe</Hl> sobre você?
@@ -247,7 +247,7 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
     const ok = /.+@.+\..{2,}/.test(email);
     return (
       <Step progress={progress} onBack={back} cta="Continuar" onCta={() => go()} ctaDisabled={!ok}>
-        <Mascot pose="idle" size={140} />
+        <Mascot pose="thinking" size={140} />
         <div className="mt-5">
           <Title>
             Qual é o seu <Hl>e-mail</Hl>?
@@ -287,7 +287,7 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
           </button>
         }
       >
-        <Mascot pose="idle" size={140} />
+        <Mascot pose="thinking" size={140} />
         <div className="mt-5">
           <Title>
             E o seu <Hl>CPF</Hl>?
@@ -746,124 +746,193 @@ function Paywall({ onBack, onDone }: { onBack: () => void; onDone: () => void })
   const start = () => {
     track("InitiateCheckout", { value: plan === "anual" ? annual : monthly, currency: "BRL" });
     gaEvent("begin_checkout", { plan });
-    // Access is granted by the store receipt / payment return, never here.
+    // Access is granted by the store receipt, never here.
     onDone();
   };
 
   return (
     <div className="flex min-h-[100dvh] flex-col bg-background">
-      <div className="flex items-center justify-between px-5 pt-4">
+      <div className="flex items-center gap-3 px-5 pt-4">
         <button
           onClick={onBack}
           aria-label="Voltar"
-          className="grid h-9 w-9 place-items-center rounded-full bg-secondary text-muted-foreground"
+          className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-secondary text-muted-foreground"
         >
           ‹
         </button>
-        <button onClick={onDone} className="text-[12.5px] text-muted-foreground">
+        <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-secondary">
+          <div
+            className="h-full w-full rounded-full"
+            style={{ background: "linear-gradient(90deg,#4F46E5,#6366F1)" }}
+          />
+        </div>
+        <button onClick={onDone} className="shrink-0 text-[12.5px] text-muted-foreground">
           Agora não
         </button>
       </div>
 
-      <div className="flex-1 px-6 pt-2">
-        <Mascot pose="done" size={130} />
-        <h1 className="mt-4 text-center text-[30px] font-extrabold leading-[1.1] tracking-tight text-foreground">
-          Comece seus <Hl>3 dias grátis</Hl>
-        </h1>
-        <Sub>Sua privacidade merece atenção todos os dias. A Priva cuida disso por você.</Sub>
+      {/* Headline beside the device, benefits full width underneath. The
+          reference lays these side by side on a wider canvas; at 375px the
+          phone was covering the benefits, so the row holds only the headline
+          and the list gets the whole width. */}
+      <div className="px-6 pt-4">
+        <div className="flex items-start gap-2">
+          <div className="min-w-0 flex-1">
+            <h1 className="text-[27px] font-extrabold leading-[1.08] tracking-tight text-foreground">
+              Comece seus
+              <br />
+              <Hl>3 dias grátis</Hl>
+            </h1>
+            <p className="mt-2.5 text-[13px] leading-relaxed text-muted-foreground">
+              Sua privacidade merece atenção todos os dias. A Priva cuida disso por você.
+            </p>
+          </div>
 
-        <div className="mt-5 space-y-2">
+          <div
+            className="-mr-8 w-[132px] shrink-0"
+            style={{ animation: "mascot-in 0.8s cubic-bezier(0.34,1.2,0.5,1) both" }}
+          >
+            <div className="overflow-hidden rounded-[22px] border-[4px] border-foreground/85 bg-background shadow-2xl">
+              <PreviewCard />
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-5 space-y-2.5">
           {[
-            { Icon: Search, t: "Relatório completo, com CPF e telefone" },
-            { Icon: Bell, t: "Alerta quando um vazamento novo aparecer" },
-            { Icon: ShieldCheck, t: "Solicitação de remoção conforme a LGPD" },
-            { Icon: Sparkles, t: "Verificação ilimitada de link, Pix e mensagem" },
+            { Icon: ShieldCheck, t: "Relatório completo", s: "CPF, telefone e exposição na web" },
+            { Icon: Bell, t: "Alertas em tempo real", s: "Quando um vazamento novo aparecer" },
+            { Icon: Lock, t: "Remoção conforme a LGPD", s: "A gente solicita em seu nome" },
           ].map((b) => (
-            <div key={b.t} className="flex items-center gap-2.5">
-              <b.Icon className="h-4 w-4 shrink-0" style={{ color: "#4F46E5" }} />
-              <span className="text-[13.5px] text-foreground">{b.t}</span>
+            <div key={b.t} className="flex items-center gap-3">
+              <span
+                className="grid h-9 w-9 shrink-0 place-items-center rounded-xl"
+                style={{ backgroundColor: "rgba(79,70,229,0.10)" }}
+              >
+                <b.Icon className="h-4 w-4" style={{ color: "#4F46E5" }} />
+              </span>
+              <span className="min-w-0">
+                <span className="block text-[13.5px] font-bold leading-tight text-foreground">
+                  {b.t}
+                </span>
+                <span className="block text-[11.5px] leading-snug text-muted-foreground">
+                  {b.s}
+                </span>
+              </span>
             </div>
           ))}
         </div>
-
-        <div className="mt-6 space-y-2.5">
-          <button
-            onClick={() => setPlan("anual")}
-            className="relative flex w-full items-center justify-between rounded-2xl px-4 py-4 text-left transition"
-            style={{
-              border: plan === "anual" ? "2px solid #4F46E5" : "1px solid var(--color-border)",
-              backgroundColor: plan === "anual" ? "rgba(79,70,229,0.04)" : "transparent",
-            }}
-          >
-            <span
-              className="absolute -top-2.5 left-4 rounded-full px-2.5 py-0.5 text-[9.5px] font-bold uppercase tracking-wide text-white"
-              style={{ background: "linear-gradient(135deg,#4F46E5,#6366F1)" }}
-            >
-              3 dias grátis · melhor valor
-            </span>
-            <span>
-              <span className="block text-[15px] font-bold text-foreground">Anual</span>
-              <span className="block text-[12px] text-muted-foreground">
-                R$ {brl(annual)} cobrados por ano
-              </span>
-            </span>
-            <span className="text-right">
-              <span className="block text-[19px] font-extrabold text-foreground">
-                R$ {brl(perMonth)}
-                <span className="text-[12px] font-medium text-muted-foreground">/mês</span>
-              </span>
-              <span
-                className="mt-0.5 inline-block rounded-full px-2 py-0.5 text-[10px] font-bold"
-                style={{ backgroundColor: "rgba(16,185,129,0.14)", color: "var(--color-success)" }}
-              >
-                Economize {save}%
-              </span>
-            </span>
-          </button>
-
-          <button
-            onClick={() => setPlan("mensal")}
-            className="flex w-full items-center justify-between rounded-2xl px-4 py-4 text-left transition"
-            style={{
-              border: plan === "mensal" ? "2px solid #4F46E5" : "1px solid var(--color-border)",
-              backgroundColor: plan === "mensal" ? "rgba(79,70,229,0.04)" : "transparent",
-            }}
-          >
-            <span>
-              <span className="block text-[15px] font-bold text-foreground">Mensal</span>
-              <span className="block text-[12px] text-muted-foreground">Sem período de teste</span>
-            </span>
-            <span className="text-[19px] font-extrabold text-foreground">
-              R$ {brl(monthly)}
-              <span className="text-[12px] font-medium text-muted-foreground">/mês</span>
-            </span>
-          </button>
-        </div>
       </div>
 
-      <div className="px-6 pb-8 pt-4">
+      {/* Extra room above: the "3 dias grátis" badge sits outside the card
+          and would otherwise touch the benefit above it. */}
+      <div className="mt-7 space-y-2.5 px-6">
+        <button
+          onClick={() => setPlan("anual")}
+          className="relative flex w-full items-center gap-3 rounded-2xl px-4 py-4 text-left transition"
+          style={{
+            border: plan === "anual" ? "2px solid #4F46E5" : "1px solid var(--color-border)",
+            backgroundColor: plan === "anual" ? "rgba(79,70,229,0.04)" : "transparent",
+          }}
+        >
+          <span
+            className="absolute -top-2.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full px-3 py-0.5 text-[9.5px] font-bold uppercase tracking-wide text-white"
+            style={{ background: "linear-gradient(135deg,#4F46E5,#6366F1)" }}
+          >
+            3 dias grátis · melhor valor
+          </span>
+          <Radio on={plan === "anual"} />
+          <span className="min-w-0 flex-1">
+            <span className="block text-[15.5px] font-bold text-foreground">Anual</span>
+            <span className="block text-[12px] text-muted-foreground">
+              R$ {brl(annual)} cobrados por ano
+            </span>
+          </span>
+          <span className="shrink-0 text-right">
+            <span className="block text-[19px] font-extrabold text-foreground">
+              R$ {brl(perMonth)}
+              <span className="text-[12px] font-medium text-muted-foreground">/mês</span>
+            </span>
+            <span
+              className="mt-0.5 inline-block rounded-full px-2 py-0.5 text-[10px] font-bold"
+              style={{ backgroundColor: "rgba(16,185,129,0.14)", color: "var(--color-success)" }}
+            >
+              Economize {save}%
+            </span>
+          </span>
+        </button>
+
+        <button
+          onClick={() => setPlan("mensal")}
+          className="flex w-full items-center gap-3 rounded-2xl px-4 py-4 text-left transition"
+          style={{
+            border: plan === "mensal" ? "2px solid #4F46E5" : "1px solid var(--color-border)",
+            backgroundColor: plan === "mensal" ? "rgba(79,70,229,0.04)" : "transparent",
+          }}
+        >
+          <Radio on={plan === "mensal"} />
+          <span className="min-w-0 flex-1">
+            <span className="block text-[15.5px] font-bold text-foreground">Mensal</span>
+            <span className="block text-[12px] text-muted-foreground">Sem período de teste</span>
+          </span>
+          <span className="shrink-0 text-[19px] font-extrabold text-foreground">
+            R$ {brl(monthly)}
+            <span className="text-[12px] font-medium text-muted-foreground">/mês</span>
+          </span>
+        </button>
+      </div>
+
+      <div className="px-6 pb-8 pt-5">
         <button
           onClick={start}
-          className="w-full rounded-2xl py-4 text-[16px] font-bold text-white transition active:scale-[0.99]"
+          className="flex w-full items-center justify-center gap-2 rounded-2xl py-4 text-[16px] font-bold text-white transition active:scale-[0.99]"
           style={{ background: "linear-gradient(135deg,#4F46E5,#6366F1)" }}
         >
           {plan === "anual" ? "Começar meus 3 dias grátis" : "Assinar plano mensal"}
         </button>
-        <div className="mt-3 flex items-center justify-center gap-3 text-[11px] text-muted-foreground">
-          <span className="inline-flex items-center gap-1">
-            <Check className="h-3 w-3" /> Sem cobrança hoje
-          </span>
-          <span className="inline-flex items-center gap-1">
-            <Check className="h-3 w-3" /> Cancele quando quiser
-          </span>
+
+        <div className="mt-4 grid grid-cols-3 gap-2">
+          {[
+            { Icon: ShieldCheck, t: "Sem cobrança hoje" },
+            { Icon: Check, t: "Cancele quando quiser" },
+            { Icon: Bell, t: "Renovação após o teste" },
+          ].map((r) => (
+            <div key={r.t} className="flex flex-col items-center gap-1 text-center">
+              <r.Icon className="h-3.5 w-3.5" style={{ color: "#4F46E5" }} />
+              <span className="text-[9.5px] leading-tight text-muted-foreground">{r.t}</span>
+            </div>
+          ))}
         </div>
-        <p className="mt-2 text-center text-[10.5px] leading-relaxed text-muted-foreground/80">
+
+        <p className="mt-3 text-center text-[10.5px] text-muted-foreground/80">
           {plan === "anual"
             ? `Após o teste, R$ ${brl(annual)} por ano. Renovação automática.`
             : `R$ ${brl(monthly)} por mês. Renovação automática.`}
         </p>
+        <div className="mt-2 flex items-center justify-center gap-2 text-[10.5px] text-muted-foreground">
+          <button className="underline-offset-2 hover:underline">Restaurar compras</button>
+          <span aria-hidden>·</span>
+          <a href="/termos" className="underline-offset-2 hover:underline">
+            Termos
+          </a>
+          <span aria-hidden>·</span>
+          <a href="/privacidade" className="underline-offset-2 hover:underline">
+            Privacidade
+          </a>
+        </div>
       </div>
     </div>
+  );
+}
+
+function Radio({ on }: { on: boolean }) {
+  return (
+    <span
+      className="grid h-5 w-5 shrink-0 place-items-center rounded-full border-2 transition"
+      style={{ borderColor: on ? "#4F46E5" : "var(--color-border)" }}
+    >
+      {on && <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: "#4F46E5" }} />}
+    </span>
   );
 }
 

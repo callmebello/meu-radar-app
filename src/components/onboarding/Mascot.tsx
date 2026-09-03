@@ -14,32 +14,47 @@ import { useEffect, useState } from "react";
  * pose and stops. Nobody checking whether their data leaked needs a bouncing
  * robot.
  */
-export type Pose = "welcome" | "scan" | "thinking" | "done" | "idle";
+/**
+ * One render per pose, cross-faded. Four separate images beat any amount of
+ * CSS on a single flat one: a pose says something the motion cannot, and the
+ * motion then only has to keep it alive.
+ */
+export type Pose = "welcome" | "thinking" | "scan" | "done" | "idle";
 
-const LAYERS = {
-  body: "/mascote/corpo.png",
-  armLeft: "/mascote/braco-esquerdo.png",
-  armRight: "/mascote/braco-direito.png",
-  legs: "/mascote/pernas.png",
+const POSE_SRC: Record<Pose, string> = {
+  welcome: "/mascote/acenando.png",
+  thinking: "/mascote/pensando.png",
+  scan: "/mascote/analisando.png",
+  done: "/mascote/sucesso.png",
+  idle: "/mascote/confiante.png",
 };
 
-function useLayered() {
-  const [ok, setOk] = useState(false);
+/** Warm the images once so a pose change never flashes an empty box. */
+function usePreload() {
   useEffect(() => {
-    let alive = true;
-    const img = new Image();
-    img.onload = () => alive && setOk(true);
-    img.onerror = () => alive && setOk(false);
-    img.src = LAYERS.body;
-    return () => {
-      alive = false;
-    };
+    Object.values(POSE_SRC).forEach((src) => {
+      const img = new Image();
+      img.src = src;
+    });
   }, []);
-  return ok;
 }
 
 export function Mascot({ pose = "idle", size = 190 }: { pose?: Pose; size?: number }) {
-  const layered = useLayered();
+  usePreload();
+  const [shown, setShown] = useState<Pose>(pose);
+  const [fading, setFading] = useState(false);
+
+  // Cross-fade rather than swap: the mascot should feel like it moved, not like
+  // the page reloaded a picture.
+  useEffect(() => {
+    if (pose === shown) return;
+    setFading(true);
+    const t = setTimeout(() => {
+      setShown(pose);
+      setFading(false);
+    }, 180);
+    return () => clearTimeout(t);
+  }, [pose, shown]);
 
   return (
     <div
@@ -47,35 +62,34 @@ export function Mascot({ pose = "idle", size = 190 }: { pose?: Pose; size?: numb
       style={{ width: size, height: size }}
       aria-hidden
     >
-      {/* Halo — the only thing that changes colour with the pose, so the
-          mascot itself never has to be re-rendered per screen. */}
+      {/* Halo — green only on success, indigo everywhere else. */}
       <span
         className="absolute inset-0 rounded-full blur-2xl"
         style={{
           background:
             pose === "done"
               ? "radial-gradient(circle, rgba(16,185,129,0.30) 0%, rgba(16,185,129,0) 68%)"
-              : "radial-gradient(circle, rgba(99,102,241,0.30) 0%, rgba(99,102,241,0) 68%)",
+              : "radial-gradient(circle, rgba(99,102,241,0.32) 0%, rgba(99,102,241,0) 68%)",
           animation: "mascot-halo 3.6s ease-in-out infinite",
         }}
       />
 
-      {/* Scanning ring, only while the analysis runs. */}
+      {/* Scanning rings, only while the analysis runs. */}
       {pose === "scan" && (
         <>
           <span
             className="absolute rounded-full"
             style={{
-              inset: -6,
-              border: "1.5px solid rgba(79,70,229,0.30)",
+              inset: -10,
+              border: "1.5px solid rgba(79,70,229,0.32)",
               animation: "mascot-ring 2.4s ease-out infinite",
             }}
           />
           <span
             className="absolute rounded-full"
             style={{
-              inset: -6,
-              border: "1.5px solid rgba(79,70,229,0.30)",
+              inset: -10,
+              border: "1.5px solid rgba(79,70,229,0.32)",
               animation: "mascot-ring 2.4s ease-out infinite 1.2s",
             }}
           />
@@ -90,59 +104,21 @@ export function Mascot({ pose = "idle", size = 190 }: { pose?: Pose; size?: numb
           className="h-full w-full"
           style={{
             animation:
-              pose === "thinking"
-                ? "mascot-tilt 4s ease-in-out infinite"
-                : "mascot-float 4s ease-in-out infinite",
+              shown === "thinking"
+                ? "mascot-tilt 5s ease-in-out infinite"
+                : shown === "welcome"
+                  ? "mascot-greet 3.2s ease-in-out infinite"
+                  : shown === "done"
+                    ? "mascot-pop 3s ease-in-out infinite"
+                    : "mascot-float 4.4s ease-in-out infinite",
           }}
         >
-          {layered ? (
-            <div className="relative h-full w-full">
-              <img
-                src={LAYERS.legs}
-                alt=""
-                className="absolute inset-0 h-full w-full object-contain"
-              />
-              <img
-                src={LAYERS.armRight}
-                alt=""
-                className="absolute inset-0 h-full w-full object-contain"
-              />
-              <img
-                src={LAYERS.body}
-                alt=""
-                className="absolute inset-0 h-full w-full object-contain"
-              />
-              {/* The waving arm: hinged at the shoulder, not the image centre. */}
-              <img
-                src={LAYERS.armLeft}
-                alt=""
-                className="absolute inset-0 h-full w-full object-contain"
-                style={{
-                  transformOrigin: "62% 38%",
-                  animation:
-                    pose === "welcome"
-                      ? "mascot-wave 1.6s ease-in-out infinite"
-                      : pose === "done"
-                        ? "mascot-cheer 2s ease-in-out infinite"
-                        : "none",
-                }}
-              />
-            </div>
-          ) : (
-            <img
-              src="/mascote.png"
-              alt=""
-              className="h-full w-full object-contain"
-              style={{
-                animation:
-                  pose === "welcome"
-                    ? "mascot-greet 1.8s ease-in-out infinite"
-                    : pose === "done"
-                      ? "mascot-pop 1.6s ease-in-out infinite"
-                      : "none",
-              }}
-            />
-          )}
+          <img
+            src={POSE_SRC[shown]}
+            alt=""
+            className="h-full w-full object-contain transition-opacity duration-200"
+            style={{ opacity: fading ? 0 : 1 }}
+          />
         </div>
       </div>
     </div>
