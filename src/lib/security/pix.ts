@@ -71,6 +71,127 @@ export function keyKind(key: string): string {
   return "chave";
 }
 
+/** CPF check digits. A valid format is not a valid owner, only a real number. */
+export function isValidCpf(v: string): boolean {
+  const d = v.replace(/\D/g, "");
+  if (d.length !== 11 || /^(\d)\1{10}$/.test(d)) return false;
+  const calc = (len: number) => {
+    let sum = 0;
+    for (let i = 0; i < len; i++) sum += Number(d[i]) * (len + 1 - i);
+    const r = (sum * 10) % 11;
+    return r === 10 ? 0 : r;
+  };
+  return calc(9) === Number(d[9]) && calc(10) === Number(d[10]);
+}
+
+/** CNPJ check digits. */
+export function isValidCnpj(v: string): boolean {
+  const d = v.replace(/\D/g, "");
+  if (d.length !== 14 || /^(\d)\1{13}$/.test(d)) return false;
+  const calc = (len: number) => {
+    const w =
+      len === 12 ? [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2] : [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+    let sum = 0;
+    for (let i = 0; i < len; i++) sum += Number(d[i]) * w[i];
+    const r = sum % 11;
+    return r < 2 ? 0 : 11 - r;
+  };
+  return calc(12) === Number(d[12]) && calc(13) === Number(d[13]);
+}
+
+/**
+ * A bare Pix key, pasted on its own.
+ *
+ * People paste the key far more often than the copia-e-cola — it is what gets
+ * sent in a WhatsApp message. Answering "não é um código Pix válido" to a
+ * perfectly good phone key was simply wrong, and on the screen where someone is
+ * about to send money, being wrong reads as the tool being broken.
+ *
+ * What we can honestly say about a bare key is narrow: whether it is
+ * well-formed, and what kind it is. It carries no recipient name, no amount and
+ * no checksum, so there is nothing to cross-check — the copy says so.
+ */
+function analyzeBareKey(raw: string): PixResult | null {
+  const v = raw.trim();
+  if (!v || /\s{2,}/.test(v) || v.length > 80) return null;
+  const digits = v.replace(/\D/g, "");
+  const signals: PixSignal[] = [];
+  let kind: string | null = null;
+
+  if (/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v)) {
+    kind = "e-mail";
+  } else if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v)) {
+    kind = "chave aleatória";
+  } else if (
+    /^\+?55\d{10,11}$/.test(digits) ||
+    (/^\d{10,11}$/.test(digits) &&
+      /^[\d\s()+-]+$/.test(v) &&
+      digits.length === 11 &&
+      digits[2] === "9")
+  ) {
+    kind = "telefone";
+  } else if (digits.length === 11 && /^[\d.\-\s]+$/.test(v)) {
+    if (!isValidCpf(digits)) {
+      return {
+        valid: false,
+        level: "alto",
+        isStatic: true,
+        key: v,
+        keyKind: "CPF",
+        signals: [
+          {
+            level: "danger",
+            label: "CPF inválido",
+            detail: "Os dígitos verificadores não conferem. Confirme o número antes de pagar.",
+          },
+        ],
+      };
+    }
+    kind = "CPF";
+  } else if (digits.length === 14 && /^[\d.\-/\s]+$/.test(v)) {
+    if (!isValidCnpj(digits)) {
+      return {
+        valid: false,
+        level: "alto",
+        isStatic: true,
+        key: v,
+        keyKind: "CNPJ",
+        signals: [
+          {
+            level: "danger",
+            label: "CNPJ inválido",
+            detail: "Os dígitos verificadores não conferem. Confirme o número antes de pagar.",
+          },
+        ],
+      };
+    }
+    kind = "CNPJ";
+  }
+
+  if (!kind) return null;
+
+  signals.push({
+    level: "ok",
+    label: `Chave Pix válida (${kind})`,
+    detail: "O formato está correto para uma chave Pix.",
+  });
+  signals.push({
+    level: "ok",
+    label: "Confirme o nome antes de enviar",
+    detail:
+      "Uma chave sozinha não diz quem recebe. O app do banco mostra o nome do titular na hora do pagamento — confira se é quem você espera.",
+  });
+
+  return {
+    valid: true,
+    level: "seguro",
+    isStatic: true,
+    key: v,
+    keyKind: kind,
+    signals,
+  };
+}
+
 export function analyzePix(raw: string): PixResult {
   // Strip only line breaks/tabs that copy-paste adds. Spaces must survive:
   // they are part of real values ("LOJA DA MARIA", "SAO PAULO"), and removing
@@ -82,6 +203,10 @@ export function analyzePix(raw: string): PixResult {
   const looksPix = payload.toUpperCase().includes("BR.GOV.BCB.PIX");
 
   if (!root["00"] || !looksPix) {
+    // Not a payload — it may still be a plain key, which is what people
+    // actually paste.
+    const bare = analyzeBareKey(payload);
+    if (bare) return bare;
     return {
       valid: false,
       level: "alto",

@@ -399,22 +399,31 @@ export function AtividadeTab() {
               {/* Pix summary — the facts that matter before paying */}
               {tool === "pix" && (result as PixResult).valid && (
                 <div className="mt-3 rounded-2xl border border-border bg-card p-4">
-                  {[
-                    ["Recebedor", (result as PixResult).merchant ?? "—"],
+                  {/* Only rows we actually have. A bare key carries no
+                      recipient or city, and printing "—" three times looks
+                      like the check failed. */}
+                  {(
                     [
-                      "Valor",
-                      typeof (result as PixResult).amount === "number"
-                        ? `R$ ${(result as PixResult).amount!.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`
-                        : "Você define ao pagar",
-                    ],
-                    ["Cidade", (result as PixResult).city ?? "—"],
-                    ["Tipo de chave", (result as PixResult).keyKind ?? "—"],
-                  ].map(([k, v]) => (
-                    <div key={k} className="flex justify-between gap-3 py-1.5 text-[13px]">
-                      <span className="text-muted-foreground">{k}</span>
-                      <span className="min-w-0 truncate font-semibold text-foreground">{v}</span>
-                    </div>
-                  ))}
+                      ["Recebedor", (result as PixResult).merchant],
+                      [
+                        "Valor",
+                        typeof (result as PixResult).amount === "number"
+                          ? `R$ ${(result as PixResult).amount!.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`
+                          : (result as PixResult).isStatic && (result as PixResult).merchant
+                            ? "Você define ao pagar"
+                            : undefined,
+                      ],
+                      ["Cidade", (result as PixResult).city],
+                      ["Tipo de chave", (result as PixResult).keyKind],
+                    ] as [string, string | undefined][]
+                  )
+                    .filter(([, v]) => !!v)
+                    .map(([k, v]) => (
+                      <div key={k} className="flex justify-between gap-3 py-1.5 text-[13px]">
+                        <span className="text-muted-foreground">{k}</span>
+                        <span className="min-w-0 truncate font-semibold text-foreground">{v}</span>
+                      </div>
+                    ))}
                 </div>
               )}
 
