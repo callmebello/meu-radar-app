@@ -686,3 +686,29 @@
 .animate-step-in {
   animation: step-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
+
+/* Priva ID — the sheen crossing the card. Long pause between passes so it
+   reads as light catching the surface, not as a loading shimmer. */
+@keyframes id-sheen {
+  0% {
+    transform: translateX(-140%) rotate(8deg);
+    opacity: 0;
+  }
+  8% {
+    opacity: 0.55;
+  }
+  38% {
+    opacity: 0.55;
+  }
+  46%,
+  100% {
+    transform: translateX(320%) rotate(8deg);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  [style*="id-sheen"] {
+    animation: none !important;
+    opacity: 0 !important;
+  }
+}

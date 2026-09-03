@@ -161,6 +161,24 @@ export function PrivaIdCard({ onShare, onBack }: { onShare?: () => void; onBack?
           "radial-gradient(120% 90% at 88% 16%, rgba(99,102,241,0.11) 0%, rgba(99,102,241,0) 55%), radial-gradient(90% 70% at 10% 94%, rgba(79,70,229,0.07) 0%, rgba(79,70,229,0) 60%)",
       }}
     >
+      {/* Reflective film. A card catches light when it moves; this is that,
+          slowed right down and kept faint — noticed on the second look, never
+          competing with the name. */}
+      <span
+        aria-hidden
+        className="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl"
+      >
+        <span
+          className="absolute inset-y-[-60%] w-[52%]"
+          style={{
+            background:
+              "linear-gradient(100deg, rgba(255,255,255,0) 0%, rgba(199,210,254,0.55) 38%, rgba(255,255,255,0.85) 50%, rgba(196,181,253,0.5) 62%, rgba(255,255,255,0) 100%)",
+            filter: "blur(6px)",
+            animation: "id-sheen 7s cubic-bezier(0.45,0,0.25,1) infinite",
+          }}
+        />
+      </span>
+
       {/* Watermark — the app's own icon set, so it reads as ours, not as stock.
           A soft violet streak passes over it, the way light catches a card held
           at an angle. Kept faint: it should be noticed only on second look. */}
@@ -188,9 +206,14 @@ export function PrivaIdCard({ onShare, onBack }: { onShare?: () => void; onBack?
           <img
             src={isDark ? "/PRIVA_logo_dark_theme.png" : "/PRIVA_logo_light_theme.png"}
             alt="Priva"
-            className="h-[15px] w-auto object-contain"
+            className="h-[17px] w-auto object-contain"
           />
-          <span className="text-[13px] font-bold tracking-[0.14em]" style={{ color: "#4F46E5" }}>
+          {/* 21px lands the cap height of "ID" on the wordmark's, so the two
+              read as one lockup instead of a logo with a label after it. */}
+          <span
+            className="text-[21px] font-bold leading-none tracking-[0.10em]"
+            style={{ color: "#4F46E5" }}
+          >
             ID
           </span>
         </span>
