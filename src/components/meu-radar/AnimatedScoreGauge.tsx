@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useIsDark } from "@/hooks/use-is-dark";
 
 interface Props {
   score: number;
@@ -22,6 +23,7 @@ export function AnimatedScoreGauge({
   showLabel = true,
 }: Props) {
   const [current, setCurrent] = useState(0);
+  const isDark = useIsDark();
 
   useEffect(() => {
     let raf = 0;
@@ -42,8 +44,14 @@ export function AnimatedScoreGauge({
   // and it should look like the brand rather than like an alarm. The verdict
   // pill takes the same tone at the same intensity, so the two read as one
   // object — the words still carry the verdict.
+  // Indigo on light. On dark it inverts to gold: our indigo sits too close to
+  // the near-black background to read at a glance, and amber is the warm
+  // counterpart already used across the brand — bright end on dark, deep end on
+  // light, so the strong colour is always the one with the most contrast.
   const PURPLE = ["#C7D2FE", "#A5B4FC", "#818CF8", "#6366F1", "#4F46E5", "#4338CA"] as const;
-  const arcColor = PURPLE[Math.min(PURPLE.length - 1, Math.round(ratio * (PURPLE.length - 1)))];
+  const GOLD = ["#B45309", "#D97706", "#F59E0B", "#FBBF24", "#FCD34D", "#FDE68A"] as const;
+  const ramp = isDark ? GOLD : PURPLE;
+  const arcColor = ramp[Math.min(ramp.length - 1, Math.round(ratio * (ramp.length - 1)))];
   const color = ratio < 0.4 ? "#ef4444" : ratio <= 0.7 ? "#f59e0b" : "#22c55e";
   const label = ratio < 0.4 ? "RISCO ALTO" : ratio <= 0.7 ? "RISCO MÉDIO" : "RISCO BAIXO";
 
@@ -66,9 +74,9 @@ export function AnimatedScoreGauge({
           {/* Weak on the left, strong on the right: the arc itself shows the
               scale the score is climbing. */}
           <linearGradient id="gauge-priva-grad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#C7D2FE" />
-            <stop offset="55%" stopColor="#818CF8" />
-            <stop offset="100%" stopColor="#4338CA" />
+            <stop offset="0%" stopColor={isDark ? "#B45309" : "#C7D2FE"} />
+            <stop offset="55%" stopColor={isDark ? "#F59E0B" : "#818CF8"} />
+            <stop offset="100%" stopColor={isDark ? "#FCD34D" : "#4338CA"} />
           </linearGradient>
           {/* Neon: the arc is redrawn blurred underneath itself, so the light
               spills onto the card instead of the stroke merely being brighter. */}
