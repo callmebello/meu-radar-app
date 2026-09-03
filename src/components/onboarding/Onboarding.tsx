@@ -806,11 +806,13 @@ function Paywall({ onBack, onDone }: { onBack: () => void; onDone: () => void })
       {/* Hero photo, faded into the page.
           A hard edge between a photograph and a UI reads as two screens glued
           together; the gradient makes the page start inside the image. */}
-      <div className="relative">
+      <div className="relative overflow-hidden">
+        {/* Slight zoom so the phone in her hands is readable — enough to see
+            the app, not so much that the scene turns into a crop. */}
         <img
           src="/paywall-hero.jpg"
           alt=""
-          className="h-[34vh] max-h-[270px] w-full object-cover object-[62%_30%]"
+          className="h-[34vh] max-h-[270px] w-full scale-[1.18] object-cover object-[64%_30%]"
         />
         <div
           className="pointer-events-none absolute inset-x-0 bottom-0 h-32"
@@ -899,7 +901,7 @@ function Paywall({ onBack, onDone }: { onBack: () => void; onDone: () => void })
         </button>
       </div>
 
-      <div className="mt-auto px-6 pb-8 pt-5">
+      <div className="px-6 pb-10 pt-6">
         <button
           onClick={start}
           className="flex w-full items-center justify-center gap-2 rounded-2xl py-4 text-[16px] font-bold text-white transition active:scale-[0.99]"
@@ -918,9 +920,13 @@ function Paywall({ onBack, onDone }: { onBack: () => void; onDone: () => void })
             ? `Depois do teste, R$ ${brl(annual)} por ano. Renovação automática.`
             : `R$ ${brl(monthly)} por mês. Renovação automática.`}
         </p>
-        <div className="mt-2.5 flex items-center justify-center gap-2 text-[10.5px] text-muted-foreground">
+        <div className="mt-5 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-[10.5px] text-muted-foreground">
           <button onClick={onDone} className="underline-offset-2 hover:underline">
             Restaurar compras
+          </button>
+          <span aria-hidden>·</span>
+          <button onClick={onDone} className="underline-offset-2 hover:underline">
+            Gerenciar conta
           </button>
           <span aria-hidden>·</span>
           <a href="/termos" className="underline-offset-2 hover:underline">
