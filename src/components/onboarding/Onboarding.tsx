@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { Step, Title, Sub, Hl } from "./ui";
 import { PhoneMock } from "./PhoneMock";
+import { FadeOut } from "./FadeOut";
 import { checkHibp } from "@/lib/api/hibp.functions";
 import { saveUser } from "@/lib/api/saveUser";
 import { rankForDisplay, displayName, logoOf, type Breach } from "@/lib/breaches";
@@ -414,14 +415,7 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
             <PhoneMock src="/mockup-priva-id.png" width={228} />
           </div>
 
-          <div
-            className="pointer-events-none absolute inset-x-0 bottom-0 h-24"
-            style={{
-              background:
-                "linear-gradient(to bottom, color-mix(in srgb, var(--color-background) 0%, transparent) 0%, var(--color-background) 82%)",
-              backdropFilter: "blur(1.5px)",
-            }}
-          />
+          <FadeOut height={120} />
 
           <FloatChip
             Icon={Eye}
