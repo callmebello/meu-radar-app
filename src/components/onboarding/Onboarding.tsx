@@ -16,6 +16,7 @@ import {
 import { Step, Title, Sub, Hl } from "./ui";
 import { PhoneMock } from "./PhoneMock";
 import { FadeOut } from "./FadeOut";
+import { ScanMark } from "./ScanMark";
 import { checkHibp } from "@/lib/api/hibp.functions";
 import { saveUser } from "@/lib/api/saveUser";
 import { rankForDisplay, displayName, logoOf, type Breach } from "@/lib/breaches";
@@ -135,7 +136,7 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
         {/* The four steps carry the noble area. Without them the screen was a
             headline floating over half a phone of white — and they set the
             expectation the rest of the flow then delivers on. */}
-        <ol className="mt-7 space-y-2.5">
+        <ol className="stagger mt-7 space-y-2.5">
           {[
             { n: "1.", t: "Detecta", s: "Encontra seus dados expostos" },
             { n: "2.", t: "Analisa", s: "Mostra o risco de cada um" },
@@ -221,7 +222,7 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
 
         {/* The beat screen earns its place by saying something true, instead of
             being a name repeated back over empty space. */}
-        <div className="mt-7 space-y-2.5">
+        <div className="stagger mt-7 space-y-2.5">
           {[
             { Icon: Lock, t: "Seu CPF vira código", s: "Guardamos o hash, nunca o número." },
             { Icon: Eye, t: "Você vê o que encontramos", s: "Sem enrolação e sem termo técnico." },
@@ -263,7 +264,7 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
           </Title>
           <Sub>Leva menos de 2 minutos. Seus dados são usados só para a verificação.</Sub>
         </div>
-        <div className="mt-6 space-y-2.5">
+        <div className="stagger mt-6 space-y-2.5">
           {[
             { Icon: Search, t: "Encontre suas exposições", s: "Veja onde seus dados apareceram." },
             { Icon: IdCard, t: "Crie seu Priva ID", s: "Sua identidade digital em um só lugar." },
@@ -479,7 +480,7 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
           Vazamento novo aparece toda semana. O aviso é o que transforma monitoramento em proteção.
         </Sub>
 
-        <div className="mt-7 space-y-2.5">
+        <div className="stagger mt-7 space-y-2.5">
           {[
             { Icon: Bell, t: "Vazamento novo com seus dados", s: "No dia em que aparecer." },
             { Icon: ShieldCheck, t: "Resposta de uma remoção", s: "Quando uma empresa responder." },
@@ -624,8 +625,9 @@ function Processing({
 
   return (
     <Step progress={0.66}>
+      <ScanMark done={pct >= 100} size={128} />
       <p
-        className="mt-6 text-center text-[54px] font-extrabold leading-none"
+        className="mt-5 text-center text-[54px] font-extrabold leading-none"
         style={{ color: "#4F46E5" }}
       >
         {Math.round(pct)}%
@@ -644,7 +646,7 @@ function Processing({
         />
       </div>
 
-      <div className="mt-5 space-y-2">
+      <div className="stagger mt-5 space-y-2">
         {steps.map((s, idx) => (
           <div key={s} className="flex items-center gap-2.5">
             <span
@@ -717,7 +719,7 @@ function Partial({
       </Sub>
 
       {shown.length > 0 && (
-        <div className="mt-5 space-y-2">
+        <div className="stagger mt-5 space-y-2">
           {shown.map((b) => (
             <div
               key={b.Domain || b.Name}
@@ -808,7 +810,7 @@ function Social({
         <Sub>Segurança, transparência e controle na palma da sua mão.</Sub>
       </div>
 
-      <div className="mt-6 space-y-2.5">
+      <div className="stagger mt-6 space-y-2.5">
         {[
           { Icon: Search, t: "Bases públicas de vazamentos", s: "Consultadas a cada verificação." },
           { Icon: Lock, t: "Seu CPF vira código", s: "Guardamos o hash, nunca o número." },

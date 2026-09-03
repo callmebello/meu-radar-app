@@ -724,3 +724,45 @@
     transform: translateY(0) scale(1);
   }
 }
+
+/* Onboarding — lists arrive one item at a time.
+   A whole screen fading in at once has no rhythm; a 70ms stagger is what makes
+   a list feel dealt rather than pasted. Distance is small on purpose: big
+   travel reads as a website, short travel with overshoot reads as an app. */
+@keyframes list-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.stagger > * {
+  animation: list-in 0.42s cubic-bezier(0.22, 1.2, 0.36, 1) both;
+}
+.stagger > *:nth-child(1) {
+  animation-delay: 0.06s;
+}
+.stagger > *:nth-child(2) {
+  animation-delay: 0.13s;
+}
+.stagger > *:nth-child(3) {
+  animation-delay: 0.2s;
+}
+.stagger > *:nth-child(4) {
+  animation-delay: 0.27s;
+}
+.stagger > *:nth-child(5) {
+  animation-delay: 0.34s;
+}
+.stagger > *:nth-child(6) {
+  animation-delay: 0.41s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stagger > * {
+    animation: none;
+  }
+}
