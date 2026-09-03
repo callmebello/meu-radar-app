@@ -1,18 +1,17 @@
 import { useState } from "react";
-import { Check, Copy, FileText, Image as ImageIcon, Link2, Loader2, X } from "lucide-react";
+import { createPortal } from "react-dom";
+import { FileText, Image as ImageIcon, Loader2, ShieldCheck, X } from "lucide-react";
 import { renderPrivaIdPng, type PrivaIdData } from "@/lib/privaIdImage";
 import { track, gaEvent } from "@/lib/analytics";
 
 /**
- * Sharing the Priva ID: picture, PDF or link.
+ * Sharing the Priva ID: picture or PDF.
  *
- * The first two are produced on the device — the card is drawn on a canvas
- * here, never uploaded and never rendered by us. The link is deliberately just
- * the app: it carries no name, no score and no identifier, so forwarding it
- * exposes nothing about the person. A public page about someone is a product
- * decision, not a share button, and this needs neither.
+ * Both are produced on the device — the card is drawn on a canvas here, never
+ * uploaded and never rendered by us. The invite link lives at the foot of the
+ * free tools instead; putting it in this sheet stretched the row and made the
+ * card look like it was offering three versions of the same thing.
  */
-const APP_URL = "https://privaapp.com.br";
 
 function download(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);
@@ -42,7 +41,6 @@ async function shareFile(blob: Blob, filename: string, type: string) {
 
 export function PrivaIdShareSheet({ data, onClose }: { data: PrivaIdData; onClose: () => void }) {
   const [busy, setBusy] = useState<"png" | "pdf" | null>(null);
-  const [copied, setCopied] = useState(false);
 
   const asImage = async () => {
     setBusy("png");
@@ -88,28 +86,6 @@ export function PrivaIdShareSheet({ data, onClose }: { data: PrivaIdData; onClos
     setBusy(null);
   };
 
-  const asLink = async () => {
-    const text = `Testei minha exposição de dados na Priva. Faça o seu: ${APP_URL}`;
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: "Priva", text, url: APP_URL });
-        track("PrivaIdShared");
-        gaEvent("priva_id_shared", { format: "link" });
-        return;
-      } catch {
-        /* dismissed */
-      }
-    }
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-      gaEvent("priva_id_shared", { format: "link" });
-    } catch {
-      /* clipboard blocked */
-    }
-  };
-
   const Option = ({
     icon: Icon,
     title,
@@ -145,7 +121,11 @@ export function PrivaIdShareSheet({ data, onClose }: { data: PrivaIdData; onClos
     </button>
   );
 
-  return (
+  // Rendered through a portal: this sheet is mounted inside the Priva ID card,
+  // which lives in a `transform`ed flip container — and a transformed ancestor
+  // becomes the containing block for `position: fixed`, so the overlay was
+  // being laid out inside the card instead of over the screen.
+  return createPortal(
     <div
       className="fixed inset-0 z-[80] flex items-end justify-center bg-black/60 backdrop-blur-sm sm:items-center sm:p-4"
       onClick={onClose}
@@ -165,10 +145,12 @@ export function PrivaIdShareSheet({ data, onClose }: { data: PrivaIdData; onClos
               A imagem e o PDF são gerados no seu aparelho.
             </p>
           </div>
+          {/* Never disabled: a render that hangs must not trap anyone in
+              this sheet. */}
           <button
             onClick={onClose}
             aria-label="Fechar"
-            className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-muted-foreground transition hover:bg-secondary"
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-border text-muted-foreground transition hover:bg-secondary"
           >
             <X className="h-5 w-5" />
           </button>
@@ -189,18 +171,13 @@ export function PrivaIdShareSheet({ data, onClose }: { data: PrivaIdData; onClos
             onClick={() => void asPdf()}
             loading={busy === "pdf"}
           />
-          <Option
-            icon={copied ? Check : Link2}
-            title={copied ? "Link copiado" : "Link"}
-            sub="Convite para o app — não leva dados seus"
-            onClick={() => void asLink()}
-          />
         </div>
 
         <p className="mt-4 flex items-center justify-center gap-1.5 text-center text-[11px] text-muted-foreground">
-          <Copy className="h-3 w-3" /> Valores aparecem mascarados, como na tela
+          <ShieldCheck className="h-3 w-3" /> Valores aparecem mascarados, como na tela
         </p>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
