@@ -36,7 +36,6 @@ import {
   recognisableCompanies,
   type Breach,
 } from "@/lib/breaches";
-import { ReportActionPlan } from "@/components/meu-radar/ReportActionPlan";
 import { generateRelatorioPdf } from "@/lib/api/generateRelatorio.functions";
 
 export const Route = createFileRoute("/relatorio")({
@@ -119,11 +118,6 @@ function RelatorioPage() {
   const [whereOpen, setWhereOpen] = useState(false);
   const [failedLogos, setFailedLogos] = useState<Set<string>>(new Set());
   const [mounted, setMounted] = useState(false);
-  // Bumped whenever the action ledger changes, so the score above the plan
-  // recomputes the moment a box is ticked. Without it the number sits still
-  // while the plan claims it moved — the one thing that would make the whole
-  // score read as decorative.
-  const [ledgerTick, setLedgerTick] = useState(0);
   const [pdfBusy, setPdfBusy] = useState(false);
 
   // Scan is read from localStorage AND re-read for a few seconds: the HIBP
@@ -184,7 +178,7 @@ function RelatorioPage() {
   const recent = breaches.some((b) => tsOf(b) && Date.now() - tsOf(b) < 365 * 86_400_000);
 
   // Deterministic score from the evidence — see lib/riskScore.
-  const { score, factors, credit, creditCap } = useMemo(
+  const { score, factors } = useMemo(
     () =>
       computeScore({
         breachCount,
@@ -195,10 +189,8 @@ function RelatorioPage() {
         // different scores for the same person.
         resolved: resolvedCounts(),
       }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [breachCount, counts, recent, publicHits, ledgerTick],
+    [breachCount, counts, recent, publicHits],
   );
-  const headroom = Math.max(0, creditCap - credit);
 
   /**
    * Removal lives as a pill inside Proteção, and this route sits outside the
@@ -682,55 +674,45 @@ function RelatorioPage() {
           </div>
         </section>
 
-        {/* ── 5a. THE PLAN — subscribers only, because it IS the product ── */}
-        {isPaid && (
-          <ReportActionPlan
-            breaches={breaches}
-            headroom={headroom}
-            onGoRemocao={() => goRemocao()}
-            onChange={() => setLedgerTick((n) => n + 1)}
-          />
-        )}
-
-        {/* ── 5b. RECOMMENDATIONS — the free reader's version of the above ── */}
-        {!isPaid && (
-          <section className="mt-7 px-5">
-            <h2 className="mb-3 text-[17px] font-bold text-foreground">
-              O que recomendamos para você
-            </h2>
-            <div className="grid gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-3">
-              {[
-                {
-                  Icon: KeyRound,
-                  title: "Troque a senha comprometida",
-                  text: "Use uma senha forte e única em cada conta importante.",
-                },
-                {
-                  Icon: Lock,
-                  title: "Ative a verificação em duas etapas",
-                  text: "Mesmo com a senha vazada, ninguém entra sem o segundo fator.",
-                },
-                {
-                  Icon: ShieldCheck,
-                  title: "Assine a Priva",
-                  text: "Pedimos a remoção dos seus dados nas fontes e seguimos monitorando para avisar de vazamentos novos.",
-                },
-              ].map((r) => (
-                <div key={r.title} className="flex gap-3 bg-card px-4 py-4 sm:flex-col sm:gap-2">
-                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[var(--color-navy)]/10">
-                    <r.Icon className="h-4 w-4 text-[var(--color-navy)]" strokeWidth={1.9} />
-                  </span>
-                  <div className="min-w-0">
-                    <p className="text-[13.5px] font-bold leading-snug text-foreground">
-                      {r.title}
-                    </p>
-                    <p className="mt-1 text-[12px] leading-snug text-muted-foreground">{r.text}</p>
-                  </div>
+        {/* ── 5. RECOMMENDATIONS — the general advice, for every reader ──
+            The per-company checklist lives in Proteção › Vazamentos, not here.
+            This page is the diagnosis: what leaked, where, and the score that
+            follows from it. Scoring boxes inside a document people download
+            and forward turn a report into a to-do list. ── */}
+        <section className="mt-7 px-5">
+          <h2 className="mb-3 text-[17px] font-bold text-foreground">
+            O que recomendamos para você
+          </h2>
+          <div className="grid gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-3">
+            {[
+              {
+                Icon: KeyRound,
+                title: "Troque a senha comprometida",
+                text: "Use uma senha forte e única em cada conta importante.",
+              },
+              {
+                Icon: Lock,
+                title: "Ative a verificação em duas etapas",
+                text: "Mesmo com a senha vazada, ninguém entra sem o segundo fator.",
+              },
+              {
+                Icon: ShieldCheck,
+                title: "Assine a Priva",
+                text: "Pedimos a remoção dos seus dados nas fontes e seguimos monitorando para avisar de vazamentos novos.",
+              },
+            ].map((r) => (
+              <div key={r.title} className="flex gap-3 bg-card px-4 py-4 sm:flex-col sm:gap-2">
+                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[var(--color-navy)]/10">
+                  <r.Icon className="h-4 w-4 text-[var(--color-navy)]" strokeWidth={1.9} />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-[13.5px] font-bold leading-snug text-foreground">{r.title}</p>
+                  <p className="mt-1 text-[12px] leading-snug text-muted-foreground">{r.text}</p>
                 </div>
-              ))}
-            </div>
-          </section>
-        )}
+              </div>
+            ))}
+          </div>
+        </section>
 
         {/* ── 6. THE OFFER — how do you want to solve it ───────────── */}
         {isPaid ? (

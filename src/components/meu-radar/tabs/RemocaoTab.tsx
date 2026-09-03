@@ -28,6 +28,7 @@ import {
   promiseLine,
   stepsFor,
   WAVE_SIZE,
+  breachKey,
   type Difficulty,
 } from "@/lib/removal";
 import { recordAction, hasAction } from "@/lib/actions";
@@ -266,9 +267,15 @@ export function RemocaoTab() {
     () => new Set((sources ?? []).map((s) => s.source.toLowerCase())),
     [sources],
   );
+  // The ledger key is shared with Vazamentos (see lib/removal.ts): both
+  // screens can mark the same leak as requested, and both must see it.
   const isRequested = (b: Breach) => {
-    const n = displayName(b).toLowerCase();
-    return sentNames.has(n) || justAsked.includes(n) || hasAction("removal_requested", n);
+    const k = breachKey(b);
+    return (
+      sentNames.has(displayName(b).toLowerCase()) ||
+      justAsked.includes(k) ||
+      hasAction("removal_requested", k)
+    );
   };
 
   // The current wave is the first one with anything still unanswered. Waves
@@ -281,7 +288,7 @@ export function RemocaoTab() {
 
   const request = (b: Breach) => {
     const name = displayName(b);
-    const key = name.toLowerCase();
+    const key = breachKey(b);
     setJustAsked((p) => [...p, key]);
     // Credits the score immediately (10 points — the heaviest action there is)
     // so the reward lands on the tap, not days later when the letter goes out.

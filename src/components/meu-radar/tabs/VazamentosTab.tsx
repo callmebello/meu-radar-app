@@ -5,6 +5,8 @@ import { rankForDisplay, displayName, logoOf, pwnCountLabel, type Breach } from 
 import { guidanceFor, leakedLabels } from "@/lib/breachActions";
 import { hasAction, recordAction, undoAction, type ActionType } from "@/lib/actions";
 import { startCheckout } from "@/lib/checkout";
+import { ACTION_CREDIT } from "@/lib/riskScore";
+import { DIFFICULTY, difficultyOf, breachKey } from "@/lib/removal";
 import { ContasTab } from "./ContasTab";
 import { track, gaEvent } from "@/lib/analytics";
 
@@ -19,7 +21,22 @@ import { track, gaEvent } from "@/lib/analytics";
  * Detection is free — the person already has this from their scan. What the
  * subscription adds is CONTINUOUS monitoring: being told about the next one.
  */
-const keyOf = (b: Breach) => b.Domain || b.Name || displayName(b);
+const keyOf = breachKey;
+
+/**
+ * What each task is worth, in the score's own currency.
+ *
+ * The tasks were already here and already credited the score — the number just
+ * moved somewhere else, silently, on another screen. A checkbox that pays and
+ * does not say so is a checkbox nobody ticks. See riskScore.ts for why closing
+ * an account is worth more than changing a password.
+ */
+const POINTS: Record<ActionType, number> = {
+  password_changed: ACTION_CREDIT.passwordChanged,
+  twofa_enabled: ACTION_CREDIT.twoFactorEnabled,
+  account_closed: ACTION_CREDIT.accountClosed,
+  removal_requested: ACTION_CREDIT.removalRequested,
+};
 
 function Initial({ name }: { name: string }) {
   return (
@@ -44,13 +61,30 @@ function Logo({ b }: { b: Breach }) {
   );
 }
 
-function BreachRow({ b, onChange }: { b: Breach; onChange: () => void }) {
+function BreachRow({
+  b,
+  onChange,
+  onRemocao,
+}: {
+  b: Breach;
+  onChange: () => void;
+  onRemocao: () => void;
+}) {
   const [open, setOpen] = useState(false);
   const name = displayName(b);
   const k = keyOf(b);
   const leaked = leakedLabels(b);
   const { tasks, advice } = useMemo(() => guidanceFor(b, name), [b, name]);
   const done = tasks.filter((t) => hasAction(t.type, k)).length;
+  // Points still on the table for this leak. It is the collapsed row's whole
+  // reason to be tapped — "3/3" says nothing to someone who has not opened it
+  // yet, while "+19 pts" says exactly what is behind the chevron.
+  const tier = DIFFICULTY[difficultyOf(b)];
+  const removable = difficultyOf(b) !== "impossivel";
+  const removalDone = hasAction("removal_requested", k);
+  const left =
+    tasks.reduce((n, t) => (hasAction(t.type, k) ? n : n + POINTS[t.type]), 0) +
+    (removable && !removalDone ? POINTS.removal_requested : 0);
 
   const toggle = (type: ActionType) => {
     if (hasAction(type, k)) undoAction(type, k);
@@ -78,16 +112,9 @@ function BreachRow({ b, onChange }: { b: Breach; onChange: () => void }) {
         {tasks.length > 0 && (
           <span
             className="shrink-0 rounded-full px-2 py-0.5 text-[10.5px] font-bold"
-            style={
-              done === tasks.length
-                ? { backgroundColor: "rgba(15,169,104,0.12)", color: "#0FA968" }
-                : {
-                    backgroundColor: "var(--color-secondary)",
-                    color: "var(--color-muted-foreground)",
-                  }
-            }
+            style={{ backgroundColor: "rgba(15,169,104,0.12)", color: "#0FA968" }}
           >
-            {done}/{tasks.length}
+            {left > 0 ? `+${left} pts` : `${done}/${tasks.length}`}
           </span>
         )}
         <ChevronDown
@@ -102,11 +129,22 @@ function BreachRow({ b, onChange }: { b: Breach; onChange: () => void }) {
       >
         <div className="overflow-hidden">
           <div className="border-t border-border px-4 py-3.5">
-            {tasks.length > 0 && (
+            {(tasks.length > 0 || removable) && (
               <>
-                <p className="mb-2 text-[11.5px] font-semibold uppercase tracking-wide text-muted-foreground">
-                  O que fazer agora
-                </p>
+                <div className="mb-2 flex items-center gap-2">
+                  <p className="text-[11.5px] font-semibold uppercase tracking-wide text-muted-foreground">
+                    O que fazer agora
+                  </p>
+                  {/* Whether there is a company on the other end, said on the
+                      same row as the tasks — because the most valuable action
+                      here (asking for removal) depends entirely on it. */}
+                  <span
+                    className="rounded-full px-2 py-0.5 text-[10px] font-bold"
+                    style={{ backgroundColor: tier.bg, color: tier.color }}
+                  >
+                    {tier.short}
+                  </span>
+                </div>
                 <ul className="space-y-1.5">
                   {tasks.map((t) => {
                     const checked = hasAction(t.type, k);
@@ -137,13 +175,67 @@ function BreachRow({ b, onChange }: { b: Breach; onChange: () => void }) {
                           >
                             {checked && <Check className="h-3 w-3 text-white" strokeWidth={3.5} />}
                           </span>
-                          <span className="text-[13.5px] text-foreground">{t.label}</span>
+                          <span className="min-w-0 flex-1 text-[13.5px] leading-snug text-foreground">
+                            {t.label}
+                          </span>
+                          <span
+                            className="shrink-0 text-[12.5px] font-bold"
+                            style={{
+                              color: checked ? "#0FA968" : "var(--color-muted-foreground)",
+                            }}
+                          >
+                            +{POINTS[t.type]}
+                          </span>
                         </button>
                       </li>
                     );
                   })}
                 </ul>
               </>
+            )}
+
+            {/* Removal never gets a self-declared checkbox: it is the one
+                action with a third party on the hook, so it goes to the queue
+                that actually tracks it. For a data broker it is also the ONLY
+                action — you never opened an account there — which is why a row
+                like Escavador would otherwise sit here worth nothing. */}
+            {removable && (
+              <button
+                onClick={onRemocao}
+                className="mt-2 flex w-full items-center gap-2.5 rounded-xl border border-border px-3 py-2.5 text-left transition active:scale-[0.99]"
+                style={
+                  removalDone
+                    ? {
+                        borderColor: "var(--color-success)",
+                        backgroundColor: "rgba(15,169,104,0.06)",
+                      }
+                    : undefined
+                }
+              >
+                <span
+                  className="grid h-5 w-5 shrink-0 place-items-center rounded-md border"
+                  style={
+                    removalDone
+                      ? {
+                          backgroundColor: "var(--color-success)",
+                          borderColor: "var(--color-success)",
+                        }
+                      : { borderColor: "var(--color-border)" }
+                  }
+                >
+                  {removalDone && <Check className="h-3 w-3 text-white" strokeWidth={3.5} />}
+                </span>
+                <span className="min-w-0 flex-1 text-[13.5px] leading-snug text-foreground">
+                  {removalDone ? "Remoção solicitada" : "Pedir remoção dos meus dados"}
+                  <span className="block text-[11.5px] text-muted-foreground">{tier.eta}</span>
+                </span>
+                <span
+                  className="shrink-0 text-[12.5px] font-bold"
+                  style={{ color: removalDone ? "#0FA968" : "var(--color-muted-foreground)" }}
+                >
+                  +{POINTS.removal_requested}
+                </span>
+              </button>
             )}
 
             {advice.length > 0 && (
@@ -165,10 +257,10 @@ function BreachRow({ b, onChange }: { b: Breach; onChange: () => void }) {
               </>
             )}
 
-            {tasks.length > 0 && (
+            {(tasks.length > 0 || removable) && (
               <p className="mt-3 text-[11px] text-muted-foreground">
-                Você marca o que já fez — não temos como verificar isso no site do serviço. Cada
-                item concluído aumenta seu score.
+                Você marca o que já fez — não temos como verificar isso no site do serviço. Os
+                pontos entram no seu Identity Score na hora, e dá para desmarcar.
               </p>
             )}
           </div>
@@ -179,17 +271,29 @@ function BreachRow({ b, onChange }: { b: Breach; onChange: () => void }) {
 }
 
 export function VazamentosTab() {
-  const { scanResult, isPremium, openScan } = useApp();
+  const { scanResult, isPremium, openScan, setProtecaoPill } = useApp();
   const [, force] = useState(0);
   // Contas used to be its own pill. It reads the same HIBP payload as the
   // breach list — one is "what leaked", the other "where you still have an
   // account" — so they belong under one heading, and the top bar gets a slot
   // back.
   const [view, setView] = useState<"vazamentos" | "contas">("vazamentos");
-  const breaches = useMemo(
-    () => rankForDisplay((scanResult?.hibp?.breaches ?? []) as Breach[]),
-    [scanResult],
-  );
+  /**
+   * Ordered by what can actually be resolved.
+   *
+   * rankForDisplay already leads with the brands a Brazilian recognises and
+   * sinks the malware dumps. On top of that, the leaks whose companies have a
+   * working privacy channel come first: those are the ones where ticking a box
+   * and asking for removal actually ends somewhere. A list that opens with
+   * four identical "Registros de malware" — which nobody can do anything about
+   * — teaches people this screen has nothing for them.
+   */
+  const breaches = useMemo(() => {
+    const rank = { facil: 0, media: 1, dificil: 2, impossivel: 3 } as const;
+    return rankForDisplay((scanResult?.hibp?.breaches ?? []) as Breach[]).sort(
+      (a, b) => rank[difficultyOf(a)] - rank[difficultyOf(b)],
+    );
+  }, [scanResult]);
 
   if (!scanResult) {
     return (
@@ -260,7 +364,12 @@ export function VazamentosTab() {
           </p>
           <div className="space-y-2">
             {breaches.map((b) => (
-              <BreachRow key={keyOf(b)} b={b} onChange={() => force((n) => n + 1)} />
+              <BreachRow
+                key={keyOf(b)}
+                b={b}
+                onChange={() => force((n) => n + 1)}
+                onRemocao={() => setProtecaoPill("remocao")}
+              />
             ))}
           </div>
         </>

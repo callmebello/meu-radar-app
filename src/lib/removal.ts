@@ -187,6 +187,15 @@ const EASY_DOMAINS = [
 const host = (b: Breach) => (b.Domain ?? "").toLowerCase();
 
 /**
+ * The ledger key for a breach.
+ *
+ * Every screen that records or reads an action about a leak has to agree on
+ * this string, or Vazamentos ticks a box that Remoção cannot see. It lives
+ * here because both screens already import this module.
+ */
+export const breachKey = (b: Breach): string => b.Domain || b.Name || (b.Title ?? "");
+
+/**
  * Where a given leak sits.
  *
  * The order matters: a stealer log is checked first because it has no company
