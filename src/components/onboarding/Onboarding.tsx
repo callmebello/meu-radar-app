@@ -137,17 +137,17 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
             expectation the rest of the flow then delivers on. */}
         <ol className="mt-7 space-y-2.5">
           {[
-            { n: "01", t: "Detecta", s: "Encontra seus dados expostos" },
-            { n: "02", t: "Analisa", s: "Mostra o risco de cada um" },
-            { n: "03", t: "Remove", s: "Solicita a remoção conforme a LGPD" },
-            { n: "04", t: "Monitora", s: "Avisa quando aparecer algo novo" },
+            { n: "1.", t: "Detecta", s: "Encontra seus dados expostos" },
+            { n: "2.", t: "Analisa", s: "Mostra o risco de cada um" },
+            { n: "3.", t: "Remove", s: "Solicita a remoção conforme a LGPD" },
+            { n: "4.", t: "Monitora", s: "Avisa quando aparecer algo novo" },
           ].map((b) => (
             <li
               key={b.n}
               className="flex items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3"
             >
               <span
-                className="grid h-9 w-9 shrink-0 place-items-center rounded-xl text-[12px] font-extrabold"
+                className="grid h-9 w-9 shrink-0 place-items-center rounded-xl text-[14px] font-extrabold"
                 style={{ backgroundColor: "rgba(79,70,229,0.10)", color: "#4F46E5" }}
               >
                 {b.n}
@@ -237,9 +237,9 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
             >
               <span
                 className="grid h-9 w-9 shrink-0 place-items-center rounded-xl"
-                style={{ backgroundColor: "rgba(16,185,129,0.12)" }}
+                style={{ backgroundColor: "rgba(79,70,229,0.10)" }}
               >
-                <b.Icon className="h-4 w-4" style={{ color: "var(--color-success)" }} />
+                <b.Icon className="h-4 w-4" style={{ color: "#4F46E5" }} />
               </span>
               <span className="min-w-0">
                 <span className="block text-[14px] font-bold leading-tight text-foreground">
@@ -820,9 +820,9 @@ function Social({
           >
             <span
               className="grid h-10 w-10 shrink-0 place-items-center rounded-xl"
-              style={{ backgroundColor: "rgba(16,185,129,0.12)" }}
+              style={{ backgroundColor: "rgba(79,70,229,0.10)" }}
             >
-              <b.Icon className="h-4 w-4" style={{ color: "var(--color-success)" }} />
+              <b.Icon className="h-4 w-4" style={{ color: "#4F46E5" }} />
             </span>
             <span className="min-w-0">
               <span className="block text-[14px] font-bold leading-tight text-foreground">
@@ -984,7 +984,7 @@ function Paywall({ onBack, onDone }: { onBack: () => void; onDone: () => void })
         </button>
       </div>
 
-      <div className="px-6 pb-10 pt-6">
+      <div className="px-6 pb-2 pt-6">
         <button
           onClick={start}
           className="flex w-full items-center justify-center gap-2 rounded-2xl py-4 text-[16px] font-bold text-white transition active:scale-[0.99]"
@@ -1003,7 +1003,14 @@ function Paywall({ onBack, onDone }: { onBack: () => void; onDone: () => void })
             ? `Depois do teste, R$ ${brl(annual)} por ano. Renovação automática.`
             : `R$ ${brl(monthly)} por mês. Renovação automática.`}
         </p>
-        <div className="mt-5 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-[10.5px] text-muted-foreground">
+      </div>
+
+      {/* The store links belong at the foot of the screen, not trailing the
+          renewal line — they are housekeeping, and Apple expects them findable
+          rather than prominent. mt-auto pins them to the bottom whatever the
+          plan block does above. */}
+      <div className="mt-auto px-6 pb-8 pt-4">
+        <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-[10.5px] text-muted-foreground">
           <button onClick={onDone} className="underline-offset-2 hover:underline">
             Restaurar compras
           </button>
