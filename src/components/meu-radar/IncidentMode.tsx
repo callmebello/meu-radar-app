@@ -300,8 +300,9 @@ function EmergencyFooter() {
           <Phone className="h-3.5 w-3.5" /> 190
         </a>
       </div>
-      <p className="mt-3 text-center text-[11px] text-muted-foreground">
-        Orientação prática da Priva — não substitui aconselhamento jurídico.
+      {/* One line: the disclaimer has to be present, not prominent. */}
+      <p className="mt-3 truncate text-center text-[11px] text-muted-foreground">
+        Orientação prática, não aconselhamento jurídico.
       </p>
     </div>
   );
