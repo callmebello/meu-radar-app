@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useIsDark } from "@/hooks/use-is-dark";
 
 /**
@@ -11,11 +12,23 @@ import { useIsDark } from "@/hooks/use-is-dark";
  *
  * Two files, one per theme, picked live so the mock never sits light-on-dark.
  */
-export function PhoneMock({ width = 200, className = "" }: { width?: number; className?: string }) {
+export function PhoneMock({
+  width = 200,
+  className = "",
+  /** Optional art for a specific screen, e.g. the Priva ID face. */
+  src,
+}: {
+  width?: number;
+  className?: string;
+  src?: string;
+}) {
+  const [failed, setFailed] = useState(false);
   const isDark = useIsDark();
+  const fallback = isDark ? "/mockup-dark.png" : "/mockup-light.png";
   return (
     <img
-      src={isDark ? "/mockup-dark.png" : "/mockup-light.png"}
+      src={src && !failed ? src : fallback}
+      onError={() => setFailed(true)}
       alt="Priva no celular"
       className={`h-auto w-full object-contain ${className}`}
       style={{ width, filter: "drop-shadow(0 18px 34px rgba(30,35,80,0.22))" }}

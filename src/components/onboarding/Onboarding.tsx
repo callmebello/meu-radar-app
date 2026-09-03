@@ -404,24 +404,46 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
         </Title>
         <Sub>Privacidade não é sorte. É monitoramento, alerta e ação.</Sub>
 
-        <div className="mt-6 flex justify-center">
-          <PhoneMock width={210} />
+        {/* The device carries the screen and the claims sit on it, floating.
+            Listing them underneath pushed the phone up and the button off; here
+            the phone is the page and the button stays where a thumb is. The
+            bottom is cropped and blurred out rather than scaled down, so the
+            frame keeps its size. */}
+        <div className="relative mt-6">
+          <div className="mx-auto flex h-[44vh] max-h-[350px] justify-center overflow-hidden">
+            <PhoneMock src="/mockup-priva-id.png" width={228} />
+          </div>
+
+          <div
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-24"
+            style={{
+              background:
+                "linear-gradient(to bottom, color-mix(in srgb, var(--color-background) 0%, transparent) 0%, var(--color-background) 82%)",
+              backdropFilter: "blur(1.5px)",
+            }}
+          />
+
+          <FloatChip
+            Icon={Eye}
+            label="Monitoramento contínuo"
+            className="left-0 top-6"
+            delay="0.15s"
+          />
+          <FloatChip
+            Icon={Bell}
+            label="Alerta de vazamento"
+            className="right-0 top-[38%]"
+            delay="0.3s"
+          />
+          <FloatChip
+            Icon={ShieldCheck}
+            label="Remoção via LGPD"
+            className="bottom-6 left-2"
+            delay="0.45s"
+          />
         </div>
 
-        <div className="mt-6 space-y-2">
-          {[
-            { Icon: Eye, t: "Monitoramento contínuo" },
-            { Icon: Bell, t: "Alerta de vazamento novo" },
-            { Icon: ShieldCheck, t: "Ações práticas para se proteger" },
-          ].map((b) => (
-            <div key={b.t} className="flex items-center gap-2.5">
-              <b.Icon className="h-4 w-4 shrink-0" style={{ color: "#4F46E5" }} />
-              <span className="text-[13.5px] text-foreground">{b.t}</span>
-            </div>
-          ))}
-        </div>
-
-        <p className="mt-5 flex items-center justify-center gap-1.5 text-center text-[12.5px] font-semibold text-foreground">
+        <p className="mt-2 flex items-center justify-center gap-1.5 text-center text-[12.5px] font-semibold text-foreground">
           <Check className="h-3.5 w-3.5" style={{ color: "var(--color-success)" }} /> Nenhuma
           cobrança agora
         </p>
@@ -499,6 +521,29 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
   }
 
   return <Paywall onBack={back} onDone={onDone} />;
+}
+
+/** A claim that sits on the device rather than under it. */
+function FloatChip({
+  Icon,
+  label,
+  className = "",
+  delay = "0s",
+}: {
+  Icon: typeof Bell;
+  label: string;
+  className?: string;
+  delay?: string;
+}) {
+  return (
+    <span
+      className={`absolute z-10 inline-flex items-center gap-1.5 rounded-full border border-border bg-card/95 px-3 py-2 text-[11.5px] font-bold text-foreground shadow-lg backdrop-blur ${className}`}
+      style={{ animation: `chip-in 0.5s cubic-bezier(0.34,1.3,0.5,1) ${delay} both` }}
+    >
+      <Icon className="h-3.5 w-3.5 shrink-0" style={{ color: "#4F46E5" }} />
+      {label}
+    </span>
+  );
 }
 
 /* ── Processing ──────────────────────────────────────────────────────────── */
