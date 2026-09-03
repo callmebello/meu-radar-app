@@ -6,7 +6,6 @@ import {
   ShieldCheck,
   ShieldAlert,
   ShieldX,
-  Share2,
   Clipboard,
   Trash2,
   Camera,
@@ -437,18 +436,6 @@ export function AtividadeTab() {
               <p className="px-2 pt-4 text-center text-[11px] leading-relaxed text-muted-foreground/70">
                 Análise feita no seu aparelho, a partir do conteúdo colado. Ajuda a decidir, mas não
                 substitui conferir pelo canal oficial.
-              </p>
-            </div>
-          )}
-
-          {/* Share hint */}
-          {!result && (
-            <div className="mx-5 mt-5 flex items-start gap-3 rounded-2xl border border-border bg-secondary/30 px-4 py-3">
-              <Share2 className="mt-0.5 h-4 w-4 shrink-0 text-[var(--color-navy)]" />
-              <p className="text-[12px] leading-snug text-muted-foreground">
-                <span className="font-semibold text-foreground">Compartilhar com a Priva:</span> no
-                Android, com o app instalado, use o botão Compartilhar do WhatsApp e escolha Priva.
-                No iPhone, copie e use o botão Colar acima.
               </p>
             </div>
           )}

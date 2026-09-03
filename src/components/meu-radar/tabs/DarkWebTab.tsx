@@ -74,9 +74,9 @@ export function DarkWebTab() {
           {sources.length === 0 ? (
             <div className="flex items-center gap-3 rounded-xl border border-[var(--color-success)]/20 bg-[var(--color-success)]/5 p-4">
               <CheckCircle2 className="h-4 w-4 shrink-0 text-[var(--color-success)]" />
-              <p className="text-sm text-[var(--color-success)]">
-                Nenhuma exposição pública encontrada. Continuamos monitorando.
-              </p>
+              {/* Same sentence the tiles use — three wordings for "nothing
+                  found" made the app sound like three different products. */}
+              <p className="text-sm text-[var(--color-success)]">Nenhuma exposição encontrada</p>
             </div>
           ) : (
             <ul className="space-y-2.5">

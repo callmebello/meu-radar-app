@@ -62,7 +62,7 @@ export function NextActionsCard() {
         {headroom > 0 && (
           <span
             className="inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[10px] font-bold"
-            style={{ backgroundColor: "rgba(15,169,104,0.12)", color: "#0FA968" }}
+            style={{ backgroundColor: "rgba(16,185,129,0.12)", color: "var(--color-success)" }}
           >
             +{headroom} {headroom === 1 ? "ponto" : "pontos"}
           </span>

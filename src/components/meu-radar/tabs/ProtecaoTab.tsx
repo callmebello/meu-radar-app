@@ -66,14 +66,16 @@ export function ProtecaoTab({ initial = "credenciais" }: { initial?: Pill }) {
 
       {/* Incident Mode entry — pushed to the bottom: it's the "if something bad
           happened" escape hatch, rarely used, so it stays out of the noble area
-          but is findable while browsing Proteção. */}
-      <div className="px-5 pb-6 pt-2">
+          but is findable while browsing Proteção. Hidden on Remoção: someone
+          reading the status of their own LGPD requests is not in an emergency,
+          and a red panic row under it only muddies the screen. */}
+      <div className={`px-5 pb-6 pt-2 ${pill === "remocao" ? "hidden" : ""}`}>
         <button
           onClick={() => goToTab("incidente")}
           className="flex w-full items-center gap-3 rounded-2xl border border-[var(--color-danger)]/25 bg-[var(--color-danger)]/5 px-4 py-3.5 text-left transition active:scale-[0.99]"
         >
           <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[var(--color-danger)]/12">
-            <IncidentMark className="h-5 w-5" />
+            <IncidentMark className="h-7 w-7" />
           </span>
           <span className="min-w-0 flex-1">
             <span className="block text-[14px] font-bold text-foreground">

@@ -15,13 +15,11 @@ export function IncidentMark({ className = "h-5 w-5" }: { className?: string }) 
     return <LifeBuoy className={`${className} text-[var(--color-danger)]`} strokeWidth={1.9} />;
   }
   return (
-    // Clipped to a circle: the asset has no alpha channel, so the square
-    // corners would paint their own background over the tinted tile.
     <img
       src="/PRIVA_mark_red.png"
       alt=""
       onError={() => setFailed(true)}
-      className={`${className} rounded-full object-cover`}
+      className={`${className} object-contain`}
     />
   );
 }
