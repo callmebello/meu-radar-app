@@ -72,20 +72,33 @@ export function ProtecaoTab({ initial = "credenciais" }: { initial?: Pill }) {
       <div className={`px-5 pb-6 pt-2 ${pill === "remocao" ? "hidden" : ""}`}>
         <button
           onClick={() => goToTab("incidente")}
-          className="flex w-full items-center gap-3 rounded-2xl border border-[var(--color-danger)]/25 bg-[var(--color-danger)]/5 px-4 py-3.5 text-left transition active:scale-[0.99]"
+          className="flex w-full items-center gap-3.5 rounded-2xl px-4 py-4 text-left transition active:scale-[0.99]"
+          style={{
+            border: "1.5px solid var(--color-danger)",
+            backgroundColor: "rgba(239,68,68,0.06)",
+            boxShadow: "0 0 24px -8px rgba(239,68,68,0.45)",
+          }}
         >
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[var(--color-danger)]/12">
+          <span
+            className="grid h-12 w-12 shrink-0 place-items-center rounded-full"
+            style={{ backgroundColor: "rgba(239,68,68,0.10)" }}
+          >
             <IncidentMark className="h-7 w-7" />
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block text-[14px] font-bold text-foreground">
-              Se algo já aconteceu
+            <span className="block text-[15px] font-extrabold leading-tight text-foreground">
+              Preciso de <span style={{ color: "var(--color-danger)" }}>ajuda agora</span>
             </span>
-            <span className="block text-[12px] text-muted-foreground">
-              Golpe, roubo, perda do celular ou senha vazada
+            <span className="mt-0.5 block text-[12.5px] leading-snug text-muted-foreground">
+              Golpe, roubo, perda do celular ou conta invadida
             </span>
           </span>
-          <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+          <span
+            className="grid h-8 w-8 shrink-0 place-items-center rounded-full"
+            style={{ border: "1.5px solid var(--color-danger)" }}
+          >
+            <ChevronRight className="h-4 w-4" style={{ color: "var(--color-danger)" }} />
+          </span>
         </button>
       </div>
     </>

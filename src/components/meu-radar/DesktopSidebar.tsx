@@ -1,11 +1,22 @@
-import { Home, Shield, ScanSearch, User, Target } from "lucide-react";
+import type React from "react";
+import { Home, User, Target } from "lucide-react";
+import { ShieldPlain, MagnifierPlain } from "./NavIcons";
 import type { TabId } from "./BottomNav";
 import { useIsDark } from "@/hooks/use-is-dark";
 
-const NAV: { id: TabId; label: string; icon: typeof Home }[] = [
+const NAV: {
+  id: TabId;
+  label: string;
+  icon: React.ComponentType<{
+    size?: number;
+    className?: string;
+    strokeWidth?: number;
+    style?: React.CSSProperties;
+  }>;
+}[] = [
   { id: "radar", label: "Início", icon: Home },
-  { id: "protecao", label: "Proteção", icon: Shield },
-  { id: "atividade", label: "Atividade", icon: ScanSearch },
+  { id: "protecao", label: "Proteção", icon: ShieldPlain },
+  { id: "atividade", label: "Atividade", icon: MagnifierPlain },
   { id: "perfil", label: "Perfil", icon: User },
 ];
 
@@ -29,7 +40,11 @@ export function DesktopSidebar({
 
   return (
     <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-border bg-card px-4 py-6 lg:flex">
-      <button onClick={() => onChange("radar")} aria-label="Início" className="mb-8 px-2 text-left transition-opacity hover:opacity-80">
+      <button
+        onClick={() => onChange("radar")}
+        aria-label="Início"
+        className="mb-8 px-2 text-left transition-opacity hover:opacity-80"
+      >
         <img src={logo} alt="PRIVA" className="h-6 w-auto object-contain" />
       </button>
 
@@ -62,7 +77,8 @@ export function DesktopSidebar({
       >
         {scanning ? (
           <>
-            <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" /> Analisando...
+            <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />{" "}
+            Analisando...
           </>
         ) : (
           <>

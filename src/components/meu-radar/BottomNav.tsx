@@ -1,14 +1,25 @@
+import type React from "react";
 import { useEffect, useRef, useState } from "react";
-import { Home, Shield, ScanSearch, User } from "lucide-react";
+import { Home, User } from "lucide-react";
+import { ShieldPlain, MagnifierPlain } from "./NavIcons";
 
 // `familia` and `incidente` stay valid destinations (reached from Perfil and
 // Proteção), they are just not bar items.
 export type TabId = "radar" | "protecao" | "familia" | "perfil" | "atividade" | "incidente";
 
-const tabs: { id: TabId; label: string; icon: typeof Shield }[] = [
+const tabs: {
+  id: TabId;
+  label: string;
+  icon: React.ComponentType<{
+    size?: number;
+    className?: string;
+    strokeWidth?: number;
+    style?: React.CSSProperties;
+  }>;
+}[] = [
   { id: "radar", label: "Início", icon: Home },
-  { id: "protecao", label: "Proteção", icon: Shield },
-  { id: "atividade", label: "Atividade", icon: ScanSearch },
+  { id: "protecao", label: "Proteção", icon: ShieldPlain },
+  { id: "atividade", label: "Atividade", icon: MagnifierPlain },
   { id: "perfil", label: "Perfil", icon: User },
 ];
 
