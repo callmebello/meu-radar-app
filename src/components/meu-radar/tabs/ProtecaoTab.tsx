@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import { ChevronRight } from "lucide-react";
-import { IncidentMark } from "../IncidentMark";
+import { EmergencyCta } from "../EmergencyCta";
 import { AppHeader } from "../Header";
 import { CredenciaisTab } from "./CredenciaisTab";
 import { ExposicaoTab } from "./ExposicaoTab";
@@ -70,36 +69,7 @@ export function ProtecaoTab({ initial = "credenciais" }: { initial?: Pill }) {
           reading the status of their own LGPD requests is not in an emergency,
           and a red panic row under it only muddies the screen. */}
       <div className={`px-5 pb-6 pt-2 ${pill === "remocao" ? "hidden" : ""}`}>
-        <button
-          onClick={() => goToTab("incidente")}
-          className="flex w-full items-center gap-3.5 rounded-2xl px-4 py-4 text-left transition active:scale-[0.99]"
-          style={{
-            border: "1.5px solid var(--color-danger)",
-            backgroundColor: "rgba(239,68,68,0.06)",
-            boxShadow: "0 0 24px -8px rgba(239,68,68,0.45)",
-          }}
-        >
-          <span
-            className="grid h-12 w-12 shrink-0 place-items-center rounded-full"
-            style={{ backgroundColor: "rgba(239,68,68,0.10)" }}
-          >
-            <IncidentMark className="h-7 w-7" />
-          </span>
-          <span className="min-w-0 flex-1">
-            <span className="block text-[15px] font-extrabold leading-tight text-foreground">
-              Preciso de <span style={{ color: "var(--color-danger)" }}>ajuda agora</span>
-            </span>
-            <span className="mt-0.5 block text-[12.5px] leading-snug text-muted-foreground">
-              Golpe, roubo, perda do celular ou conta invadida
-            </span>
-          </span>
-          <span
-            className="grid h-8 w-8 shrink-0 place-items-center rounded-full"
-            style={{ border: "1.5px solid var(--color-danger)" }}
-          >
-            <ChevronRight className="h-4 w-4" style={{ color: "var(--color-danger)" }} />
-          </span>
-        </button>
+        <EmergencyCta />
       </div>
     </>
   );

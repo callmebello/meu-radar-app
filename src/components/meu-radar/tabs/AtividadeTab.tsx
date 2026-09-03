@@ -16,6 +16,7 @@ import {
 import { AppHeader } from "../Header";
 import { QrScanner } from "../QrScanner";
 import { InviteBlock } from "../InviteBlock";
+import { EmergencyCta } from "../EmergencyCta";
 import { FamiliaTab } from "./FamiliaTab";
 import { useApp } from "@/contexts/AppContext";
 import { analyzeLink, type LinkResult } from "@/lib/security/link";
@@ -432,6 +433,11 @@ export function AtividadeTab() {
                   </li>
                 ))}
               </ul>
+
+              {/* Only on a high-risk result: the person has just been told
+                  they were targeted, which is the one moment in this tab when
+                  "algo já aconteceu" is a live question rather than noise. */}
+              {result.level === "alto" && <EmergencyCta className="mt-4" />}
 
               <p className="px-2 pt-4 text-center text-[11px] leading-relaxed text-muted-foreground/70">
                 Análise feita no seu aparelho, a partir do conteúdo colado. Ajuda a decidir, mas não
