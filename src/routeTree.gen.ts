@@ -13,6 +13,7 @@ import { Route as VerificarLinkRouteImport } from './routes/verificar-link'
 import { Route as TermosRouteImport } from './routes/termos'
 import { Route as RelatorioRouteImport } from './routes/relatorio'
 import { Route as PrivacidadeRouteImport } from './routes/privacidade'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as InicioRouteImport } from './routes/inicio'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
@@ -36,6 +37,11 @@ const RelatorioRoute = RelatorioRouteImport.update({
 const PrivacidadeRoute = PrivacidadeRouteImport.update({
   id: '/privacidade',
   path: '/privacidade',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
   getParentRoute: () => rootRouteImport,
 } as any)
 const InicioRoute = InicioRouteImport.update({
@@ -62,6 +68,7 @@ const AdminRemovalRoute = AdminRemovalRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/inicio': typeof InicioRoute
+  '/onboarding': typeof OnboardingRoute
   '/privacidade': typeof PrivacidadeRoute
   '/relatorio': typeof RelatorioRoute
   '/termos': typeof TermosRoute
@@ -72,6 +79,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/inicio': typeof InicioRoute
+  '/onboarding': typeof OnboardingRoute
   '/privacidade': typeof PrivacidadeRoute
   '/relatorio': typeof RelatorioRoute
   '/termos': typeof TermosRoute
@@ -83,6 +91,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/inicio': typeof InicioRoute
+  '/onboarding': typeof OnboardingRoute
   '/privacidade': typeof PrivacidadeRoute
   '/relatorio': typeof RelatorioRoute
   '/termos': typeof TermosRoute
@@ -95,6 +104,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/inicio'
+    | '/onboarding'
     | '/privacidade'
     | '/relatorio'
     | '/termos'
@@ -105,6 +115,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/inicio'
+    | '/onboarding'
     | '/privacidade'
     | '/relatorio'
     | '/termos'
@@ -115,6 +126,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/inicio'
+    | '/onboarding'
     | '/privacidade'
     | '/relatorio'
     | '/termos'
@@ -126,6 +138,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   InicioRoute: typeof InicioRoute
+  OnboardingRoute: typeof OnboardingRoute
   PrivacidadeRoute: typeof PrivacidadeRoute
   RelatorioRoute: typeof RelatorioRoute
   TermosRoute: typeof TermosRoute
@@ -164,6 +177,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PrivacidadeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/inicio': {
       id: '/inicio'
       path: '/inicio'
@@ -198,6 +218,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   InicioRoute: InicioRoute,
+  OnboardingRoute: OnboardingRoute,
   PrivacidadeRoute: PrivacidadeRoute,
   RelatorioRoute: RelatorioRoute,
   TermosRoute: TermosRoute,

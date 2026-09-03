@@ -569,3 +569,120 @@
   border-radius: 2px;
   animation: confetti-fall linear forwards;
 }
+
+/* ── Onboarding mascot ─────────────────────────────────────────────────────
+   CSS instead of Rive: no runtime to ship, no .riv to author, and it degrades
+   to a still pose under prefers-reduced-motion for free. */
+@keyframes mascot-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@keyframes mascot-float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-9px) rotate(-1deg);
+  }
+}
+@keyframes mascot-tilt {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-3deg);
+  }
+  50% {
+    transform: translateY(-5px) rotate(2deg);
+  }
+}
+@keyframes mascot-halo {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(0.94);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.06);
+  }
+}
+@keyframes mascot-ring {
+  from {
+    opacity: 0.85;
+    transform: scale(0.86);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.35);
+  }
+}
+/* Layered: the arm hinges at the shoulder. */
+@keyframes mascot-wave {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-16deg);
+  }
+  75% {
+    transform: rotate(10deg);
+  }
+}
+@keyframes mascot-cheer {
+  0%,
+  100% {
+    transform: rotate(0deg) translateY(0);
+  }
+  50% {
+    transform: rotate(-8deg) translateY(-6px);
+  }
+}
+/* Flat fallback: the whole body leans into the greeting instead. */
+@keyframes mascot-greet {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  30% {
+    transform: rotate(-4deg);
+  }
+  60% {
+    transform: rotate(3deg);
+  }
+}
+@keyframes mascot-pop {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [style*="mascot-"] {
+    animation: none !important;
+  }
+}
+
+@keyframes step-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-step-in {
+  animation: step-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
